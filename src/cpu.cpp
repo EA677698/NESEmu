@@ -3,32 +3,15 @@
 //
 
 
-#include <cstdlib>
+#include <cstdint>
+#include "global.h"
 
 struct {
-    u_int8_t a; //acumulator
-    u_int8_t x; //x index
-    u_int8_t y; //y  index
-    u_int16_t pc; //program counter
-    u_int8_t sp; //stack pointer
+    uint8_t ac; //accumulator
+    uint8_t x; //x index
+    uint8_t y; //y  index
+    uint16_t pc; //program counter
+    uint8_t sp; //stack pointer
+    uint8_t sr; //sr register (flags)
 } registers;
 
-struct {
-        u_int8_t C: 1; //carry
-        u_int8_t Z: 1; //zero
-        u_int8_t I: 1; //interrupt disable
-        u_int8_t D: 1; //decimal
-        u_int8_t V: 1; //overflow
-        u_int8_t N: 1; //negative
-        u_int8_t B: 1; //b flag
-    } flags;
-
-typedef u_int16_t opcodes;
-
-opcodes x86[] = {
-
-};
-
-opcodes r6502[] {
-
-};
