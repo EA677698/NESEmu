@@ -26,10 +26,6 @@ void set_overflow_flag(){
     registers.sr |= (1 << 6);
 }
 
-bool is_bit_set(uint8_t operand, char bit){
-    return (operand & (0x1 << bit)) >> bit;
-}
-
 void assign_zero_status(uint8_t operand){
     if(!operand){
         set_zero_flag();
@@ -462,6 +458,7 @@ void tya(){
 }
 
 
+// Memory Addressing Modes
 void accumulator(void (*instruction)(uint8_t)){instruction(registers.ac);}
 void immediate(uint8_t operand, void (*instruction)(uint8_t) ){instruction(operand);}
 void zero_page(uint8_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address]);}

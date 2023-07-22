@@ -75,6 +75,8 @@ void tsx(); // Transfer Stack Pointer to X
 void txa(); // Transfer X to Accumulator
 void txs(); // Transfer X to Stack Pointer
 void tya(); // Transfer Y to Accumulator
+
+// Memory Addressing Modes
 void accumulator(void (*instruction)(uint8_t));
 void immediate(uint8_t operand, void (*instruction)(uint8_t));
 void zero_page(uint8_t address, void (*instruction)(uint8_t));

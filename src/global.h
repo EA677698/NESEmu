@@ -18,8 +18,15 @@
 #define NES_APU_IO_REGISTERS_END 0x4017
 #define CARTRIDGE_SPACE_START 0x4020
 
+#define READ 0x1
+#define WRITE 0x2
+
 uint8_t RAM[65536];
 uint8_t *internal_mem = RAM;
+
+bool is_bit_set(uint8_t operand, char bit){
+    return (operand & (0x1 << bit)) >> bit;
+}
 
 
 #endif //EMULATOR_GLOBAL_H
