@@ -11,12 +11,22 @@ void io_db_write(uint16_t ppu_register, uint8_t operand){
     if(ppu_register >= 0x2008 && ppu_register <= 0x3FFF) {
         ppu_register = 0x2000 + (ppu_register % 8);
     }
+    if(ppu_register == PPUSTATUS_ADDR){
+        //TODO throw error
+        return;
+    }
     internal_mem[ppu_register] = operand;
 }
 
 uint8_t io_db_read(uint16_t ppu_register){
     if(ppu_register >= 0x2008 && ppu_register <= 0x3FFF) {
         ppu_register = 0x2000 + (ppu_register % 8);
+    }
+    if(ppu_register == PPUCTRL_ADDR || ppu_register == PPUMASK_ADDR ||
+    ppu_register == OAMADDR_ADDR || ppu_register == PPUSCROLL_ADDR ||
+    ppu_register == PPUADDR_ADDR || ppu_register == OAMDMA_ADDR){
+        //TODO throw error
+        return 0x0;
     }
     return internal_mem[ppu_register];
 }
@@ -30,13 +40,3 @@ void PPU_INIT(){
     PPUADDR = 0x0;
     PPUDATA = 0x0;
 }
-
-
-// CONTROLLER
-
-
-// MASK
-
-
-
-// STATUS

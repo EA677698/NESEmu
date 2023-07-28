@@ -7,6 +7,9 @@
 #include "global.h"
 #include "ppu.h"
 
+
+//CONTROLLER UTIL
+
 bool is_NMI_enabled(){
     return is_bit_set(PPUCTRL,7);
 }
@@ -53,6 +56,8 @@ uint16_t base_nametable_address(){
     }
 }
 
+//MASK UTIL
+
 bool greyscale_mode(){
     return is_bit_set(PPUMASK,0);
 }
@@ -84,3 +89,4 @@ bool emphasize_green(){
 bool emphasize_blue(){
     return is_bit_set(PPUMASK,7);
 }
+

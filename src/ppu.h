@@ -16,6 +16,16 @@
 #define PPUDATA internal_mem[0x2007]
 #define OAMDMA internal_mem[0x4014]
 
+#define PPUCTRL_ADDR 0x2000
+#define PPUMASK_ADDR 0x2001
+#define PPUSTATUS_ADDR 0x2002
+#define OAMADDR_ADDR 0x2003
+#define OAMDATA_ADDR 0x2004
+#define PPUSCROLL_ADDR 0x2005
+#define PPUADDR_ADDR 0x2006
+#define PPUDATA_ADDR 0x2007
+#define OAMDMA_ADDR 0x4014
+
 const uint8_t cpu_access[] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE * WRITE, WRITE * WRITE, READ | WRITE, WRITE};
 
 void io_db_write(uint16_t ppu_register);

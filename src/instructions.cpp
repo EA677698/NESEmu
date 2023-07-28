@@ -469,7 +469,7 @@ void absolute_x(uint16_t address, void (*instruction)(uint8_t) ){instruction(int
 void absolute_y(uint16_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address + registers.y]);}
 void indirect(uint16_t address, void (*instruction)(uint16_t)){
     if(instruction != jmp){
-        //TODO Throw invalid instruction error here!
+        //TODO throw invalid instruction error
         return;
     }
     instruction(internal_mem[address] | (internal_mem[(address & 0xFF00) | ((address + 1) & 0x00FF)] << 8));

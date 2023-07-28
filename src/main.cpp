@@ -1,5 +1,6 @@
 #include "cpu.cpp"
 
+
 void power_up(){ //TODO Complete
     registers.sr = 0x34;
     registers.ac,registers.x,registers.y = 0;
@@ -20,5 +21,4 @@ void reset(){ //TODO Complete
 }
 
 int main() {
-    return 0;
 }
