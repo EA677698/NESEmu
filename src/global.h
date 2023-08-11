@@ -5,8 +5,8 @@
 #ifndef EMULATOR_GLOBAL_H
 #define EMULATOR_GLOBAL_H
 
-#include <cstdlib>
 #include <cstdio>
+#include <fstream>
 
 #define ZERO_PAGE_BEGIN 0x0
 #define ZERO_PAGE_END 0xFF
@@ -18,11 +18,33 @@
 #define NES_APU_IO_REGISTERS_END 0x4017
 #define CARTRIDGE_SPACE_START 0x4020
 
+
+
 #define READ 0x1
 #define WRITE 0x2
 
 uint8_t RAM[65536];
 uint8_t *internal_mem = RAM;
+
+struct{
+    std::ifstream rom_file;
+    char header[16];
+    int PRG_ROM_SIZE;
+    int CHR_ROM_SIZE;
+    bool nametable_mirroring;
+    bool persistent_memory;
+    bool trainer_present;
+    bool ignore_mirroring_control;
+    int lower_nybble;
+    int upper_nybble;
+    int mode;
+    int unisystem;
+    int PRG_RAM_SIZE;
+    bool region;
+
+
+
+} rom;
 
 
 
