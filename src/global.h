@@ -28,22 +28,18 @@ uint8_t *internal_mem = RAM;
 
 struct{
     std::ifstream rom_file;
-    char header[16];
-    int PRG_ROM_SIZE;
-    int CHR_ROM_SIZE;
+    uint8_t header[16];
+    uint16_t PRG_ROM_SIZE;
+    uint16_t CHR_ROM_SIZE;
     bool nametable_mirroring;
     bool persistent_memory;
     bool trainer_present;
     bool ignore_mirroring_control;
-    int lower_nybble;
-    int upper_nybble;
-    int mode;
-    int unisystem;
-    int PRG_RAM_SIZE;
-    bool region;
-
-
-
+    uint8_t lower_nybble;
+    uint8_t upper_nybble;
+    uint16_t mode;
+    uint16_t unisystem;
+    uint8_t PRG_RAM_SIZE;
 } rom;
 
 

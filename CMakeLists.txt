@@ -9,6 +9,6 @@ include_directories(${SDL2_PATH}/include)
 link_directories(${SDL2_PATH}/lib/x86)
 
 add_executable(emulator src/main.cpp src/cpu.cpp src/global.h src/instructions.cpp
-        src/apu.cpp src/ppu.cpp src/instructions.h src/ppu.h src/util.cpp src/romLoader.cpp)
+        src/apu.cpp src/ppu.cpp src/instructions.h src/ppu.h src/util.cpp src/romLoader.cpp src/mappers/mapper.cpp src/mappers/mapper.h src/mappers/mapper0.cpp src/mappers/mapper0.h src/opcode_interpreter.cpp)
 
 target_link_libraries(emulator SDL2.lib SDL2main.lib)

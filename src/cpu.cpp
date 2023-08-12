@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "global.h"
 
+#define RESET_VECTOR internal_mem[0xFFFD] | internal_mem[0xFFFC]
+
 struct {
     uint8_t ac; //accumulator
     uint8_t x; //x index

@@ -1,4 +1,5 @@
 #include "cpu.cpp"
+#include "romLoader.cpp"
 
 
 void power_up(){ //TODO Complete
@@ -13,6 +14,8 @@ void power_up(){ //TODO Complete
     for(int i = 0x4010; i <= 0x4013; i++){
         internal_mem[i] = 0;
     }
+    load_rom();
+    registers.pc = RESET_VECTOR;
 }
 
 void reset(){ //TODO Complete

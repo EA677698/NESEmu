@@ -12,7 +12,6 @@ void clear_zero_flag();
 void set_zero_flag();
 void set_negative_flag();
 void set_overflow_flag();
-bool is_bit_set(uint8_t operand, char bit);
 void assign_zero_status(uint8_t operand); // Sets the zero flag based on whether the operand is zero.
 void assign_negative_status(uint8_t operand); // Sets the negative flag based on operand's sign.
 void stack_decrement(); // Decrements the stack pointer and checks for underflows.
