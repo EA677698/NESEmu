@@ -5,6 +5,8 @@
 #ifndef EMULATOR_INSTRUCTIONS_H
 #define EMULATOR_INSTRUCTIONS_H
 
+#include "../global.h"
+#include "cpu.cpp"
 #include <cstdint>
 
 void clear_negative_flag();
@@ -565,15 +567,27 @@ void tya();
 
 // Memory Addressing Modes
 void accumulator(void (*instruction)(uint8_t));
-void immediate(uint8_t operand, void (*instruction)(uint8_t));
-void zero_page(uint8_t address, void (*instruction)(uint8_t));
-void zero_page_x(uint8_t address, void (*instruction)(uint8_t));
-void absolute(uint16_t address, void (*instruction)(uint16_t));
-void absolute(uint16_t address, void (*instruction)(uint8_t));
-void absolute_x(uint16_t address, void (*instruction)(uint8_t));
-void absolute_y(uint16_t address, void (*instruction)(uint8_t));
-void indirect(uint16_t address, void (*instruction)(uint16_t));
-void indirect_x(uint8_t address, void (*instruction)(uint8_t));
-void indirect_y(uint8_t address, void (*instruction)(uint8_t));
+void immediate(void (*instruction)(uint8_t), uint8_t operand = internal_mem[registers.pc++]);
+void zero_page(void (*instruction)(uint8_t), uint8_t address = internal_mem[registers.pc++]);
+void zero_page_x(void (*instruction)(uint8_t),uint8_t address = internal_mem[registers.pc++]);
+void zero_page_y(void (*instruction)(uint8_t),uint8_t address = internal_mem[registers.pc++]);
+void absolute(void (*instruction)(uint16_t), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute(void (*instruction)(uint8_t), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute_x(void (*instruction)(uint8_t), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute_y(void (*instruction)(uint8_t), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void indirect(void (*instruction)(uint16_t), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void indirect_x(void (*instruction)(uint8_t), uint8_t address = internal_mem[registers.pc++]);
+void indirect_y(void (*instruction)(uint8_t), uint8_t address = internal_mem[registers.pc++]);
 
+void accumulator(void (*instruction)(uint8_t &));
+void immediate(void (*instruction)(uint8_t &), uint8_t& operand = internal_mem[registers.pc++]);
+void zero_page(void (*instruction)(uint8_t &), uint8_t& address = internal_mem[registers.pc++]);
+void zero_page_x(void (*instruction)(uint8_t &),uint8_t& address = internal_mem[registers.pc++]);
+void zero_page_y(void (*instruction)(uint8_t &),uint8_t& address = internal_mem[registers.pc++]);
+void absolute(void (*instruction)(uint16_t &), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute(void (*instruction)(uint8_t &), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute_x(void (*instruction)(uint8_t &), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void absolute_y(void (*instruction)(uint8_t &), uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8));
+void indirect_x(void (*instruction)(uint8_t &), uint8_t & address = internal_mem[registers.pc++]);
+void indirect_y(void (*instruction)(uint8_t &), uint8_t & address = internal_mem[registers.pc++]);
 #endif //EMULATOR_INSTRUCTIONS_H

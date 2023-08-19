@@ -4,7 +4,7 @@
 
 
 #include <cstdint>
-#include "global.h"
+#include "../global.h"
 
 #define RESET_VECTOR internal_mem[0xFFFD] | internal_mem[0xFFFC]
 
@@ -15,5 +15,6 @@ struct {
     uint16_t pc; //program counter
     uint8_t sp; //stack pointer
     uint8_t sr; //sr register (flags)
+    uint8_t opcode; //fetched opcode to execute
 } registers;
 

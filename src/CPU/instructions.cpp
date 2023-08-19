@@ -459,27 +459,47 @@ void tya(){
 
 
 // Memory Addressing Modes
-void accumulator(void (*instruction)(uint8_t)){instruction(registers.ac);}
-void immediate(uint8_t operand, void (*instruction)(uint8_t) ){instruction(operand);}
-void zero_page(uint8_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address]);}
-void zero_page_x(uint8_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address + registers.x]);}
-void absolute(uint16_t address, void (*instruction)(uint16_t) ){instruction(address);}
-void absolute(uint16_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address]);}
-void absolute_x(uint16_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address + registers.x]);}
-void absolute_y(uint16_t address, void (*instruction)(uint8_t) ){instruction(internal_mem[address + registers.y]);}
-void indirect(uint16_t address, void (*instruction)(uint16_t)){
+void accumulator(void (*instruction)(uint8_t)) {instruction(registers.ac);}
+void immediate(void (*instruction)(uint8_t), uint8_t operand){instruction(operand);}
+void zero_page(void (*instruction)(uint8_t), uint8_t address){instruction(internal_mem[address]);}
+void zero_page_x(void (*instruction)(uint8_t),uint8_t address){instruction(internal_mem[address + registers.x]);}
+void zero_page_y(void (*instruction)(uint8_t),uint8_t address){instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t), uint16_t address){instruction(address);}
+void absolute(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address]);}
+void absolute_x(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address + registers.x]);}
+void absolute_y(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address + registers.y]);}
+void indirect(void (*instruction)(uint16_t), uint16_t address){
     if(instruction != jmp){
         //TODO throw invalid instruction error
         return;
     }
     instruction(internal_mem[address] | (internal_mem[(address & 0xFF00) | ((address + 1) & 0x00FF)] << 8));
 }
-void indirect_x(uint8_t address, void (*instruction)(uint8_t)) {
+void indirect_x(void (*instruction)(uint8_t), uint8_t address) {
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = internal_mem[zero_page_address] | (internal_mem[(zero_page_address + 1) & 0xFF] << 8);
     instruction(internal_mem[effective_address]);
 }
-void indirect_y(uint8_t address, void (*instruction)(uint8_t)) {
+void indirect_y(void (*instruction)(uint8_t), uint8_t address) {
+    uint16_t effective_address = (internal_mem[address] | (internal_mem[(address + 1) & 0xFF] << 8)) + registers.y;
+    instruction(internal_mem[effective_address]);
+}
+
+void accumulator(void (*instruction)(uint8_t &)) {instruction(registers.ac);}
+void immediate(void (*instruction)(uint8_t &), uint8_t& operand){instruction(operand);}
+void zero_page(void (*instruction)(uint8_t &), uint8_t& address){instruction(internal_mem[address]);}
+void zero_page_x(void (*instruction)(uint8_t &),uint8_t& address){instruction(internal_mem[address + registers.x]);}
+void zero_page_y(void (*instruction)(uint8_t &),uint8_t& address){instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t &), uint16_t& address){instruction(address);}
+void absolute(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address]);}
+void absolute_x(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address + registers.x]);}
+void absolute_y(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address + registers.y]);}
+void indirect_x(void (*instruction)(uint8_t &), uint8_t address) {
+    uint8_t zero_page_address = (address + registers.x) & 0xFF;
+    uint16_t effective_address = internal_mem[zero_page_address] | (internal_mem[(zero_page_address + 1) & 0xFF] << 8);
+    instruction(internal_mem[effective_address]);
+}
+void indirect_y(void (*instruction)(uint8_t &), uint8_t address) {
     uint16_t effective_address = (internal_mem[address] | (internal_mem[(address + 1) & 0xFF] << 8)) + registers.y;
     instruction(internal_mem[effective_address]);
 }
