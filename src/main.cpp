@@ -1,6 +1,10 @@
 #include "global.h"
 #include "romLoader.h"
 #include <iostream>
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/async_logger.h"
+#include "spdlog/async.h"
 
 uint8_t RAM[65536];
 uint8_t *internal_mem = RAM;
@@ -25,9 +29,9 @@ void power_up(){ //TODO Complete
     }
     load_rom();
     registers.pc = RESET_VECTOR;
-    printf("0xFFFD: 0x%X\n",internal_mem[0xFFFD]);
-    printf("0xFFFC: 0x%X\n",internal_mem[0xFFFC]);
-    printf("RESET_VECTOR: 0x%X\n",RESET_VECTOR);
+    spdlog::info("0xFFFD: 0x{:X}",internal_mem[0xFFFD]);
+    spdlog::info("0xFFFC: 0x{:X}",internal_mem[0xFFFC]);
+    spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
 }
 
 void reset(){ //TODO Complete
@@ -36,13 +40,25 @@ void reset(){ //TODO Complete
 }
 
 int main() {
+    spdlog::init_thread_pool(8192, 1);
+
+    // Create a stdout sink
+    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
+    // Create an async logger with the name "async_logger", linked to the stdout sink
+    auto async_logger = std::make_shared<spdlog::async_logger>("async_logger", stdout_sink, spdlog::thread_pool());
+
+    // Set the global logger to be our async logger
+    spdlog::set_default_logger(async_logger);
+
     power_up();
-    printf("PC REGISTER: 0x%X\n",registers.pc);
-    printf("INITIAL OPCODE: 0x%X\n",internal_mem[registers.pc]);
-    printf("ROM HEADER: %s\n",rom.header);
+    spdlog::info("PC REGISTER: 0x{:X}", registers.pc);
+    spdlog::info("INITIAL OPCODE: 0x{:X}",internal_mem[registers.pc]);
+    spdlog::set_level(spdlog::level::debug);
     while (1){
-        printf("EXECUTING OPCODE: 0x%X\n",internal_mem[registers.pc]);
-        printf("PC REGISTER: 0x%X\n",registers.pc);
+        spdlog::debug("EXECUTING OPCODE: 0x{:X}",internal_mem[registers.pc]);
+        spdlog::debug("PC REGISTER: 0x{:X}",registers.pc);
         execute_opcode(internal_mem[registers.pc++]);
     }
+    spdlog::shutdown();
 }

@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "instructions.h"
+#include "spdlog/spdlog.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
 void clear_negative_flag(){
@@ -182,7 +183,7 @@ void brk(){
     internal_mem[0x100 + registers.sp] = front;
     uint16_t interrupt_vector = internal_mem[0xFFFE] | ((uint16_t) (internal_mem[0xFFFF] << 8));
     registers.pc = interrupt_vector;
-    printf("SETTING PC COUNTER TO 0x%X\n",interrupt_vector);
+    spdlog::debug("SETTING PC COUNTER TO 0x{:X}",interrupt_vector);
 }
 
 void bvc(int8_t operand){

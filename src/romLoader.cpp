@@ -4,6 +4,7 @@
 
 #include "romLoader.h"
 #include "mappers/mapper0.h"
+#include "spdlog/spdlog.h"
 
 bool is_iNES_1_format(){
     if(rom.header[0] != 0x4E){
@@ -53,7 +54,7 @@ void load_rom_fd(){
     rom.rom_file.open(URL, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
         //TODO throw error
-        fprintf(stderr,"UNABLE TO OPEN ROM FILE\n");
+        spdlog::error("UNABLE TO OPEN ROM FILE");
     }
     char buff[16];
     rom.rom_file.read(buff,16);
@@ -64,10 +65,10 @@ void load_rom(){
     load_rom_fd();
     if(!is_iNES_1_format()){
         //TODO throw error
-        fprintf(stderr,"INVALID FILE FORMAT\n");
+        spdlog::error("INVALID FILE FORMAT");
         exit(1);
     }
     load_flags();
-    printf("PRG_ROM_SIZE: %d\n",rom.PRG_ROM_SIZE);
+    spdlog::info("PRG_ROM_SIZE: {}",rom.PRG_ROM_SIZE);
     mapper0 MAP;
 }

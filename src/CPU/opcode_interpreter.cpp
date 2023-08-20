@@ -5,8 +5,7 @@
 #include <iostream>
 #include "cpu.h"
 #include "instructions.h"
-
-using namespace std;
+#include "spdlog/spdlog.h"
 
 // low byte then high byte
 
@@ -577,7 +576,8 @@ void execute_opcode(int opcode){
 
         default:
             //TODO THROW ERROR
-            fprintf(stderr,"INVALID INSTRUCTION. OPCODE: 0x%X\n",opcode);
+            spdlog::critical("INVALID INSTRUCTION. OPCODE: 0x{:X}",opcode);
+            spdlog::critical("Halting CPU...");
             exit(1);
     }
 
