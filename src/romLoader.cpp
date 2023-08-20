@@ -3,8 +3,9 @@
 //
 
 
+#include <iostream>
 #include "global.h"
-#define URL "" //TEMP
+#define URL "../Super_mario_brothers.nes" //TEMP
 
 bool is_iNES_format(){
     if(rom.header[0] != 0x4E){
@@ -51,6 +52,7 @@ void load_rom_fd(){
     rom.rom_file.open(URL, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
         //TODO throw error
+        std::cerr << "UNABLE TO OPEN ROM FILE" << std::endl;
     }
     char buff[16];
     rom.rom_file.read(buff,16);
@@ -61,6 +63,7 @@ void load_rom(){
     load_rom_fd();
     if(!is_iNES_format()){
         //TODO throw error
+        std::cerr << "INVALID FILE FORMAT" << std::endl;
         return;
     }
     load_flags();

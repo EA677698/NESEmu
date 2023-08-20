@@ -2,6 +2,7 @@
 // Created by eafc6 on 7/1/2023.
 //
 
+#include <iostream>
 #include "instructions.h"
 #include "cpu.cpp"
 
@@ -471,6 +472,7 @@ void absolute_y(void (*instruction)(uint8_t), uint16_t address){instruction(inte
 void indirect(void (*instruction)(uint16_t), uint16_t address){
     if(instruction != jmp){
         //TODO throw invalid instruction error
+        std::cerr << "INVALID ADDRESSING MODE FOR JMP INSTRUCTION" << std::endl;
         return;
     }
     instruction(internal_mem[address] | (internal_mem[(address & 0xFF00) | ((address + 1) & 0x00FF)] << 8));
