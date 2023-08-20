@@ -3,8 +3,8 @@
 //
 
 #include <iostream>
+#include "cpu.h"
 #include "instructions.h"
-#include "cpu.cpp"
 
 using namespace std;
 
@@ -577,7 +577,8 @@ void execute_opcode(int opcode){
 
         default:
             //TODO THROW ERROR
-            cerr << "INVALID INSTRUCTION. OPCODE: " << std::hex << opcode << endl;
+            fprintf(stderr,"INVALID INSTRUCTION. OPCODE: 0x%X\n",opcode);
+            exit(1);
     }
 
 }

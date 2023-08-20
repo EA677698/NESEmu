@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include "instructions.h"
-#include "cpu.cpp"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
 void clear_negative_flag(){
@@ -172,17 +171,18 @@ void bpl(int8_t operand){
 }
 
 void brk(){
-    registers.pc += 2;
+    registers.pc += 1;
+    registers.sr |= 0x10;
     php();
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    stack_increment();
+    stack_decrement();
     internal_mem[0x100 + registers.sp] = back;
-    stack_increment();
+    stack_decrement();
     internal_mem[0x100 + registers.sp] = front;
-    registers.sr |= 0x10;
-    uint16_t interrupt_vector = internal_mem[0xFFFE] | (internal_mem[0xFFFF] << 8);
+    uint16_t interrupt_vector = internal_mem[0xFFFE] | ((uint16_t) (internal_mem[0xFFFF] << 8));
     registers.pc = interrupt_vector;
+    printf("SETTING PC COUNTER TO 0x%X\n",interrupt_vector);
 }
 
 void bvc(int8_t operand){
@@ -361,7 +361,7 @@ void plp(){
 
 void rol(uint8_t &operand){
     uint8_t old_carry = is_bit_set(registers.sr,7);
-    registers.sr &= 0xFE | is_bit_set(operand,7);
+    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand,7));
     operand <<= 1;
     operand &= 0xFE | old_carry;
     assign_zero_status(operand);
@@ -370,7 +370,7 @@ void rol(uint8_t &operand){
 
 void ror(uint8_t &operand){
     uint8_t old_carry = is_bit_set(registers.sr,7);
-    registers.sr &= 0xFE | is_bit_set(operand,0);
+    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand,0));
     operand >>= 1;
     operand &= 0x7F | (old_carry << 7);
     assign_zero_status(operand);
@@ -461,15 +461,16 @@ void tya(){
 
 // Memory Addressing Modes
 void accumulator(void (*instruction)(uint8_t)) {instruction(registers.ac);}
-void immediate(void (*instruction)(uint8_t), uint8_t operand){instruction(operand);}
-void zero_page(void (*instruction)(uint8_t), uint8_t address){instruction(internal_mem[address]);}
-void zero_page_x(void (*instruction)(uint8_t),uint8_t address){instruction(internal_mem[address + registers.x]);}
-void zero_page_y(void (*instruction)(uint8_t),uint8_t address){instruction(internal_mem[address + registers.y]);}
-void absolute(void (*instruction)(uint16_t), uint16_t address){instruction(address);}
-void absolute(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address]);}
-void absolute_x(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address + registers.x]);}
-void absolute_y(void (*instruction)(uint8_t), uint16_t address){instruction(internal_mem[address + registers.y]);}
-void indirect(void (*instruction)(uint16_t), uint16_t address){
+void immediate(void (*instruction)(uint8_t)){uint8_t operand = internal_mem[registers.pc++]; instruction(operand);}
+void zero_page(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address]);}
+void zero_page_x(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.x]);}
+void zero_page_y(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(address);}
+void absolute(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address]);}
+void absolute_x(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.x]);}
+void absolute_y(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.y]);}
+void indirect(void (*instruction)(uint16_t)){
+    uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8);
     if(instruction != jmp){
         //TODO throw invalid instruction error
         std::cerr << "INVALID ADDRESSING MODE FOR JMP INSTRUCTION" << std::endl;
@@ -477,31 +478,35 @@ void indirect(void (*instruction)(uint16_t), uint16_t address){
     }
     instruction(internal_mem[address] | (internal_mem[(address & 0xFF00) | ((address + 1) & 0x00FF)] << 8));
 }
-void indirect_x(void (*instruction)(uint8_t), uint8_t address) {
+void indirect_x(void (*instruction)(uint8_t)) {
+    uint8_t address = internal_mem[registers.pc++];
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = internal_mem[zero_page_address] | (internal_mem[(zero_page_address + 1) & 0xFF] << 8);
     instruction(internal_mem[effective_address]);
 }
-void indirect_y(void (*instruction)(uint8_t), uint8_t address) {
+void indirect_y(void (*instruction)(uint8_t)) {
+    uint8_t address = internal_mem[registers.pc++];
     uint16_t effective_address = (internal_mem[address] | (internal_mem[(address + 1) & 0xFF] << 8)) + registers.y;
     instruction(internal_mem[effective_address]);
 }
 
 void accumulator(void (*instruction)(uint8_t &)) {instruction(registers.ac);}
-void immediate(void (*instruction)(uint8_t &), uint8_t& operand){instruction(operand);}
-void zero_page(void (*instruction)(uint8_t &), uint8_t& address){instruction(internal_mem[address]);}
-void zero_page_x(void (*instruction)(uint8_t &),uint8_t& address){instruction(internal_mem[address + registers.x]);}
-void zero_page_y(void (*instruction)(uint8_t &),uint8_t& address){instruction(internal_mem[address + registers.y]);}
-void absolute(void (*instruction)(uint16_t &), uint16_t& address){instruction(address);}
-void absolute(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address]);}
-void absolute_x(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address + registers.x]);}
-void absolute_y(void (*instruction)(uint8_t &), uint16_t& address){instruction(internal_mem[address + registers.y]);}
-void indirect_x(void (*instruction)(uint8_t &), uint8_t address) {
+void immediate(void (*instruction)(uint8_t &)){uint8_t operand = internal_mem[registers.pc++]; instruction(operand);}
+void zero_page(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address]);}
+void zero_page_x(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.x]);}
+void zero_page_y(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(address);}
+void absolute(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address]);}
+void absolute_x(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.x]);}
+void absolute_y(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.y]);}
+void indirect_x(void (*instruction)(uint8_t &)) {
+    uint8_t address = internal_mem[registers.pc++];
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = internal_mem[zero_page_address] | (internal_mem[(zero_page_address + 1) & 0xFF] << 8);
     instruction(internal_mem[effective_address]);
 }
-void indirect_y(void (*instruction)(uint8_t &), uint8_t address) {
+void indirect_y(void (*instruction)(uint8_t &)) {
+    uint8_t address = internal_mem[registers.pc++];
     uint16_t effective_address = (internal_mem[address] | (internal_mem[(address + 1) & 0xFF] << 8)) + registers.y;
     instruction(internal_mem[effective_address]);
 }

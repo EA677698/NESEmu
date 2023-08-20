@@ -4,6 +4,7 @@
 
 
 #include <cstdint>
+#include <iostream>
 #include "global.h"
 #include "ppu.h"
 
@@ -54,6 +55,8 @@ uint16_t base_nametable_address(){
         case 2: return 0x2800;
         case 3: return 0x2C00;
     }
+    std::cerr << "NAMETABLE ISSUE" << std::endl;
+    return 0x0;
 }
 
 //MASK UTIL

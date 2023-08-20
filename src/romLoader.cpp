@@ -2,12 +2,10 @@
 // Created by eafc6 on 8/10/2023.
 //
 
+#include "romLoader.h"
+#include "mappers/mapper0.h"
 
-#include <iostream>
-#include "global.h"
-#define URL "../Super_mario_brothers.nes" //TEMP
-
-bool is_iNES_format(){
+bool is_iNES_1_format(){
     if(rom.header[0] != 0x4E){
         return false;
     }
@@ -18,6 +16,9 @@ bool is_iNES_format(){
         return false;
     }
     if(rom.header[3] != 0x1A){
+        return false;
+    }
+    if((rom.header[7] & 0x0C) == 0x08){
         return false;
     }
     return true;
@@ -52,7 +53,7 @@ void load_rom_fd(){
     rom.rom_file.open(URL, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
         //TODO throw error
-        std::cerr << "UNABLE TO OPEN ROM FILE" << std::endl;
+        fprintf(stderr,"UNABLE TO OPEN ROM FILE\n");
     }
     char buff[16];
     rom.rom_file.read(buff,16);
@@ -61,12 +62,12 @@ void load_rom_fd(){
 
 void load_rom(){
     load_rom_fd();
-    if(!is_iNES_format()){
+    if(!is_iNES_1_format()){
         //TODO throw error
-        std::cerr << "INVALID FILE FORMAT" << std::endl;
-        return;
+        fprintf(stderr,"INVALID FILE FORMAT\n");
+        exit(1);
     }
     load_flags();
-    internal_mem[0xFFFC] = rom.lower_nybble;
-    internal_mem[0xFFFD] = rom.upper_nybble;
+    printf("PRG_ROM_SIZE: %d\n",rom.PRG_ROM_SIZE);
+    mapper0 MAP;
 }

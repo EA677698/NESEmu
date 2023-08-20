@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include "CPU/cpu.h"
 
 #define ZERO_PAGE_BEGIN 0x0
 #define ZERO_PAGE_END 0xFF
@@ -23,10 +24,10 @@
 #define READ 0x1
 #define WRITE 0x2
 
-uint8_t RAM[65536];
-uint8_t *internal_mem = RAM;
+extern uint8_t RAM[65536];
+extern uint8_t *internal_mem;
 
-struct{
+struct ROM{
     std::ifstream rom_file;
     uint8_t header[16];
     uint16_t PRG_ROM_SIZE;
@@ -40,13 +41,13 @@ struct{
     uint16_t mode;
     uint16_t unisystem;
     uint8_t PRG_RAM_SIZE;
-} rom;
+};
+
+extern ROM rom;
 
 
 
-bool is_bit_set(uint8_t operand, char bit){
-    return (operand & (0x1 << bit)) >> bit;
-}
+extern bool is_bit_set(uint8_t operand, char bit);
 
 
 #endif //EMULATOR_GLOBAL_H

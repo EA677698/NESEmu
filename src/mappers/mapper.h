@@ -9,8 +9,6 @@
 class mapper {
 
 public:
-    virtual ~mapper();
-
 };
 
 
