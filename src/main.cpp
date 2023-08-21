@@ -3,6 +3,7 @@
 #include <iostream>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/async_logger.h"
 #include "spdlog/async.h"
 
@@ -41,14 +42,10 @@ void reset(){ //TODO Complete
 
 int main() {
     spdlog::init_thread_pool(8192, 1);
-
-    // Create a stdout sink
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-
-    // Create an async logger with the name "async_logger", linked to the stdout sink
-    auto async_logger = std::make_shared<spdlog::async_logger>("async_logger", stdout_sink, spdlog::thread_pool());
-
-    // Set the global logger to be our async logger
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("latestLog.txt", true);
+    std::vector<spdlog::sink_ptr> sinks {stdout_sink, file_sink};
+    auto async_logger = std::make_shared<spdlog::async_logger>("NESEmu", sinks.begin(), sinks.end(), spdlog::thread_pool());
     spdlog::set_default_logger(async_logger);
 
     power_up();
@@ -56,8 +53,7 @@ int main() {
     spdlog::info("INITIAL OPCODE: 0x{:X}",internal_mem[registers.pc]);
     spdlog::set_level(spdlog::level::debug);
     while (1){
-        spdlog::debug("EXECUTING OPCODE: 0x{:X}",internal_mem[registers.pc]);
-        spdlog::debug("PC REGISTER: 0x{:X}",registers.pc);
+        spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}",internal_mem[registers.pc],registers.pc);
         execute_opcode(internal_mem[registers.pc++]);
     }
     spdlog::shutdown();

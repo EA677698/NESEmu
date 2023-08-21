@@ -183,7 +183,7 @@ void brk(){
     internal_mem[0x100 + registers.sp] = front;
     uint16_t interrupt_vector = internal_mem[0xFFFE] | ((uint16_t) (internal_mem[0xFFFF] << 8));
     registers.pc = interrupt_vector;
-    spdlog::debug("SETTING PC COUNTER TO 0x{:X}",interrupt_vector);
+    spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
 }
 
 void bvc(int8_t operand){
@@ -290,9 +290,8 @@ void jmp(uint16_t address){
 }
 
 void jsr(uint16_t operand){
-    uint16_t address = registers.pc + 3 - 1;
-    uint8_t front = address>>8;
-    uint8_t back = address & 0xFF;
+    uint8_t front = registers.pc >> 8;
+    uint8_t back = registers.pc & 0xFF;
     stack_decrement();
     internal_mem[0x100 + registers.sp] = back;
     stack_decrement();
@@ -474,8 +473,8 @@ void indirect(void (*instruction)(uint16_t)){
     uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8);
     if(instruction != jmp){
         //TODO throw invalid instruction error
-        std::cerr << "INVALID ADDRESSING MODE FOR JMP INSTRUCTION" << std::endl;
-        return;
+        spdlog::critical("INVALID ADDRESSING MODE FOR JMP INSTRUCTION (INDIRECT ADDRESSING MODE)");
+        exit(1);
     }
     instruction(internal_mem[address] | (internal_mem[(address & 0xFF00) | ((address + 1) & 0x00FF)] << 8));
 }
