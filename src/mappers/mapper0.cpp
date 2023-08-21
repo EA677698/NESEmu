@@ -19,17 +19,6 @@ mapper0::mapper0() {
         memcpy(internal_mem + 0xC000, buffer + 16384, 16384);
     }
 
-    // NMI VECTOR
-    internal_mem[0xFFFA] = buffer[ROM_SIZE - 6];
-    internal_mem[0xFFFB] = buffer[ROM_SIZE - 5];
-
-    // RESET VECTOR
-    internal_mem[0xFFFC] = buffer[ROM_SIZE - 4];
-    internal_mem[0xFFFD] = buffer[ROM_SIZE - 3];
-
-    // IRQ/BRK VECTOR
-    internal_mem[0xFFFE] = buffer[ROM_SIZE - 2];
-    internal_mem[0xFFFF] = buffer[ROM_SIZE - 1];
 
     delete[] buffer;
 }

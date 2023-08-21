@@ -299,6 +299,7 @@ void execute_opcode(int opcode){
             break;
         case 0xAD:
             absolute(lda);
+            break;
         case 0xBD:
             absolute_x(lda);
             break;

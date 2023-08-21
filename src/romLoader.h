@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include "global.h"
-#define URL "../Excite_bike.nes" //TEMP
+#define URL "../Super_mario_brothers.nes" //TEMP
 
 bool is_iNES_1_format();
 

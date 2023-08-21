@@ -56,5 +56,6 @@ int main() {
         spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}",internal_mem[registers.pc],registers.pc);
         execute_opcode(internal_mem[registers.pc++]);
     }
+    //8E19
     spdlog::shutdown();
 }

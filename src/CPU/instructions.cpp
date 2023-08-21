@@ -44,19 +44,11 @@ void assign_negative_status(uint8_t operand){
 }
 
 void stack_decrement(){
-    if(registers.sp == 0x0){
-        registers.sp = 0xFF;
-    } else{
-        registers.sp--;
-    }
+    registers.sp--;
 }
 
 void stack_increment(){
-    if(registers.sp == 0xFF){
-        registers.sp = 0x0;
-    } else{
-        registers.sp++;
-    }
+    registers.sp++;
 }
 
 // ----------------------------------------- DEFINED INSTRUCTIONS -----------------------------------------
@@ -292,6 +284,7 @@ void jmp(uint16_t address){
 void jsr(uint16_t operand){
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
+    spdlog::info("Storing address 0x{:X} into stack",registers.pc);
     stack_decrement();
     internal_mem[0x100 + registers.sp] = back;
     stack_decrement();
@@ -388,13 +381,13 @@ void rti(){
 }
 
 void rts(){
-    stack_increment();
     uint16_t address = internal_mem[0x100 + registers.sp];
-    address <<= 8;
     stack_increment();
+    address <<= 8;
     address |= internal_mem[0x100 + registers.sp];
+    stack_increment();
+    spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address;
-    registers.pc++;
 }
 
 void sbc(uint8_t operand){
@@ -465,12 +458,34 @@ void immediate(void (*instruction)(uint8_t)){uint8_t operand = internal_mem[regi
 void zero_page(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address]);}
 void zero_page_x(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.x]);}
 void zero_page_y(void (*instruction)(uint8_t)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.y]);}
-void absolute(void (*instruction)(uint16_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(address);}
-void absolute(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address]);}
-void absolute_x(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.x]);}
-void absolute_y(void (*instruction)(uint8_t)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(address);
+}
+void absolute(void (*instruction)(uint8_t)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address]);
+}
+void absolute_x(void (*instruction)(uint8_t)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address + registers.x]);
+}
+void absolute_y(void (*instruction)(uint8_t)){
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address + registers.y]);
+}
 void indirect(void (*instruction)(uint16_t)){
-    uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8);
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
     if(instruction != jmp){
         //TODO throw invalid instruction error
         spdlog::critical("INVALID ADDRESSING MODE FOR JMP INSTRUCTION (INDIRECT ADDRESSING MODE)");
@@ -495,10 +510,30 @@ void immediate(void (*instruction)(uint8_t &)){uint8_t operand = internal_mem[re
 void zero_page(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address]);}
 void zero_page_x(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.x]);}
 void zero_page_y(void (*instruction)(uint8_t &)){uint8_t address = internal_mem[registers.pc++]; instruction(internal_mem[address + registers.y]);}
-void absolute(void (*instruction)(uint16_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(address);}
-void absolute(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address]);}
-void absolute_x(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.x]);}
-void absolute_y(void (*instruction)(uint8_t &)){uint16_t address = internal_mem[registers.pc++] | (((uint16_t) internal_mem[registers.pc++]) << 8); instruction(internal_mem[address + registers.y]);}
+void absolute(void (*instruction)(uint16_t &)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(address);
+}
+void absolute(void (*instruction)(uint8_t &)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address]);
+}
+void absolute_x(void (*instruction)(uint8_t &)) {
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address + registers.x]);
+}
+void absolute_y(void (*instruction)(uint8_t &)){
+    uint16_t lowByte = internal_mem[registers.pc++];
+    uint16_t highByte = internal_mem[registers.pc++];
+    uint16_t address = (highByte << 8) | lowByte;
+    instruction(internal_mem[address + registers.y]);
+}
 void indirect_x(void (*instruction)(uint8_t &)) {
     uint8_t address = internal_mem[registers.pc++];
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
