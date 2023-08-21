@@ -2,11 +2,6 @@
 
 NESEMU is a software emulator for the Nintendo Entertainment System (NES), a popular 8-bit home video game console from the 1980s.
 
-## Features
-
-- Written in C++
-- Utilizes SDL2 and SPDLOG libraries
-
 ## Dependencies
 
 - [SDL2](https://www.libsdl.org/download-2.0.php)
