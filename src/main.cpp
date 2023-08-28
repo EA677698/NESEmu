@@ -94,16 +94,21 @@ int main(int argc, char* argv[]) {
     spdlog::set_level(spdlog::level::debug);
     SDL_Event event;
     bool quit = false;
-    clock_t CPU = clock();
+    time_t CPU = time(NULL);
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true;
             }
         }
-        if(clock() - CPU); //TODO FINISH
-        spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}",internal_mem[registers.pc],registers.pc);
-        execute_opcode(internal_mem[registers.pc++]);
+        if(time(NULL) - CPU >= 1){
+            registers.cycles = 0;
+            CPU = time(NULL);
+        }
+        if(registers.cycles < 1790000) {
+            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", internal_mem[registers.pc], registers.pc);
+            execute_opcode(internal_mem[registers.pc++]);
+        }
 
         // ... (update pixels and rendering code here)
     }

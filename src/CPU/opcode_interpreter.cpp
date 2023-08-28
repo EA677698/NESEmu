@@ -29,11 +29,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0x7D:
-            absolute_x(adc);
+            registers.cycles += (4 + absolute_x(adc));
             //TODO special cycle case
             break;
         case 0x79:
-            absolute_y(adc);
+            registers.cycles += (4 + absolute_y(adc));
             //TODO special cycle case
             break;
         case 0x61:
@@ -41,7 +41,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0x71:
-            indirect_y(adc);
+            registers.cycles += (5 + indirect_y(adc));
             //TODO special cycle case
             break;
 
@@ -63,11 +63,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0x3D:
-            absolute_x(logical_and);
+            registers.cycles += (4 + absolute_x(logical_and));
             //TODO special cycle case
             break;
         case 0x39:
-            absolute_y(logical_and);
+            registers.cycles += (4 + absolute_y(logical_and));
             //TODO special cycle case
             break;
         case 0x21:
@@ -75,7 +75,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0x31:
-            indirect_y(logical_and);
+            registers.cycles += (5 + indirect_y(logical_and));
             //TODO special cycle case
             break;
 
@@ -105,18 +105,21 @@ void execute_opcode(int opcode){
         case 0x90:
             bcc(internal_mem[registers.pc++]);
             //TODO special cycle case
+            registers.cycles += 2;
             break;
 
         //BCS
         case 0xB0:
             bcs(internal_mem[registers.pc++]);
             //TODO special cycle case
+            registers.cycles += 2;
             break;
 
         //BEQ
         case 0xF0:
             beq(internal_mem[registers.pc++]);
             //TODO special cycle case
+            registers.cycles += 2;
             break;
 
         //BIT
@@ -132,18 +135,21 @@ void execute_opcode(int opcode){
         //BMI
         case 0x30:
             bmi(internal_mem[registers.pc++]);
+            registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BNE
         case 0xD0:
             bne(internal_mem[registers.pc++]);
+            registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BPL
         case 0x10:
             bpl(internal_mem[registers.pc++]);
+            registers.cycles += 2;
             //TODO special cycle case
             break;
 
@@ -156,12 +162,14 @@ void execute_opcode(int opcode){
         //BVC
         case 0x50:
             bvc(internal_mem[registers.pc++]);
+            registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BVS
         case 0x70:
             bvs(internal_mem[registers.pc++]);
+            registers.cycles += 2;
             //TODO special cycle case
             break;
 
@@ -207,11 +215,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0xDD:
-            absolute_x(cmp);
+            registers.cycles += (4 + absolute_x(cmp));
             //TODO special cycle case
             break;
         case 0xD9:
-            absolute_y(cmp);
+            registers.cycles += (4 + absolute_y(cmp));
             //TODO special cycle case
             break;
         case 0xC1:
@@ -219,7 +227,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0xD1:
-            indirect_y(cmp);
+            registers.cycles += (5 + indirect_y(cmp));
             //TODO special cycle case
             break;
 
@@ -299,11 +307,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0x5D:
-            absolute_x(eor);
+            registers.cycles += (4 + absolute_x(eor));
             //TODO special cycle case
             break;
         case 0x59:
-            absolute_y(eor);
+            registers.cycles += (4 + absolute_y(eor));
             //TODO special cycle case
             break;
         case 0x41:
@@ -311,7 +319,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0x51:
-            indirect_y(eor);
+            registers.cycles += (5 + indirect_y(eor));
             //TODO special cycle case
             break;
 
@@ -379,11 +387,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0xBD:
-            absolute_x(lda);
+            registers.cycles += (4 + absolute_x(lda));
             //TODO special cycle case
             break;
         case 0xB9:
-            absolute_y(lda);
+            registers.cycles += (4 + absolute_y(lda));
             //TODO special cycle case
             break;
         case 0xA1:
@@ -391,7 +399,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0xB1:
-            indirect_y(lda);
+            registers.cycles += (5 + indirect_y(lda));
             //TODO special cycle case
             break;
 
@@ -413,7 +421,7 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0xBE:
-            absolute_y(ldx);
+            registers.cycles += (4 + absolute_y(ldx));
             //TODO special cycle case
             break;
 
@@ -435,7 +443,7 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0xBC:
-            absolute_x(ldy);
+            registers.cycles += (4 + absolute_x(ldy));
             //TODO special cycle case
             break;
 
@@ -485,11 +493,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0x1D:
-            absolute_x(ora);
+            registers.cycles += (4 + absolute_x(ora));
             //TODO special cycle case
             break;
         case 0x19:
-            absolute_y(ora);
+            registers.cycles += (4 + absolute_y(ora));
             //TODO special cycle case
             break;
         case 0x01:
@@ -497,7 +505,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0x11:
-            indirect_y(ora);
+            registers.cycles += (5 + indirect_y(ora));
             //TODO special cycle case
             break;
 
@@ -599,11 +607,11 @@ void execute_opcode(int opcode){
             registers.cycles += 4;
             break;
         case 0xFD:
-            absolute_x(sbc);
+            registers.cycles += (4 + absolute_x(sbc));
             //TODO special cycle case
             break;
         case 0xF9:
-            absolute_y(sbc);
+            registers.cycles += (4 + absolute_y(sbc));
             //TODO special cycle case
             break;
         case 0xE1:
@@ -611,7 +619,7 @@ void execute_opcode(int opcode){
             registers.cycles += 6;
             break;
         case 0xF1:
-            indirect_y(sbc);
+            registers.cycles += (5 + indirect_y(sbc));
             //TODO special cycle case
             break;
 

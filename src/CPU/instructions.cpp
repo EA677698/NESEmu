@@ -7,6 +7,10 @@
 #include "spdlog/spdlog.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
+bool is_page_crossed(uint16_t initial_address, uint16_t change){
+    return (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
+}
+
 void clear_negative_flag(){
     registers.sr &= 0x7F;
 }
@@ -114,18 +118,21 @@ void asl(uint8_t &operand){
 
 void bcc(int8_t operand){
     if(!is_bit_set(registers.sr,0)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void bcs(int8_t operand){
     if(is_bit_set(registers.sr,0)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void beq(int8_t operand){
     if(is_bit_set(registers.sr,1)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -147,18 +154,21 @@ void bit(uint8_t operand){
 
 void bmi(int8_t operand){
     if(is_bit_set(registers.sr,7)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void bne(int8_t operand){
     if(!is_bit_set(registers.sr,1)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void bpl(int8_t operand){
     if(!is_bit_set(registers.sr,7)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -180,12 +190,14 @@ void brk(){
 
 void bvc(int8_t operand){
     if(!is_bit_set(registers.sr,6)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void bvs(int8_t operand){
     if(is_bit_set(registers.sr,6)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -470,17 +482,19 @@ void absolute(void (*instruction)(uint8_t)) {
     uint16_t address = (highByte << 8) | lowByte;
     instruction(internal_mem[address]);
 }
-void absolute_x(void (*instruction)(uint8_t)) {
+bool absolute_x(void (*instruction)(uint8_t)) {
     uint16_t lowByte = internal_mem[registers.pc++];
     uint16_t highByte = internal_mem[registers.pc++];
     uint16_t address = (highByte << 8) | lowByte;
     instruction(internal_mem[address + registers.x]);
+    return is_page_crossed(address,registers.x);
 }
-void absolute_y(void (*instruction)(uint8_t)){
+bool absolute_y(void (*instruction)(uint8_t)){
     uint16_t lowByte = internal_mem[registers.pc++];
     uint16_t highByte = internal_mem[registers.pc++];
     uint16_t address = (highByte << 8) | lowByte;
     instruction(internal_mem[address + registers.y]);
+    return is_page_crossed(address,registers.y);
 }
 void indirect(void (*instruction)(uint16_t)){
     uint16_t lowByte = internal_mem[registers.pc++];
@@ -499,10 +513,11 @@ void indirect_x(void (*instruction)(uint8_t)) {
     uint16_t effective_address = internal_mem[zero_page_address] | (internal_mem[(zero_page_address + 1) & 0xFF] << 8);
     instruction(internal_mem[effective_address]);
 }
-void indirect_y(void (*instruction)(uint8_t)) {
+bool indirect_y(void (*instruction)(uint8_t)) {
     uint8_t address = internal_mem[registers.pc++];
     uint16_t effective_address = (internal_mem[address] | (internal_mem[(address + 1) & 0xFF] << 8)) + registers.y;
     instruction(internal_mem[effective_address]);
+    return is_page_crossed(registers.pc - 1, effective_address);
 }
 
 void accumulator(void (*instruction)(uint8_t &)) {instruction(registers.ac);}

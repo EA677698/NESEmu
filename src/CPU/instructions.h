@@ -572,11 +572,11 @@ void zero_page_x(void (*instruction)(uint8_t));
 void zero_page_y(void (*instruction)(uint8_t));
 void absolute(void (*instruction)(uint16_t));
 void absolute(void (*instruction)(uint8_t));
-void absolute_x(void (*instruction)(uint8_t));
-void absolute_y(void (*instruction)(uint8_t));
+bool absolute_x(void (*instruction)(uint8_t));
+bool absolute_y(void (*instruction)(uint8_t));
 void indirect(void (*instruction)(uint16_t));
 void indirect_x(void (*instruction)(uint8_t));
-void indirect_y(void (*instruction)(uint8_t));
+bool indirect_y(void (*instruction)(uint8_t));
 
 void accumulator(void (*instruction)(uint8_t &));
 void immediate(void (*instruction)(uint8_t &));
