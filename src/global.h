@@ -45,9 +45,14 @@ struct ROM{
 
 extern ROM rom;
 
+extern void write(uint16_t address, uint8_t operand);
 
+extern uint8_t* read(uint16_t address);
 
 extern bool is_bit_set(uint8_t operand, char bit);
+
+extern void exit();
+
 
 
 #endif //EMULATOR_GLOBAL_H

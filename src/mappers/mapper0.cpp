@@ -2,6 +2,7 @@
 // Created by eafc6 on 8/12/2023.
 //
 
+#include <cstring>
 #include "mapper0.h"
 
 mapper0::mapper0() {
