@@ -1,6 +1,7 @@
 # .gitignore
 
 .idea/
+.vscode/
 cmake-build-debug/
 Super_mario_brothers.nes
 Excite_bike.nes

@@ -60,7 +60,7 @@ void logical_and(uint8_t operand);
  * Absolute        | 0x0E
  * Absolute,X      | 0x1E
  */
-void asl(uint8_t &operand);
+void asl(uint16_t address);
 
 /* Branch if Carry Clear
  *
@@ -345,7 +345,7 @@ void ldy(uint8_t operand);
  * Absolute        | 0x4E
  * Absolute,X      | 0x5E
  */
-void lsr(uint8_t &operand);
+void lsr(uint16_t address);
 
 /* No Operation
  *
@@ -412,7 +412,7 @@ void plp();
  * Absolute        | 0x2E
  * Absolute,X      | 0x3E
  */
-void rol(uint8_t &operand);
+void rol(uint16_t address);
 
 /* Rotate Right
  *
@@ -424,7 +424,7 @@ void rol(uint8_t &operand);
  * Absolute        | 0x6E
  * Absolute,X      | 0x7E
  */
-void ror(uint8_t &operand);
+void ror(uint16_t address);
 
 /* Return from Interrupt
  *
@@ -494,7 +494,7 @@ void sei();
  * (Indirect,X)    | 0x81
  * (Indirect),Y    | 0x91
  */
-void sta(uint8_t &operand);
+void sta(uint16_t address);
 
 /* Store X Register
  *
@@ -504,7 +504,7 @@ void sta(uint8_t &operand);
  * Zero Page,Y     | 0x96
  * Absolute        | 0x8E
  */
-void stx(uint8_t &operand);
+void stx(uint16_t address);
 
 /* Store Y Register
  *
@@ -514,7 +514,7 @@ void stx(uint8_t &operand);
  * Zero Page,X     | 0x94
  * Absolute        | 0x8C
  */
-void sty(uint8_t &operand);
+void sty(uint16_t address);
 
 /* Transfer Accumulator to X
  *
@@ -578,15 +578,14 @@ void indirect(void (*instruction)(uint16_t));
 void indirect_x(void (*instruction)(uint8_t));
 bool indirect_y(void (*instruction)(uint8_t));
 
-void accumulator(void (*instruction)(uint8_t &));
-void immediate(void (*instruction)(uint8_t &));
-void zero_page(void (*instruction)(uint8_t &));
-void zero_page_x(void (*instruction)(uint8_t &));
-void zero_page_y(void (*instruction)(uint8_t &));
-void absolute(void (*instruction)(uint16_t &));
+void accumulator(void (*instruction)(uint16_t));
+void immediate(void (*instruction)(uint16_t));
+void zero_page(void (*instruction)(uint16_t));
+void zero_page_x(void (*instruction)(uint16_t));
+void zero_page_y(void (*instruction)(uint16_t));
 void absolute(void (*instruction)(uint8_t &));
-void absolute_x(void (*instruction)(uint8_t &));
-void absolute_y(void (*instruction)(uint8_t &));
-void indirect_x(void (*instruction)(uint8_t &));
-void indirect_y(void (*instruction)(uint8_t &));
+void absolute_x(void (*instruction)(uint16_t));
+void absolute_y(void (*instruction)(uint16_t));
+void indirect_x(void (*instruction)(uint16_t));
+void indirect_y(void (*instruction)(uint16_t));
 #endif //EMULATOR_INSTRUCTIONS_H

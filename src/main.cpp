@@ -14,37 +14,6 @@ uint8_t RAM[65536];
 uint8_t *internal_mem = RAM;
 ROM rom;
 REGISTERS registers;
-const uint8_t CPU_PPU_PERM[] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE * WRITE, WRITE * WRITE, READ | WRITE, WRITE};
-
-
-
-void write(uint16_t address, uint8_t operand){
-    if(address >= 0x2000 && address <= 0x3FFF){
-        address = 0x2000 + (address % 8);
-        if(CPU_PPU_PERM[address % 8] > READ){
-            internal_mem[address] = operand;
-        } else{
-            spdlog::error("Invalid CPU write to PPU: 0x{:X}", address);
-        }
-    } else{
-        internal_mem[address] = operand;
-    }
-}
-
-uint8_t* read(uint16_t address){
-    if(address >= 0x2000 && address <= 0x3FFF){
-        address = 0x2000 + (address % 8);
-        if(CPU_PPU_PERM[address % 8] & READ){
-            return &internal_mem[address];
-        } else{
-            spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
-            return nullptr;
-        }
-    } else{
-        return &internal_mem[address];
-    }
-
-}
 
 bool is_bit_set(uint8_t operand, char bit){
     return (operand & (0x1 << bit)) >> bit;
@@ -55,6 +24,7 @@ void power_up(){
     registers.sr = 0x34;
     registers.ac = 0,registers.x = 0,registers.y = 0;
     registers.sp = 0xFD;
+    registers.rw_register_mode = 0x0;
     internal_mem[0x4017] = 0;
     internal_mem[0x4015] = 0;
     for(int i = 0x4000; i <= 0x400F; i++){

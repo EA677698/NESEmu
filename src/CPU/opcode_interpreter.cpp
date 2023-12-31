@@ -738,6 +738,7 @@ void execute_opcode(int opcode){
         default:
             spdlog::critical("INVALID INSTRUCTION. OPCODE: 0x{:X}",opcode);
             spdlog::critical("Halting CPU...");
+            exit();
             exit(1);
     }
 
