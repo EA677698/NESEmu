@@ -1,5 +1,8 @@
 #include "cpu.h"
 #include "../global.h"
+#include "../romLoader.h"
+
+uint8_t cpu_mem[65536];
 
 void cpu_write(uint16_t address, uint8_t operand){
     if(registers.rw_register_mode){
@@ -24,19 +27,19 @@ void cpu_write(uint16_t address, uint8_t operand){
                 break;
             default:
                 spdlog::error("Invalid CPU write to illegal register: 0x{:X}", address);
-                exit(1);
+                exit();
         }
         return;
     }
-    if(address >= 0x2000 && address <= 0x3FFF){
-        address = 0x2000 + (address % 8);
+    if(address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END){
+        address = NES_PPU_REGISTER_START + (address % 8);
         if(CPU_PPU_PERM[address % 8] > READ){
-            internal_mem[address] = operand;
+            cpu_mem[address] = operand;
         } else{
             spdlog::error("Invalid CPU write to PPU: 0x{:X}", address);
         }
     } else{
-        internal_mem[address] = operand;
+        cpu_mem[address] = operand;
     }
 }
 
@@ -57,19 +60,38 @@ uint8_t cpu_read(uint16_t address){
                 return registers.sr;
             default:
                 spdlog::error("Invalid CPU read to illegal register: 0x{:X}", address);
-                exit(1);
+                exit();
         }
     }
-    if(address >= 0x2000 && address <= 0x3FFF){
-        address = 0x2000 + (address % 8);
+    if(address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END){
+        address = NES_PPU_REGISTER_START + (address % 8);
         if(CPU_PPU_PERM[address % 8] & READ){
-            return internal_mem[address];
+            return cpu_mem[address];
         } else{
             spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
             return 0;
         }
     } else{
-        return internal_mem[address];
+        return cpu_mem[address];
     }
 
+}
+
+void cpu_power_up(){
+    memset(cpu_mem, 0, 65536);
+    registers.sr = 0x34;
+    registers.ac = 0,registers.x = 0,registers.y = 0;
+    registers.sp = 0xFD;
+    registers.rw_register_mode = 0x0;
+    cpu_mem[0x4017] = 0;
+    cpu_mem[0x4015] = 0;
+    for(int i = 0x4000; i <= 0x400F; i++){
+        cpu_mem[i] = 0;
+    }
+    for(int i = 0x4010; i <= 0x4013; i++){
+        cpu_mem[i] = 0;
+    }
+    load_rom();
+    registers.pc = RESET_VECTOR;
+    spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
 }

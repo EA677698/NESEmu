@@ -103,21 +103,21 @@ void execute_opcode(int opcode){
 
         //BCC
         case 0x90:
-            bcc(internal_mem[registers.pc++]);
+            bcc(cpu_mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
             break;
 
         //BCS
         case 0xB0:
-            bcs(internal_mem[registers.pc++]);
+            bcs(cpu_mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
             break;
 
         //BEQ
         case 0xF0:
-            beq(internal_mem[registers.pc++]);
+            beq(cpu_mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
             break;
@@ -134,21 +134,21 @@ void execute_opcode(int opcode){
 
         //BMI
         case 0x30:
-            bmi(internal_mem[registers.pc++]);
+            bmi(cpu_mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BNE
         case 0xD0:
-            bne(internal_mem[registers.pc++]);
+            bne(cpu_mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BPL
         case 0x10:
-            bpl(internal_mem[registers.pc++]);
+            bpl(cpu_mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
             break;
@@ -161,14 +161,14 @@ void execute_opcode(int opcode){
 
         //BVC
         case 0x50:
-            bvc(internal_mem[registers.pc++]);
+            bvc(cpu_mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
             break;
 
         //BVS
         case 0x70:
-            bvs(internal_mem[registers.pc++]);
+            bvs(cpu_mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
             break;

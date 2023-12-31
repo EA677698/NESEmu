@@ -55,7 +55,9 @@ void load_rom_fd(){
     if(!rom.rom_file.is_open()){
         //TODO throw error
         spdlog::error("UNABLE TO OPEN ROM FILE");
+        exit();
     }
+    spdlog::info("Loaded ROM: {}",URL);
     char buff[16];
     rom.rom_file.read(buff,16);
     memcpy(rom.header,buff,16);

@@ -533,10 +533,10 @@ bool indirect_y(void (*instruction)(uint8_t)) {
 }
 
 void accumulator(void (*instruction)(uint16_t)) {registers.rw_register_mode = 0x1 ;instruction(0x0);}
-void immediate(void (*instruction)(uint16_t)){instruction(&internal_mem[registers.pc++] - internal_mem);}
-void zero_page(void (*instruction)(uint16_t)){instruction(cpu_read(&internal_mem[registers.pc++] - internal_mem));}
-void zero_page_x(void (*instruction)(uint16_t)){instruction(cpu_read((&internal_mem[registers.pc++] - internal_mem) + registers.x));}
-void zero_page_y(void (*instruction)(uint16_t)){instruction(cpu_read((&internal_mem[registers.pc++] - internal_mem) + registers.y));}
+void immediate(void (*instruction)(uint16_t)){instruction(&cpu_mem[registers.pc++] - cpu_mem);}
+void zero_page(void (*instruction)(uint16_t)){instruction(cpu_read(&cpu_mem[registers.pc++] - cpu_mem));}
+void zero_page_x(void (*instruction)(uint16_t)){instruction(cpu_read((&cpu_mem[registers.pc++] - cpu_mem) + registers.x));}
+void zero_page_y(void (*instruction)(uint16_t)){instruction(cpu_read((&cpu_mem[registers.pc++] - cpu_mem) + registers.y));}
 
 /*
  * Unused supposedly...
@@ -553,22 +553,22 @@ void absolute_x(void (*instruction)(uint16_t)) {
     uint16_t lowByte = cpu_read(registers.pc++);
     uint16_t highByte = cpu_read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(&internal_mem[address + registers.x] - internal_mem);
+    instruction(&cpu_mem[address + registers.x] - cpu_mem);
 }
 void absolute_y(void (*instruction)(uint16_t)){
     uint16_t lowByte = cpu_read(registers.pc++);
     uint16_t highByte = cpu_read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(&internal_mem[address + registers.y] - internal_mem);
+    instruction(&cpu_mem[address + registers.y] - cpu_mem);
 }
 void indirect_x(void (*instruction)(uint16_t)) {
     uint8_t address = cpu_read(registers.pc++);
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = cpu_read(zero_page_address) | (cpu_read((zero_page_address + 1) & 0xFF) << 8);
-    instruction(&internal_mem[effective_address] - internal_mem);
+    instruction(&cpu_mem[effective_address] - cpu_mem);
 }
 void indirect_y(void (*instruction)(uint16_t)) {
     uint8_t address = cpu_read(registers.pc++);
     uint16_t effective_address = (cpu_read(address) | (cpu_read((address + 1) & 0xFF) << 8)) + registers.y;
-    instruction(&internal_mem[effective_address] - internal_mem);
+    instruction(&cpu_mem[effective_address] - cpu_mem);
 }

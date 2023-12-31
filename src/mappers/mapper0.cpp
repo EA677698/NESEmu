@@ -12,12 +12,12 @@ mapper0::mapper0() {
     char *buffer = new char[ROM_SIZE];
     rom.rom_file.read(buffer, ROM_SIZE);
 
-    memcpy(internal_mem + 0x8000, buffer, 16384);
+    memcpy(cpu_mem + 0x8000, buffer, 16384);
 
     if (ROM_SIZE == 16384) {
-        memcpy(internal_mem + 0xC000, buffer, 16384);
+        memcpy(cpu_mem + 0xC000, buffer, 16384);
     } else if (ROM_SIZE == 32768) {
-        memcpy(internal_mem + 0xC000, buffer + 16384, 16384);
+        memcpy(cpu_mem + 0xC000, buffer + 16384, 16384);
     }
 
 

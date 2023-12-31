@@ -3,11 +3,16 @@
 //
 
 
-#include <cstdint>
-#include "global.h"
+#include "../global.h"
 #include "ppu.h"
 
-void PPU_INIT(){
+uint8_t OAM[256]; //object attribute memory
+uint8_t ppu_mem[16384]; //vram
+
+
+//PPU registers are mapped to cpu memory
+
+void ppu_power_up(){
     PPUCTRL = 0x0;
     PPUMASK = 0x0;
     PPUSTATUS = 0x0; //TODO investigate correct setting at power up
@@ -16,7 +21,6 @@ void PPU_INIT(){
     PPUADDR = 0x0;
     PPUDATA = 0x0;
 }
-
 
 //PPUCTRL
 uint16_t get_base_nametable_address(){

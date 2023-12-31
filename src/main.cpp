@@ -10,8 +10,6 @@
 #include "spdlog/async_logger.h"
 #include "spdlog/async.h"
 
-uint8_t RAM[65536];
-uint8_t *internal_mem = RAM;
 ROM rom;
 REGISTERS registers;
 
@@ -20,22 +18,7 @@ bool is_bit_set(uint8_t operand, char bit){
 }
 
 void power_up(){
-    memset(internal_mem,0,65536);
-    registers.sr = 0x34;
-    registers.ac = 0,registers.x = 0,registers.y = 0;
-    registers.sp = 0xFD;
-    registers.rw_register_mode = 0x0;
-    internal_mem[0x4017] = 0;
-    internal_mem[0x4015] = 0;
-    for(int i = 0x4000; i <= 0x400F; i++){
-        internal_mem[i] = 0;
-    }
-    for(int i = 0x4010; i <= 0x4013; i++){
-        internal_mem[i] = 0;
-    }
-    load_rom();
-    registers.pc = RESET_VECTOR;
-    spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
+    cpu_power_up();
 }
 
 void exit(){
@@ -60,7 +43,7 @@ int main(int argc, char* argv[]) {
     init_video();
     power_up();
     spdlog::info("PC REGISTER: 0x{:X}", registers.pc);
-    spdlog::info("INITIAL OPCODE: 0x{:X}",internal_mem[registers.pc]);
+    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu_mem[registers.pc]);
     spdlog::set_level(spdlog::level::debug);
     SDL_Event event;
     bool quit = false;
@@ -76,8 +59,8 @@ int main(int argc, char* argv[]) {
             CPU = time(NULL);
         }
         if(registers.cycles < 1790000) {
-            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", internal_mem[registers.pc], registers.pc);
-            execute_opcode(internal_mem[registers.pc++]);
+            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu_mem[registers.pc], registers.pc);
+            execute_opcode(cpu_mem[registers.pc++]);
         }
 
         // ... (update pixels and rendering code here)
