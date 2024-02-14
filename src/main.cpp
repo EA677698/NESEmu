@@ -39,6 +39,7 @@ void init_spdlog(){
 }
 
 int main(int argc, char* argv[]) {
+    int testing_mode = 0x0;
     if(argc < 2) {
         spdlog::error("No rom file provided");
         exit(1);
@@ -48,6 +49,13 @@ int main(int argc, char* argv[]) {
     PPU ppu;
     CPU cpu(ppu);
     power_up(cpu, argv[1]);
+    testing_mode = argc > 2; // TESTING MODE
+    if(testing_mode) {
+        int pc_register_operand = std::stoi(argv[2], nullptr, 16);
+        if(pc_register_operand != -1) {
+            cpu.registers.pc = (uint16_t)pc_register_operand;
+        }
+    }
     spdlog::info("PC REGISTER: 0x{:X}", cpu.registers.pc);
     spdlog::info("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
     spdlog::set_level(spdlog::level::debug);
@@ -67,6 +75,18 @@ int main(int argc, char* argv[]) {
         if(cpu.registers.cycles < 1790000) {
             spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu.mem[cpu.registers.pc], cpu.registers.pc);
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
+        }
+
+        if(testing_mode) {
+            for(int i = 3; i<argc; i++) {
+                if(!strcmp(argv[i], "~")) {
+                    uint16_t address = (uint16_t)std::stoi(argv[i - 1], nullptr, 16);
+                    spdlog::debug("STRING AT MEMORY ADDRESS 0x{:X}: {}", address, cpu.mem[address]);
+                } else {
+                    uint16_t address = (uint16_t)std::stoi(argv[i], nullptr, 16);
+                    spdlog::debug("DATA AT MEMORY ADDRESS 0x{:X}: 0x{:X}", address, cpu.mem[address] );
+                }
+            }
         }
 
         // ... (update pixels and rendering code here)

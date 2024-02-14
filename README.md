@@ -25,6 +25,17 @@ Currently, NESEMU is only compiled using Visual Studio 2022's compiler on Window
 
 Support for other operating systems is planned and will be added in the future.
 
+## Testing (CLI)
+
+The emulator can be testing by passing arguments to it. The following are the available arguments:
+
+```./emulator (path to the ROM file) (Optional initial PC value, otherwise set to -1) (Memory address 1) (Memory address 2)...```
+
+Memory addresses passed as arguments will have their contents printed every cycle.
+if '~' is passed in place of a memory address, the emulator will read continuously from the last specified address until
+it reaches a null terminator then will continue with the rest of the arguments
+
+
 ## Resources
 
 A lot of information, research, and resources that have been used in this project can be found at [nesdev.org](https://nesdev.org).
