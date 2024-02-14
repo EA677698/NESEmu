@@ -7,21 +7,39 @@
 
 #include <cstdint>
 
-#define PPUCTRL cpu_mem[0x2000]
-#define PPUMASK cpu_mem[0x2001]
-#define PPUSTATUS cpu_mem[0x2002]
-#define OAMADDR cpu_mem[0x2003]
-#define OAMDATA internal_mem[0x2004]
-#define PPUSCROLL cpu_mem[0x2005]
-#define PPUADDR cpu_mem[0x2006]
-#define PPUDATA cpu_mem[0x2007]
-#define OAMDMA internal_mem[0x4014]
+#define PATTERN_TABLE_0 0x0000
+#define PATTERN_TABLE_1 0x1000
+#define NAMETABLE_0 0x2000
+#define NAMETABLE_1 0x2400
+#define NAMETABLE_2 0x2800
+#define NAMETABLE_3 0x2C00
+#define NAMETABLE_MIRRORS 0x3000
+#define PALETTE_RAM 0x3F00
+#define PALETTE_RAM_MIRRORS 0x4000
 
 extern uint8_t OAM[];
 extern uint8_t ppu_mem[];
 
+struct {
+    uint8_t ppuctrl;
+    uint8_t ppumask;
+    uint8_t ppustatus;
+    uint8_t oamaddr;
+    uint8_t oamdata;
+    uint8_t ppuscroll;
+    uint8_t ppuaddr;
+    uint8_t ppudata;
+    uint8_t oamdma;
+    // Internal registers VVVVVV
+    uint16_t v; //current vram address
+    uint16_t t; //temporary vram address
+    uint8_t x; //fine x scroll
+    uint8_t w; //write toggle
+    uint8_t rw_register_mode;
+} ppu_registers;
+
 void ppu_write(uint16_t address, uint8_t operand);
-void ppu_read(uint16_t address);
+uint8_t ppu_read(uint16_t address);
 
 void ppu_power_up();
 

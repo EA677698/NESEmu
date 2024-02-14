@@ -36,7 +36,7 @@
 
 extern uint8_t cpu_mem[];
 
-struct REGISTERS {
+struct {
     uint8_t ac; //accumulator
     uint8_t x; //x index
     uint8_t y; //y  index
@@ -46,11 +46,9 @@ struct REGISTERS {
     // NOT ACTUAL REGISTERS VVVVVVV
     uint32_t cycles;
     uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
-};
+} cpu_registers;
 
-extern REGISTERS registers;
-
-const uint8_t CPU_PPU_PERM[] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE * WRITE, WRITE * WRITE, READ | WRITE, WRITE};
+const uint8_t CPU_PPU_PERM[] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE, WRITE, READ | WRITE, WRITE};
 
 void execute_opcode(int opcode);
 

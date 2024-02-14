@@ -1,6 +1,7 @@
 # NESEMU - NES Emulator
 
 NESEMU is a software emulator for the Nintendo Entertainment System (NES), a popular 8-bit home video game console from the 1980s.
+This emulator is the NTSC version of the NES. There are no current plans to add PAL compatibility.
 
 ## Dependencies
 

@@ -11,7 +11,6 @@
 #include "spdlog/async.h"
 
 ROM rom;
-REGISTERS registers;
 
 bool is_bit_set(uint8_t operand, char bit){
     return (operand & (0x1 << bit)) >> bit;
@@ -42,8 +41,8 @@ int main(int argc, char* argv[]) {
     init_spdlog();
     init_video();
     power_up();
-    spdlog::info("PC REGISTER: 0x{:X}", registers.pc);
-    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu_mem[registers.pc]);
+    spdlog::info("PC REGISTER: 0x{:X}", cpu_registers.pc);
+    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu_mem[cpu_registers.pc]);
     spdlog::set_level(spdlog::level::debug);
     SDL_Event event;
     bool quit = false;
@@ -55,12 +54,12 @@ int main(int argc, char* argv[]) {
             }
         }
         if(time(NULL) - CPU >= 1){
-            registers.cycles = 0;
+            cpu_registers.cycles = 0;
             CPU = time(NULL);
         }
-        if(registers.cycles < 1790000) {
-            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu_mem[registers.pc], registers.pc);
-            execute_opcode(cpu_mem[registers.pc++]);
+        if(cpu_registers.cycles < 1790000) {
+            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu_mem[cpu_registers.pc], cpu_registers.pc);
+            execute_opcode(cpu_mem[cpu_registers.pc++]);
         }
 
         // ... (update pixels and rendering code here)
