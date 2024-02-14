@@ -27,7 +27,7 @@ struct {
     uint8_t oamaddr;
     uint8_t oamdata;
     uint8_t ppuscroll;
-    uint8_t ppuaddr;
+    uint16_t ppuaddr;
     uint8_t ppudata;
     uint8_t oamdma;
     // Internal registers VVVVVV
@@ -35,12 +35,30 @@ struct {
     uint16_t t; //temporary vram address
     uint8_t x; //fine x scroll
     uint8_t w; //write toggle
-    uint8_t rw_register_mode;
 } ppu_registers;
 
 void ppu_write(uint16_t address, uint8_t operand);
 uint8_t ppu_read(uint16_t address);
 
 void ppu_power_up();
+uint16_t get_base_nametable_address();
+uint8_t get_vram_address_increment();
+uint16_t get_sprite_pattern_table_address();
+uint16_t get_background_pattern_table_address();
+uint8_t get_sprite_size();
+uint8_t get_PPU_select();
+uint8_t get_NMI();
+uint8_t is_greyscale();
+uint8_t background_visibility();
+uint8_t sprites_visibility();
+uint8_t background_shown();
+uint8_t sprites_shown();
+uint8_t is_red_emphasized();
+uint8_t is_green_emphasized();
+uint8_t is_blue_emphasized();
+uint8_t PPU_open_bus();
+uint8_t sprite_overflow();
+uint8_t sprite_zero_hit();
+uint8_t is_in_vblank();
 
 #endif //EMULATOR_PPU_H
