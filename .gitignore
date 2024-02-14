@@ -3,6 +3,7 @@
 .idea/
 .vscode/
 cmake-build-debug/
+cmake-build-release
 Super_mario_brothers.nes
 Excite_bike.nes
 libs/

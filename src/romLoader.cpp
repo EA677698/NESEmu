@@ -3,6 +3,8 @@
 //
 
 #include "romLoader.h"
+
+#include "global.h"
 #include "mappers/mapper0.h"
 #include "spdlog/spdlog.h"
 
@@ -50,21 +52,21 @@ void load_flags(){
     rom.PRG_RAM_SIZE = rom.header[8];
 }
 
-void load_rom_fd(){
-    rom.rom_file.open(URL, std::ifstream::in | std::ifstream::binary);
+void load_rom_fd(std::string rom_path){
+    rom.rom_file.open(rom_path, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
         //TODO throw error
         spdlog::error("UNABLE TO OPEN ROM FILE");
         exit();
     }
-    spdlog::info("Loaded ROM: {}",URL);
+    spdlog::info("Loaded ROM: {}",rom_path);
     char buff[16];
     rom.rom_file.read(buff,16);
     memcpy(rom.header,buff,16);
 }
 
-void load_rom(){
-    load_rom_fd();
+void load_rom(CPU *cpu, std::string rom_path){
+    load_rom_fd(rom_path);
     if(!is_iNES_1_format()){
         //TODO throw error
         spdlog::error("INVALID FILE FORMAT");
@@ -72,5 +74,5 @@ void load_rom(){
     }
     load_flags();
     spdlog::info("PRG_ROM_SIZE: {}",rom.PRG_ROM_SIZE);
-    mapper0 MAP;
+    mapper0 MAP(cpu);
 }

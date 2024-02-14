@@ -3,35 +3,34 @@
 //
 
 #include <iostream>
-#include "instructions.h"
-#include "spdlog/spdlog.h"
+#include "cpu.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
 bool is_page_crossed(uint16_t initial_address, uint16_t change){
     return (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
 }
 
-void clear_negative_flag(){
-    cpu_registers.sr &= 0x7F;
+void CPU::clear_negative_flag(){
+    registers.sr &= 0x7F;
 }
 
-void clear_zero_flag(){
-    cpu_registers.sr &= 0xFD;
+void CPU::clear_zero_flag(){
+    registers.sr &= 0xFD;
 }
 
-void set_zero_flag(){
-    cpu_registers.sr |= 0x2;
+void CPU::set_zero_flag(){
+    registers.sr |= 0x2;
 }
 
-void set_negative_flag(){
-    cpu_registers.sr |= 0x80;
+void CPU::set_negative_flag(){
+    registers.sr |= 0x80;
 }
 
-void set_overflow_flag(){
-    cpu_registers.sr |= (1 << 6);
+void CPU::set_overflow_flag(){
+    registers.sr |= (1 << 6);
 }
 
-void assign_zero_status(uint8_t operand){
+void CPU::assign_zero_status(uint8_t operand){
     if(!operand){
         set_zero_flag();
     } else{
@@ -39,7 +38,7 @@ void assign_zero_status(uint8_t operand){
     }
 }
 
-void assign_negative_status(uint8_t operand){
+void CPU::assign_negative_status(uint8_t operand){
     if(is_bit_set(operand,7)){
         set_negative_flag();
     } else{
@@ -47,100 +46,100 @@ void assign_negative_status(uint8_t operand){
     }
 }
 
-void stack_decrement(){
-    cpu_registers.sp--;
+void CPU::stack_decrement(){
+    registers.sp--;
 }
 
-void stack_increment(){
-    cpu_registers.sp++;
+void CPU::stack_increment(){
+    registers.sp++;
 }
 
 // ----------------------------------------- DEFINED INSTRUCTIONS -----------------------------------------
 
-void sec(){
-    cpu_registers.sr |= 0x1;
+void CPU::sec(){
+    registers.sr |= 0x1;
 }
 
-void clc(){
-    cpu_registers.sr &= 0xFE;
+void CPU::clc(){
+    registers.sr &= 0xFE;
 }
 
-void sed(){
-    cpu_registers.sr |= 0x8;
+void CPU::sed(){
+    registers.sr |= 0x8;
 }
 
-void cld(){
-    cpu_registers.sr &= 0xF7;
+void CPU::cld(){
+    registers.sr &= 0xF7;
 }
 
-void sei(){
-    cpu_registers.sr |= 0x4;
+void CPU::sei(){
+    registers.sr |= 0x4;
 }
 
-void cli(){
-    cpu_registers.sr &= 0xFB;
+void CPU::cli(){
+    registers.sr &= 0xFB;
 }
 
-void clv(){
-    cpu_registers.sr &= 0xBF;
+void CPU::clv(){
+    registers.sr &= 0xBF;
 }
 
-void adc(uint8_t operand){
-    uint16_t temp = cpu_registers.ac + operand + is_bit_set(cpu_registers.sr, 0);
+void CPU::adc(uint8_t operand){
+    uint16_t temp = registers.ac + operand + is_bit_set(registers.sr, 0);
     if(temp > 0xFF){
         sec();
     } else {
         clc();
     }
-    cpu_registers.ac = temp & 0xFF;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+    registers.ac = temp & 0xFF;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
 
-void logical_and(uint8_t operand){
-    cpu_registers.ac &= operand;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::logical_and(uint8_t operand){
+    registers.ac &= operand;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void asl(uint16_t address){
-    uint8_t operand = cpu_read(address);
+void CPU::asl(uint16_t address){
+    uint8_t operand = read(address);
     if (is_bit_set(operand,7)) {
         sec();
     } else {
         clc();
     }
-    cpu_write(address, operand << 1);
+    write(address, operand << 1);
     assign_zero_status(operand);
     assign_negative_status(operand);
-    cpu_registers.rw_register_mode = 0x0;
+    registers.rw_register_mode = 0x0;
 }
 
 
-void bcc(int8_t operand){
-    if(!is_bit_set(cpu_registers.sr, 0)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bcc(int8_t operand){
+    if(!is_bit_set(registers.sr, 0)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void bcs(int8_t operand){
-    if(is_bit_set(cpu_registers.sr, 0)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bcs(int8_t operand){
+    if(is_bit_set(registers.sr, 0)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void beq(int8_t operand){
-    if(is_bit_set(cpu_registers.sr, 1)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::beq(int8_t operand){
+    if(is_bit_set(registers.sr, 1)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void bit(uint8_t operand){
-    if(!(cpu_registers.ac & operand)){
+void CPU::bit(uint8_t operand){
+    if(!(registers.ac & operand)){
         set_zero_flag();
     } else{
         clear_zero_flag();
@@ -154,64 +153,64 @@ void bit(uint8_t operand){
 
 }
 
-void bmi(int8_t operand){
-    if(is_bit_set(cpu_registers.sr, 7)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bmi(int8_t operand){
+    if(is_bit_set(registers.sr, 7)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void bne(int8_t operand){
-    if(!is_bit_set(cpu_registers.sr, 1)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bne(int8_t operand){
+    if(!is_bit_set(registers.sr, 1)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void bpl(int8_t operand){
-    if(!is_bit_set(cpu_registers.sr, 7)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bpl(int8_t operand){
+    if(!is_bit_set(registers.sr, 7)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void brk(){
-    cpu_registers.pc += 1;
-    cpu_registers.sr |= 0x10;
+void CPU::brk(){
+    registers.pc += 1;
+    registers.sr |= 0x10;
     php();
-    uint8_t front = cpu_registers.pc >> 8;
-    uint8_t back = cpu_registers.pc & 0xFF;
+    uint8_t front = registers.pc >> 8;
+    uint8_t back = registers.pc & 0xFF;
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, back);
+    write(0x100 + registers.sp, back);
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, front);
-    uint16_t interrupt_vector = cpu_read(0xFFFE) | ((uint16_t) (cpu_read(0xFFFF) << 8));
-    cpu_registers.pc = interrupt_vector;
+    write(0x100 + registers.sp, front);
+    uint16_t interrupt_vector = read(0xFFFE) | ((uint16_t) (read(0xFFFF) << 8));
+    registers.pc = interrupt_vector;
     spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
 }
 
-void bvc(int8_t operand){
-    if(!is_bit_set(cpu_registers.sr, 6)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bvc(int8_t operand){
+    if(!is_bit_set(registers.sr, 6)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void bvs(int8_t operand){
-    if(is_bit_set(cpu_registers.sr, 6)){
-        cpu_registers.cycles += (1 + is_page_crossed(cpu_registers.pc, operand));
-        cpu_registers.pc += operand;
+void CPU::bvs(int8_t operand){
+    if(is_bit_set(registers.sr, 6)){
+        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        registers.pc += operand;
     }
 }
 
-void cmp(uint8_t operand){
-    uint8_t result = cpu_registers.ac - operand;
-    if (cpu_registers.ac >= operand) {
+void CPU::cmp(uint8_t operand){
+    uint8_t result = registers.ac - operand;
+    if (registers.ac >= operand) {
         sec();
     } else {
         clc();
     }
-    if (cpu_registers.ac == operand) {
+    if (registers.ac == operand) {
         set_zero_flag();
     } else {
         clear_zero_flag();
@@ -219,14 +218,14 @@ void cmp(uint8_t operand){
     assign_negative_status(result);
 }
 
-void cpx(uint8_t operand){
-    uint8_t result = cpu_registers.x - operand;
-    if (cpu_registers.x >= operand) {
+void CPU::cpx(uint8_t operand){
+    uint8_t result = registers.x - operand;
+    if (registers.x >= operand) {
         sec();
     } else {
         clc();
     }
-    if (cpu_registers.x == operand) {
+    if (registers.x == operand) {
         set_zero_flag();
     } else {
         clear_zero_flag();
@@ -234,14 +233,14 @@ void cpx(uint8_t operand){
     assign_negative_status(result);
 }
 
-void cpy(uint8_t operand){
-    uint8_t result = cpu_registers.y - operand;
-    if (cpu_registers.y >= operand) {
+void CPU::cpy(uint8_t operand){
+    uint8_t result = registers.y - operand;
+    if (registers.y >= operand) {
         sec();
     } else {
         clc();
     }
-    if (cpu_registers.y == operand) {
+    if (registers.y == operand) {
         set_zero_flag();
     } else {
         clear_zero_flag();
@@ -249,326 +248,326 @@ void cpy(uint8_t operand){
     assign_negative_status(result);
 }
 
-void dec(uint8_t operand){
+void CPU::dec(uint8_t operand){
     operand--;
     assign_zero_status(operand);
     assign_negative_status(operand);
 }
 
-void dex(){
-    cpu_registers.x--;
-    assign_zero_status(cpu_registers.x);
-    assign_negative_status(cpu_registers.x);
+void CPU::dex(){
+    registers.x--;
+    assign_zero_status(registers.x);
+    assign_negative_status(registers.x);
 }
 
-void dey(){
-    cpu_registers.y--;
-    assign_zero_status(cpu_registers.y);
-    assign_negative_status(cpu_registers.y);
+void CPU::dey(){
+    registers.y--;
+    assign_zero_status(registers.y);
+    assign_negative_status(registers.y);
 }
 
-void eor(uint8_t operand){
-    cpu_registers.ac ^= operand;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::eor(uint8_t operand){
+    registers.ac ^= operand;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void inc(uint8_t operand){
+void CPU::inc(uint8_t operand){
     operand++;
     assign_zero_status(operand);
     assign_negative_status(operand);
 }
 
-void inx(){
-    cpu_registers.x++;
-    assign_zero_status(cpu_registers.x);
-    assign_negative_status(cpu_registers.x);
+void CPU::inx(){
+    registers.x++;
+    assign_zero_status(registers.x);
+    assign_negative_status(registers.x);
 }
 
-void iny(){
-    cpu_registers.y++;
-    assign_zero_status(cpu_registers.y);
-    assign_negative_status(cpu_registers.y);
+void CPU::iny(){
+    registers.y++;
+    assign_zero_status(registers.y);
+    assign_negative_status(registers.y);
 }
 
-void jmp(uint16_t address){
-    cpu_registers.pc = address;
+void CPU::jmp(uint16_t address){
+    registers.pc = address;
 }
 
-void jsr(uint16_t operand){
-    uint8_t front = cpu_registers.pc >> 8;
-    uint8_t back = cpu_registers.pc & 0xFF;
-    spdlog::info("Storing address 0x{:X} into stack", cpu_registers.pc);
+void CPU::jsr(uint16_t operand){
+    uint8_t front = registers.pc >> 8;
+    uint8_t back = registers.pc & 0xFF;
+    spdlog::info("Storing address 0x{:X} into stack", registers.pc);
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, back);
+    write(0x100 + registers.sp, back);
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, front);
-    cpu_registers.pc = operand;
-    cpu_registers.rw_register_mode = 0x0;
+    write(0x100 + registers.sp, front);
+    registers.pc = operand;
+    registers.rw_register_mode = 0x0;
 }
 
-void lda(uint8_t operand){
-    cpu_registers.ac = operand;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::lda(uint8_t operand){
+    registers.ac = operand;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void ldx(uint8_t operand){
-    cpu_registers.x = operand;
-    assign_zero_status(cpu_registers.x);
-    assign_negative_status(cpu_registers.x);
+void CPU::ldx(uint8_t operand){
+    registers.x = operand;
+    assign_zero_status(registers.x);
+    assign_negative_status(registers.x);
 }
 
-void ldy(uint8_t operand){
-    cpu_registers.y = operand;
-    assign_zero_status(cpu_registers.y);
-    assign_negative_status(cpu_registers.y);
+void CPU::ldy(uint8_t operand){
+    registers.y = operand;
+    assign_zero_status(registers.y);
+    assign_negative_status(registers.y);
 }
 
-void lsr(uint16_t address){
-    uint8_t operand = cpu_read(address);
+void CPU::lsr(uint16_t address){
+    uint8_t operand = read(address);
     if(is_bit_set(operand,0)){
         sec();
     } else{
         clc();
     }
-    cpu_write(address, operand >> 1);
+    write(address, operand >> 1);
     assign_zero_status(operand);
     clear_negative_flag();
-    cpu_registers.rw_register_mode = 0x0;
+    registers.rw_register_mode = 0x0;
 }
 
-void nop(){}
+void CPU::nop(){}
 
-void ora(uint8_t operand){
-    cpu_registers.ac |= operand;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::ora(uint8_t operand){
+    registers.ac |= operand;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void pha(){
+void CPU::pha(){
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, cpu_registers.ac);
+    write(0x100 + registers.sp, registers.ac);
 }
 
-void php(){
+void CPU::php(){
     stack_decrement();
-    cpu_write(0x100 + cpu_registers.sp, cpu_registers.sr);
+    write(0x100 + registers.sp, registers.sr);
 }
 
-void pla(){
+void CPU::pla(){
     stack_increment();
-    cpu_registers.ac = cpu_read(0x100 + cpu_registers.sp);
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+    registers.ac = read(0x100 + registers.sp);
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void plp(){
+void CPU::plp(){
     stack_increment();
-    cpu_registers.sr &= 0x0;
-    cpu_registers.sr |= cpu_read(0x100 + cpu_registers.sp);
+    registers.sr &= 0x0;
+    registers.sr |= read(0x100 + registers.sp);
 }
 
-void rol(uint16_t address){
-    uint8_t operand = cpu_read(address);
-    uint8_t old_carry = is_bit_set(cpu_registers.sr, 7);
-    cpu_registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 7));
-    cpu_write(address, operand <<= 1);
-    cpu_write(address, operand &= 0xFE | old_carry);
+void CPU::rol(uint16_t address){
+    uint8_t operand = read(address);
+    uint8_t old_carry = is_bit_set(registers.sr, 7);
+    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 7));
+    write(address, operand <<= 1);
+    write(address, operand &= 0xFE | old_carry);
     assign_zero_status(operand);
     assign_negative_status(operand);
-    cpu_registers.rw_register_mode = 0x0;
+    registers.rw_register_mode = 0x0;
 }
 
-void ror(uint16_t address){
-    uint8_t operand = cpu_read(address);
-    uint8_t old_carry = is_bit_set(cpu_registers.sr, 7);
-    cpu_registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 0));
-    cpu_write(address, operand >>= 1);
-    cpu_write(address, operand &= 0x7F | (old_carry << 7));
+void CPU::ror(uint16_t address){
+    uint8_t operand = read(address);
+    uint8_t old_carry = is_bit_set(registers.sr, 7);
+    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 0));
+    write(address, operand >>= 1);
+    write(address, operand &= 0x7F | (old_carry << 7));
     assign_zero_status(operand);
     assign_negative_status(operand);
-    cpu_registers.rw_register_mode = 0x0;
+    registers.rw_register_mode = 0x0;
 }
 
-void rti(){
+void CPU::rti(){
     plp();
     stack_increment();
-    uint16_t address = cpu_read(0x100 + cpu_registers.sp);
+    uint16_t address = read(0x100 + registers.sp);
     address <<= 8;
     stack_increment();
-    address |= cpu_read(0x100 + cpu_registers.sp);
-    cpu_registers.pc = address;
+    address |= read(0x100 + registers.sp);
+    registers.pc = address;
 }
 
-void rts(){
-    uint16_t address = cpu_read(0x100 + cpu_registers.sp);
+void CPU::rts(){
+    uint16_t address = read(0x100 + registers.sp);
     stack_increment();
     address <<= 8;
-    address |= cpu_read(0x100 + cpu_registers.sp);
+    address |= read(0x100 + registers.sp);
     stack_increment();
     spdlog::info("Retrieving address from stack: 0x{:X}",address);
-    cpu_registers.pc = address;
+    registers.pc = address;
 }
 
-void sbc(uint8_t operand){
-    int16_t res = cpu_registers.ac - operand - !is_bit_set(cpu_registers.sr, 0);
+void CPU::sbc(uint8_t operand){
+    int16_t res = registers.ac - operand - !is_bit_set(registers.sr, 0);
     if(res < 0){
         clc();
         set_overflow_flag();
     } else{
         sec();
     }
-    cpu_registers.ac -= operand - !is_bit_set(cpu_registers.sr, 0);
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+    registers.ac -= operand - !is_bit_set(registers.sr, 0);
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void sta(uint16_t address){
-    cpu_write(address, cpu_registers.ac);
-    cpu_registers.rw_register_mode = 0x0;
+void CPU::sta(uint16_t address){
+    write(address, registers.ac);
+    registers.rw_register_mode = 0x0;
 }
 
-void stx(uint16_t address){
-    cpu_write(address, cpu_registers.x);
-    cpu_registers.rw_register_mode = 0x0;
+void CPU::stx(uint16_t address){
+    write(address, registers.x);
+    registers.rw_register_mode = 0x0;
 }
 
-void sty(uint16_t address){
-    cpu_write(address, cpu_registers.y);
-    cpu_registers.rw_register_mode = 0x0;
+void CPU::sty(uint16_t address){
+    write(address, registers.y);
+    registers.rw_register_mode = 0x0;
 }
 
-void tax(){
-    cpu_registers.x = cpu_registers.ac;
-    assign_zero_status(cpu_registers.x);
-    assign_negative_status(cpu_registers.x);
+void CPU::tax(){
+    registers.x = registers.ac;
+    assign_zero_status(registers.x);
+    assign_negative_status(registers.x);
 }
 
-void tay(){
-    cpu_registers.y = cpu_registers.ac;
-    assign_zero_status(cpu_registers.y);
-    assign_negative_status(cpu_registers.y);
+void CPU::tay(){
+    registers.y = registers.ac;
+    assign_zero_status(registers.y);
+    assign_negative_status(registers.y);
 }
 
-void tsx(){
-    cpu_registers.x = cpu_registers.sp;
-    assign_zero_status(cpu_registers.x);
-    assign_negative_status(cpu_registers.x);
+void CPU::tsx(){
+    registers.x = registers.sp;
+    assign_zero_status(registers.x);
+    assign_negative_status(registers.x);
 }
 
-void txa(){
-    cpu_registers.ac = cpu_registers.x;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::txa(){
+    registers.ac = registers.x;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void txs(){
-    cpu_registers.sp = cpu_registers.x;
-    assign_zero_status(cpu_registers.sp);
-    assign_negative_status(cpu_registers.sp);
+void CPU::txs(){
+    registers.sp = registers.x;
+    assign_zero_status(registers.sp);
+    assign_negative_status(registers.sp);
 }
 
-void tya(){
-    cpu_registers.ac = cpu_registers.y;
-    assign_zero_status(cpu_registers.ac);
-    assign_negative_status(cpu_registers.ac);
+void CPU::tya(){
+    registers.ac = registers.y;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
 
 // Memory Addressing Modes
-void accumulator(void (*instruction)(uint8_t)) {instruction(cpu_registers.ac);}
-void immediate(void (*instruction)(uint8_t)){uint8_t operand = cpu_read(cpu_registers.pc++); instruction(operand);}
-void zero_page(void (*instruction)(uint8_t)){uint8_t address = cpu_read(cpu_registers.pc++); instruction(cpu_read(address));}
-void zero_page_x(void (*instruction)(uint8_t)){uint8_t address = cpu_read(cpu_registers.pc++); instruction(cpu_read(address + cpu_registers.x));}
-void zero_page_y(void (*instruction)(uint8_t)){uint8_t address = cpu_read(cpu_registers.pc++); instruction(cpu_read(address + cpu_registers.y));}
-void absolute(void (*instruction)(uint16_t)) {
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {(this->*instruction)(registers.ac);}
+void CPU::immediate(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); (this->*instruction)(operand);}
+void CPU::zero_page(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(read(address));}
+void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(read(address + registers.x));}
+void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(read(address + registers.y));}
+void CPU::absolute(void (CPU::*instruction)(uint16_t)) {
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(address);
+    (this->*instruction)(address);
 }
-void absolute(void (*instruction)(uint8_t)) {
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void CPU::absolute(void (CPU::*instruction)(uint8_t)) {
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(cpu_read(address));
+    (this->*instruction)(read(address));
 }
-bool absolute_x(void (*instruction)(uint8_t)) {
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+bool CPU::absolute_x(void (CPU::*instruction)(uint8_t)) {
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(cpu_read(address + cpu_registers.x));
-    return is_page_crossed(address, cpu_registers.x);
+    (this->*instruction)(read(address + registers.x));
+    return is_page_crossed(address, registers.x);
 }
-bool absolute_y(void (*instruction)(uint8_t)){
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+bool CPU::absolute_y(void (CPU::*instruction)(uint8_t)){
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(cpu_read(address + cpu_registers.y));
-    return is_page_crossed(address, cpu_registers.y);
+    (this->*instruction)(read(address + registers.y));
+    return is_page_crossed(address, registers.y);
 }
-void indirect(void (*instruction)(uint16_t)){
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void CPU::indirect(void (CPU::*instruction)(uint16_t)){
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    if(instruction != jmp){
+    if(instruction != &CPU::jmp){
         //TODO throw invalid instruction error
         spdlog::critical("INVALID ADDRESSING MODE FOR JMP INSTRUCTION (INDIRECT ADDRESSING MODE)");
         exit(1);
     }
-    instruction(cpu_read(address) | (cpu_read((address & 0xFF00) | ((address + 1) & 0x00FF)) << 8));
+    (this->*instruction)(read(address) | (read((address & 0xFF00) | ((address + 1) & 0x00FF)) << 8));
 }
-void indirect_x(void (*instruction)(uint8_t)) {
-    uint8_t address = cpu_read(cpu_registers.pc++);
-    uint8_t zero_page_address = (address + cpu_registers.x) & 0xFF;
-    uint16_t effective_address = cpu_read(zero_page_address) | (cpu_read((zero_page_address + 1) & 0xFF) << 8);
-    instruction(cpu_read(effective_address));
+void CPU::indirect_x(void (CPU::*instruction)(uint8_t)) {
+    uint8_t address = read(registers.pc++);
+    uint8_t zero_page_address = (address + registers.x) & 0xFF;
+    uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
+    (this->*instruction)(read(effective_address));
 }
-bool indirect_y(void (*instruction)(uint8_t)) {
-    uint8_t address = cpu_read(cpu_registers.pc++);
-    uint16_t effective_address = (cpu_read(address) | (cpu_read((address + 1) & 0xFF) << 8)) + cpu_registers.y;
-    instruction(cpu_read(effective_address));
-    return is_page_crossed(cpu_registers.pc - 1, effective_address);
+bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
+    uint8_t address = read(registers.pc++);
+    uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
+    (this->*instruction)(read(effective_address));
+    return is_page_crossed(registers.pc - 1, effective_address);
 }
 
-void accumulator(void (*instruction)(uint16_t)) { cpu_registers.rw_register_mode = 0x1 ;instruction(0x0);}
-void immediate(void (*instruction)(uint16_t)){instruction(&cpu_mem[cpu_registers.pc++] - cpu_mem);}
-void zero_page(void (*instruction)(uint16_t)){instruction(cpu_read(&cpu_mem[cpu_registers.pc++] - cpu_mem));}
-void zero_page_x(void (*instruction)(uint16_t)){instruction(cpu_read((&cpu_mem[cpu_registers.pc++] - cpu_mem) + cpu_registers.x));}
-void zero_page_y(void (*instruction)(uint16_t)){instruction(cpu_read((&cpu_mem[cpu_registers.pc++] - cpu_mem) + cpu_registers.y));}
+void CPU::accumulator(void (CPU::*instruction)(uint16_t)) { registers.rw_register_mode = 0x1 ;(this->*instruction)(0x0);}
+void CPU::immediate(void (CPU::*instruction)(uint16_t)){(this->*instruction)(&mem[registers.pc++] - mem);}
+void CPU::zero_page(void (CPU::*instruction)(uint16_t)){(this->*instruction)(read(&mem[registers.pc++] - mem));}
+void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)){(this->*instruction)(read((&mem[registers.pc++] - mem) + registers.x));}
+void CPU::zero_page_y(void (CPU::*instruction)(uint16_t)){(this->*instruction)(read((&mem[registers.pc++] - mem) + registers.y));}
 
 /*
  * Unused supposedly...
  *
-void absolute(void (*instruction)(uint8_t &)) {
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void absolute(void (CPU::*instruction)(uint8_t &)) {
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(cpu_read(address));
+    instruction(read(address));
 }
 */
 
-void absolute_x(void (*instruction)(uint16_t)) {
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void CPU::absolute_x(void (CPU::*instruction)(uint16_t)) {
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(&cpu_mem[address + cpu_registers.x] - cpu_mem);
+    (this->*instruction)(&mem[address + registers.x] - mem);
 }
-void absolute_y(void (*instruction)(uint16_t)){
-    uint16_t lowByte = cpu_read(cpu_registers.pc++);
-    uint16_t highByte = cpu_read(cpu_registers.pc++);
+void CPU::absolute_y(void (CPU::*instruction)(uint16_t)){
+    uint16_t lowByte = read(registers.pc++);
+    uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    instruction(&cpu_mem[address + cpu_registers.y] - cpu_mem);
+    (this->*instruction)(&mem[address + registers.y] - mem);
 }
-void indirect_x(void (*instruction)(uint16_t)) {
-    uint8_t address = cpu_read(cpu_registers.pc++);
-    uint8_t zero_page_address = (address + cpu_registers.x) & 0xFF;
-    uint16_t effective_address = cpu_read(zero_page_address) | (cpu_read((zero_page_address + 1) & 0xFF) << 8);
-    instruction(&cpu_mem[effective_address] - cpu_mem);
+void CPU::indirect_x(void (CPU::*instruction)(uint16_t)) {
+    uint8_t address = read(registers.pc++);
+    uint8_t zero_page_address = (address + registers.x) & 0xFF;
+    uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
+    (this->*instruction)(&mem[effective_address] - mem);
 }
-void indirect_y(void (*instruction)(uint16_t)) {
-    uint8_t address = cpu_read(cpu_registers.pc++);
-    uint16_t effective_address = (cpu_read(address) | (cpu_read((address + 1) & 0xFF) << 8)) + cpu_registers.y;
-    instruction(&cpu_mem[effective_address] - cpu_mem);
+void CPU::indirect_y(void (CPU::*instruction)(uint16_t)) {
+    uint8_t address = read(registers.pc++);
+    uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
+    (this->*instruction)(&mem[effective_address] - mem);
 }

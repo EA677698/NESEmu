@@ -5,9 +5,7 @@
 #ifndef EMULATOR_GLOBAL_H
 #define EMULATOR_GLOBAL_H
 
-#include <cstdio>
 #include <fstream>
-#include "CPU/cpu.h"
 
 struct ROM{
     std::ifstream rom_file;

@@ -7,12 +7,13 @@
 
 #include "mapper.h"
 #include "../global.h"
+#include "../CPU/cpu.h"
 
 class mapper0 : public mapper{
 
 public:
 
-    mapper0();
+    mapper0(CPU *cpu);
 };
 
 

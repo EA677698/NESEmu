@@ -1,8 +1,9 @@
 #include "global.h"
-#include "romLoader.h"
-#include <iostream>
 #include <SDL_events.h>
 #include <SDL.h>
+
+#include "romLoader.h"
+#include "CPU/cpu.h"
 #include "RenderWindow/main_window.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -16,8 +17,8 @@ bool is_bit_set(uint8_t operand, char bit){
     return (operand & (0x1 << bit)) >> bit;
 }
 
-void power_up(){
-    cpu_power_up();
+void power_up(CPU &cpu, std::string rom_path){
+    cpu.power_up(rom_path);
 }
 
 void exit(){
@@ -38,11 +39,17 @@ void init_spdlog(){
 }
 
 int main(int argc, char* argv[]) {
+    if(argc < 2) {
+        spdlog::error("No rom file provided");
+        exit(1);
+    }
     init_spdlog();
     init_video();
-    power_up();
-    spdlog::info("PC REGISTER: 0x{:X}", cpu_registers.pc);
-    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu_mem[cpu_registers.pc]);
+    PPU ppu;
+    CPU cpu(ppu);
+    power_up(cpu, argv[1]);
+    spdlog::info("PC REGISTER: 0x{:X}", cpu.registers.pc);
+    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
     spdlog::set_level(spdlog::level::debug);
     SDL_Event event;
     bool quit = false;
@@ -54,12 +61,12 @@ int main(int argc, char* argv[]) {
             }
         }
         if(time(NULL) - CPU >= 1){
-            cpu_registers.cycles = 0;
+            cpu.registers.cycles = 0;
             CPU = time(NULL);
         }
-        if(cpu_registers.cycles < 1790000) {
-            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu_mem[cpu_registers.pc], cpu_registers.pc);
-            execute_opcode(cpu_mem[cpu_registers.pc++]);
+        if(cpu.registers.cycles < 1790000) {
+            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu.mem[cpu.registers.pc], cpu.registers.pc);
+            cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
         }
 
         // ... (update pixels and rendering code here)
