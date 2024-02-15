@@ -38,5 +38,5 @@ jobs:
       working-directory: ${{github.workspace}}
 
     - name: Run pytest
-      run: pytest --color=yes
+      run: pytest --color=yes --verbose
       working-directory: ${{github.workspace}}/tests
