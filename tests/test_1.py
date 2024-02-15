@@ -2,7 +2,7 @@ import pytest
 
 import subprocess
 
-executable_path = "../build/Release/emulator.exe"
+executable_path = "../build/bin/Release/emulator.exe"
 
 
 def test_check():
