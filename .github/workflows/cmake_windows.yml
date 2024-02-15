@@ -31,7 +31,7 @@ jobs:
 
     - name: Install specific version of CMake
       run: |
-        choco install cmake --version=3.28.0 --force -y
+        choco install cmake --version=3.28 --force -y
         cmake --version
 
     - name: Configure CMake project
