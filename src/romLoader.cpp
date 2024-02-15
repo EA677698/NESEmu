@@ -8,7 +8,7 @@
 #include "mappers/mapper0.h"
 #include "spdlog/spdlog.h"
 
-bool is_iNES_1_format(){
+bool is_iNES_format(){
     if(rom.header[0] != 0x4E){
         return false;
     }
@@ -67,7 +67,7 @@ void load_rom_fd(std::string rom_path){
 
 void load_rom(CPU *cpu, std::string rom_path){
     load_rom_fd(rom_path);
-    if(!is_iNES_1_format()){
+    if(!is_iNES_format()){
         //TODO throw error
         spdlog::error("INVALID FILE FORMAT");
         exit(1);

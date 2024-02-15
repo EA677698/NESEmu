@@ -8,7 +8,7 @@
 #include "CPU/cpu.h"
 
 
-bool is_iNES_1_format();
+bool is_iNES_format();
 
 void load_flag_6();
 
