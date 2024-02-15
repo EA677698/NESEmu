@@ -8,3 +8,5 @@ Super_mario_brothers.nes
 Excite_bike.nes
 libs/
 venv/
+tests/.pytest_cache
+tests/__pycache__
