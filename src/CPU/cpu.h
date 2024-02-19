@@ -70,9 +70,11 @@ public:
         uint16_t pc; //program counter
         uint8_t sp; //stack pointer
         uint8_t sr; //sr register (flags)
+        //bits: Negative flag, Overflow flag, Reserved, Break command, Decimal mode, IRQ disable, Zero flag, Carry flag
         // NOT ACTUAL REGISTERS VVVVVVV
         uint32_t cycles;
         uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
+        uint16_t operand; // operand for the current instruction
     } registers;
 
 

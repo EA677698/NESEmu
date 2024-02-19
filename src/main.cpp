@@ -38,8 +38,8 @@ void init_spdlog(){
     spdlog::set_default_logger(async_logger);
 }
 
-int main(int argc, char* argv[]) {
-    int testing_mode = 0x0;
+int main(int argc, char* argv[]) { // [rom path] [debug mode]
+    uint8_t debug_mode = 0x0;
     if(argc < 2) {
         spdlog::error("No rom file provided");
         exit(1);
@@ -49,19 +49,17 @@ int main(int argc, char* argv[]) {
     PPU ppu;
     CPU cpu(ppu);
     power_up(cpu, argv[1]);
-    testing_mode = argc > 2; // TESTING MODE
-    if(testing_mode) {
-        int pc_register_operand = std::stoi(argv[2], nullptr, 16);
-        if(pc_register_operand != -1) {
-            cpu.registers.pc = (uint16_t)pc_register_operand;
-        }
+    debug_mode = argc > 2; // DEBUGGING/TESTING MODE
+
+    if(debug_mode) {
+        spdlog::set_level(spdlog::level::debug);
     }
-    spdlog::info("PC REGISTER: 0x{:X}", cpu.registers.pc);
-    spdlog::info("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
-    spdlog::set_level(spdlog::level::debug);
+    spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
+    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
     SDL_Event event;
     bool quit = false;
     time_t CPU = time(NULL);
+    uint32_t test_type;
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -73,18 +71,21 @@ int main(int argc, char* argv[]) {
             CPU = time(NULL);
         }
         if(cpu.registers.cycles < 1790000) {
-            spdlog::debug("EXECUTING OPCODE: 0x{:X} AT PC REGISTER: 0x{:X}", cpu.mem[cpu.registers.pc], cpu.registers.pc);
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
+            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                A: 0x{:X} X: 0x{:X} Y: 0x{:X} SP: 0x{:X} SR: 0x{:X} PC: 0x{:X}",
+                          cpu.registers.pc - 1, cpu.mem[cpu.registers.pc - 1], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
+            cpu.registers.operand = 0x0;
+
         }
 
-        if(testing_mode) {
-            for(int i = 3; i<argc; i++) {
-                if(!strcmp(argv[i], "~")) {
-                    uint16_t address = (uint16_t)std::stoi(argv[i - 1], nullptr, 16);
-                    spdlog::debug("STRING AT MEMORY ADDRESS 0x{:X}: {}", address, cpu.mem[address]);
-                } else {
-                    uint16_t address = (uint16_t)std::stoi(argv[i], nullptr, 16);
-                    spdlog::debug("DATA AT MEMORY ADDRESS 0x{:X}: 0x{:X}", address, cpu.mem[address] );
+        if(debug_mode) {
+            test_type = (cpu.mem[0x6001] << 4) | (cpu.mem[0x6002] << 2) | cpu.mem[0x6003];
+            if(test_type == 0xDEB061) {
+                uint8_t status = cpu.mem[0x6000];
+                if(status == 0x81 || status <= 0x7F) {
+                    spdlog::debug("Test finished or requires reset");
+                    exit();
+                    exit(status);
                 }
             }
         }
