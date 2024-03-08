@@ -175,15 +175,15 @@ void CPU::bpl(int8_t operand){
 }
 
 void CPU::brk(){
-    registers.pc += 1;
+    registers.pc += 2;
     registers.sr |= 0x10;
-    php();
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
     stack_decrement();
-    write(0x100 + registers.sp, back);
-    stack_decrement();
     write(0x100 + registers.sp, front);
+    stack_decrement();
+    write(0x100 + registers.sp, back);
+    php();
     uint16_t interrupt_vector = read(0xFFFE) | ((uint16_t) (read(0xFFFF) << 8));
     registers.pc = interrupt_vector;
     spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
@@ -472,6 +472,71 @@ void CPU::tya(){
     registers.ac = registers.y;
     assign_zero_status(registers.ac);
     assign_negative_status(registers.ac);
+}
+
+// ----------------------- UNOFFICIAL OPCODES -----------------------
+
+void CPU::alr() {
+}
+
+void CPU::anc() {
+}
+
+void CPU::anc2() {
+}
+
+void CPU::ane() {
+}
+
+void CPU::arr() {
+}
+
+void CPU::dcp() {
+}
+
+void CPU::isc() {
+}
+
+void CPU::las() {
+}
+
+void CPU::lax() {
+}
+
+void CPU::lxa() {
+}
+
+void CPU::rla() {
+}
+
+void CPU::rra() {
+}
+
+void CPU::sax() {
+}
+
+void CPU::sbx() {
+}
+
+void CPU::sha() {
+}
+
+void CPU::shx() {
+}
+
+void CPU::shy() {
+}
+
+void CPU::slo() {
+}
+
+void CPU::sre() {
+}
+
+void CPU::tas() {
+}
+
+void CPU::usbc() {
 }
 
 

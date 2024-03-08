@@ -35,10 +35,10 @@ void init_spdlog(){
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("latestLog.txt", true);
     std::vector<spdlog::sink_ptr> sinks {stdout_sink, file_sink};
     auto async_logger = std::make_shared<spdlog::async_logger>("NESEmu", sinks.begin(), sinks.end(), spdlog::thread_pool());
-    spdlog::set_default_logger(async_logger);
+    set_default_logger(async_logger);
 }
 
-int main(int argc, char* argv[]) { // [rom path] [debug mode]
+int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     uint8_t debug_mode = 0x0;
     if(argc < 2) {
         spdlog::error("No rom file provided");
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) { // [rom path] [debug mode]
     PPU ppu;
     CPU cpu(ppu);
     power_up(cpu, argv[1]);
-    debug_mode = argc > 2; // DEBUGGING/TESTING MODE
+    debug_mode = argc > 3; // DEBUGGING/TESTING MODE
 
     if(debug_mode) {
         spdlog::set_level(spdlog::level::debug);
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) { // [rom path] [debug mode]
     SDL_Event event;
     bool quit = false;
     time_t CPU = time(NULL);
-    uint32_t test_type;
+    char* test_type = argv[2];
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -70,18 +70,19 @@ int main(int argc, char* argv[]) { // [rom path] [debug mode]
             cpu.registers.cycles = 0;
             CPU = time(NULL);
         }
-        if(cpu.registers.cycles < 1790000) {
+        if(cpu.registers.cycles < 1790000) { // First three are the following: Address in $PC, opcode, and operand
+            uint16_t currPC = cpu.registers.pc;
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}                A: 0x{:X} X: 0x{:X} Y: 0x{:X} SP: 0x{:X} SR: 0x{:X} PC: 0x{:X}",
-                          cpu.registers.pc - 1, cpu.mem[cpu.registers.pc - 1], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
+                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
             cpu.registers.operand = 0x0;
 
         }
 
         if(debug_mode) {
-            test_type = (cpu.mem[0x6001] << 4) | (cpu.mem[0x6002] << 2) | cpu.mem[0x6003];
-            if(test_type == 0xDEB061) {
+            if(!strcmp(test_type, "blargg")) {
                 uint8_t status = cpu.mem[0x6000];
+                spdlog::debug("Status: 0x{:X}", status);
                 if(status == 0x81 || status <= 0x7F) {
                     spdlog::debug("Test finished or requires reset");
                     exit();

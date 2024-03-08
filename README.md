@@ -40,6 +40,8 @@ it reaches a null terminator then will continue with the rest of the arguments
 
 A lot of information, research, and resources that have been used in this project can be found at [nesdev.org](https://nesdev.org).
 
+Information about unofficial opcodes used can be found at [www.masswerk.at](https://www.masswerk.at/nowgobang/2021/6502-illegal-opcodes).
+
 ## Contributing
 
 If you're interested in contributing, please open an issue or a pull request. Contributions are welcome!

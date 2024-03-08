@@ -58,6 +58,7 @@ private:
     void assign_negative_status(uint8_t operand); // Sets the negative flag based on operand's sign.
     void stack_decrement(); // Decrements the stack pointer.
     void stack_increment(); // Increments the stack pointer.
+
 public:
     uint8_t mem[65536];
 
@@ -69,8 +70,10 @@ public:
         uint8_t y; //y  index
         uint16_t pc; //program counter
         uint8_t sp; //stack pointer
-        uint8_t sr; //sr register (flags)
+
         //bits: Negative flag, Overflow flag, Reserved, Break command, Decimal mode, IRQ disable, Zero flag, Carry flag
+        uint8_t sr; //sr register (flags)
+
         // NOT ACTUAL REGISTERS VVVVVVV
         uint32_t cycles;
         uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
@@ -423,6 +426,38 @@ public:
      * Addressing Mode | Opcode
      * ------------------------
      * Implied         | 0xEA
+     *
+     * UNOFFICIAL NOPS
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Implied         | 0x1A
+     * Implied         | 0x3A
+     * Implied         | 0x5A
+     * Implied         | 0x7A
+     * Implied         | 0xDA
+     * Implied         | 0xFA
+     * Immediate       | 0x80
+     * Immediate       | 0x82
+     * Immediate       | 0x89
+     * Immediate       | 0xC2
+     * Immediate       | 0xE2
+     * Zero Page       | 0x04
+     * Zero Page       | 0x44
+     * Zero Page       | 0x64
+     * Zero Page,X     | 0x14
+     * Zero Page,X     | 0x34
+     * Zero Page,X     | 0x54
+     * Zero Page,X     | 0x74
+     * Zero Page,X     | 0xD4
+     * Zero Page,X     | 0xF4
+     * Absolute        | 0x0C
+     * Absolute,X      | 0x1C
+     * Absolute,X      | 0x3C
+     * Absolute,X      | 0x5C
+     * Absolute,X      | 0x7C
+     * Absolute,X      | 0xDC
+     * Absolute,X      | 0xFC
      */
     void nop();
 
@@ -634,6 +669,224 @@ public:
      * Implied         | 0x98
      */
     void tya();
+
+
+    // ----------------------------- UNOFFICIAL OPCODES -----------------------------
+
+
+    /* AND operation + LSR
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0x4B
+     */
+    void alr();
+
+    /* AND operation + set C as ASL
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0x0B
+     */
+    void anc();
+
+    /* AND operation + set C as ROL
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0x2B
+     */
+    void anc2();
+
+    /* And X + AND operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0x8B
+     */
+    void ane();
+
+    /* AND operation + ROR
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0x6B
+     */
+    void arr();
+
+    /* Decrement operation + CMP operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0xC7
+     * Zero Page,X     | 0xD7
+     * Absolute        | 0xCF
+     * Absolute,X      | 0xDF
+     * Absolute,Y      | 0xDB
+     * (Indirect,X)    | 0xC3
+     * (Indirect),Y    | 0xD3
+     */
+    void dcp();
+
+    /* Increment operation + SBC operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0xE7
+     * Zero Page,X     | 0xF7
+     * Absolute        | 0xEF
+     * Absolute,X      | 0xFF
+     * Absolute,Y      | 0xFB
+     * (Indirect,X)    | 0xE3
+     * (Indirect),Y    | 0xF3
+     */
+    void isc();
+
+    /* LDA/TSX operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Absolute,Y      | 0xBB
+     */
+    void las();
+
+    /* LDA operation + LDX operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0xA7
+     * Zero Page,Y     | 0xB7
+     * Absolute        | 0xAF
+     * Absolute,Y      | 0xBF
+     * (Indirect,X)    | 0xA3
+     * (Indirect),Y    | 0xB3
+     */
+    void lax();
+
+    /* Store * AND operation in A and X
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0xAB
+     */
+    void lxa();
+
+    /* ROL operation + AND operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0x27
+     * Zero Page,X     | 0x37
+     * Absolute        | 0x2F
+     * Absolute,X      | 0x3F
+     * Absolute,Y      | 0x3B
+     * (Indirect,X)    | 0x23
+     * (Indirect),Y    | 0x33
+     */
+    void rla();
+
+    /* ROR operation + ADC operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0x67
+     * Zero Page,X     | 0x77
+     * Absolute        | 0x6F
+     * Absolute,X      | 0x7F
+     * Absolute,Y      | 0x7B
+     * (Indirect,X)    | 0x63
+     * (Indirect),Y    | 0x73
+     */
+    void rra();
+
+    /* A and X on the bus at the same time and stored in M
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0x87
+     * Zero Page,Y     | 0x97
+     * Absolute        | 0x8F
+     * (Indirect,X)    | 0x83
+     */
+    void sax();
+
+    /* CMP and DEX at once. Sets CMP flags
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0xCB
+     */
+    void sbx();
+
+    /* Stores A AND X and high byte of addr + 1 at addr
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Absolute,Y      | 0x9F
+     * (Indirect),Y    | 0x93
+     */
+    void sha();
+
+    /* Stores X AND high byte of addr + 1 at addr
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Absolute,Y      | 0x9E
+     */
+    void shx();
+
+    /* Stores Y AND high byte of addr + 1 at addr
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Absolute,X      | 0x9C
+     */
+    void shy();
+
+    /* ASL operation + ORA operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0x07
+     * Zero Page,X     | 0x17
+     * Absolute        | 0x0F
+     * Absolute,X      | 0x1F
+     * Absolute,Y      | 0x1B
+     * (Indirect,X)    | 0x03
+     * (Indirect),Y    | 0x13
+     */
+    void slo();
+
+    /* LSR operation + EOR operation
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Zero Page       | 0x47
+     * Zero Page,X     | 0x57
+     * Absolute        | 0x4F
+     * Absolute,X      | 0x5F
+     * Absolute,Y      | 0x5B
+     * (Indirect,X)    | 0x43
+     * (Indirect),Y    | 0x53
+     */
+    void sre();
+
+    /* puts A AND X in SP and store A AND X AND high byte of addr + 1 at addr
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Absolute,Y      | 0x9B
+     */
+    void tas();
+
+     /* SBC operation + NOP
+     *
+     * Addressing Mode | Opcode
+     * ------------------------
+     * Immediate       | 0xEB
+     */
+    void usbc();
+
 
     // Memory Addressing Modes
     void accumulator(void (CPU::*instruction)(uint8_t));
