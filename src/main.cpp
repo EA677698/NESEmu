@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     bool quit = false;
     time_t CPU = time(NULL);
     char* test_type = argv[2];
+    uint8_t nestest = 0x1;
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -69,14 +70,6 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
         if(time(NULL) - CPU >= 1){
             cpu.registers.cycles = 0;
             CPU = time(NULL);
-        }
-        if(cpu.registers.cycles < 1790000) { // First three are the following: Address in $PC, opcode, and operand
-            uint16_t currPC = cpu.registers.pc;
-            cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
-            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                A: 0x{:X} X: 0x{:X} Y: 0x{:X} SP: 0x{:X} SR: 0x{:X} PC: 0x{:X}",
-                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
-            cpu.registers.operand = 0x0;
-
         }
 
         if(debug_mode) {
@@ -89,6 +82,23 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
                     exit(status);
                 }
             }
+            if(!strcmp(test_type, "nestest")) {
+                if(nestest) {
+                    cpu.registers.pc = 0xC000;
+                    nestest = 0x0;
+                }
+                spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
+            }
+
+        if(cpu.registers.cycles < 1790000) {
+            // First three are the following: Address in $PC, opcode, and operand
+            uint16_t currPC = cpu.registers.pc;
+            cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
+            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                A: 0x{:X} X: 0x{:X} Y: 0x{:X} SP: 0x{:X} SR: 0x{:X} PC: 0x{:X}",
+                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
+            cpu.registers.operand = 0x0;
+        }
+
         }
 
         // ... (update pixels and rendering code here)

@@ -110,7 +110,7 @@ void CPU::asl(uint16_t address){
     } else {
         clc();
     }
-    write(address, operand << 1);
+    write(address, operand <<= 1);
     assign_zero_status(operand);
     assign_negative_status(operand);
     registers.rw_register_mode = 0x0;
@@ -175,7 +175,7 @@ void CPU::bpl(int8_t operand){
 }
 
 void CPU::brk(){
-    registers.pc += 2;
+    registers.pc++;
     registers.sr |= 0x10;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
@@ -331,7 +331,7 @@ void CPU::lsr(uint16_t address){
     } else{
         clc();
     }
-    write(address, operand >> 1);
+    write(address, operand >>= 1);
     assign_zero_status(operand);
     clear_negative_flag();
     registers.rw_register_mode = 0x0;
@@ -346,16 +346,19 @@ void CPU::ora(uint8_t operand){
 }
 
 void CPU::pha(){
-    stack_decrement();
+    registers.pc++;
     write(0x100 + registers.sp, registers.ac);
+    stack_decrement();
 }
 
 void CPU::php(){
-    stack_decrement();
+    registers.pc++;
     write(0x100 + registers.sp, registers.sr);
+    stack_decrement();
 }
 
 void CPU::pla(){
+    registers.pc++;
     stack_increment();
     registers.ac = read(0x100 + registers.sp);
     assign_zero_status(registers.ac);
@@ -363,6 +366,7 @@ void CPU::pla(){
 }
 
 void CPU::plp(){
+    registers.pc++;
     stack_increment();
     registers.sr &= 0x0;
     registers.sr |= read(0x100 + registers.sp);
@@ -391,6 +395,7 @@ void CPU::ror(uint16_t address){
 }
 
 void CPU::rti(){
+    registers.pc++;
     plp();
     stack_increment();
     uint16_t address = read(0x100 + registers.sp);
@@ -401,11 +406,12 @@ void CPU::rti(){
 }
 
 void CPU::rts(){
+    registers.pc++;
+    stack_increment();
     uint16_t address = read(0x100 + registers.sp);
-    stack_increment();
     address <<= 8;
-    address |= read(0x100 + registers.sp);
     stack_increment();
+    address |= read(0x100 + registers.sp);
     spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address + 1;
 }
