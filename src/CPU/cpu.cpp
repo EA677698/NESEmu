@@ -94,4 +94,5 @@ void CPU::power_up(const std::string &rom_path){
     registers.pc = RESET_VECTOR;
     printf("PC Register: 0x%X\n", registers.pc);
     spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
+    registers.cycles = 0;
 }

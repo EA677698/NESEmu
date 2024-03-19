@@ -126,8 +126,10 @@ void CPU::bcc(int8_t operand){
 
 void CPU::bcs(int8_t operand){
     if(is_bit_set(registers.sr, 0)){
-        registers.cycles += (1 + is_page_crossed(registers.pc, operand));
+        uint16_t old_pc = registers.pc;
         registers.pc += operand;
+        registers.cycles += (1 + is_page_crossed(old_pc, operand));
+
     }
 }
 
@@ -176,14 +178,15 @@ void CPU::bpl(int8_t operand){
 
 void CPU::brk(){
     registers.pc++;
-    registers.sr |= 0x10;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
     stack_decrement();
     write(0x100 + registers.sp, front);
     stack_decrement();
     write(0x100 + registers.sp, back);
-    php();
+    stack_decrement();
+    uint8_t status = registers.sr | 0x30;
+    write(0x100 + registers.sp, status);
     uint16_t interrupt_vector = read(0xFFFE) | ((uint16_t) (read(0xFFFF) << 8));
     registers.pc = interrupt_vector;
     spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
@@ -374,10 +377,14 @@ void CPU::plp(){
 
 void CPU::rol(uint16_t address){
     uint8_t operand = read(address);
-    uint8_t old_carry = is_bit_set(registers.sr, 7);
-    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 7));
-    write(address, operand <<= 1);
-    write(address, operand &= 0xFE | old_carry);
+    uint8_t old_carry = is_bit_set(registers.sr, 0);
+    clc();
+    if(is_bit_set(operand, 7)) {
+        sec();
+    }
+    operand <<= 1;
+    operand |= old_carry;
+    write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
     registers.rw_register_mode = 0x0;
@@ -385,10 +392,14 @@ void CPU::rol(uint16_t address){
 
 void CPU::ror(uint16_t address){
     uint8_t operand = read(address);
-    uint8_t old_carry = is_bit_set(registers.sr, 7);
-    registers.sr &= 0xFE | ((uint8_t)is_bit_set(operand, 0));
-    write(address, operand >>= 1);
-    write(address, operand &= 0x7F | (old_carry << 7));
+    uint8_t old_carry = is_bit_set(registers.sr, 0);
+    clc();
+    if(is_bit_set(operand, 0)) {
+        sec();
+    }
+    operand >>= 1;
+    operand |= (old_carry << 7);
+    write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
     registers.rw_register_mode = 0x0;
@@ -396,7 +407,9 @@ void CPU::ror(uint16_t address){
 
 void CPU::rti(){
     registers.pc++;
-    plp();
+    stack_increment();
+    uint8_t status = read(0x100 + registers.sp);
+    registers.sr = status & ~0x30;
     stack_increment();
     uint16_t address = read(0x100 + registers.sp);
     address <<= 8;
@@ -602,7 +615,9 @@ bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
     return is_page_crossed(registers.pc - 1, effective_address);
 }
 
-void CPU::accumulator(void (CPU::*instruction)(uint16_t)) { registers.rw_register_mode = 0x1 ;(this->*instruction)(0x0);}
+void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
+    (this->*instruction)(0x0);
+}
 void CPU::immediate(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = &mem[registers.pc++] - mem);}
 void CPU::zero_page(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = read(&mem[registers.pc++] - mem));}
 void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = read((&mem[registers.pc++] - mem) + registers.x));}

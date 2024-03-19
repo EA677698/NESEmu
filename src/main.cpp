@@ -84,7 +84,9 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
             }
             if(!strcmp(test_type, "nestest")) {
                 if(nestest) {
+                    spdlog::info("NESTEST: setting PC to 0xC000");
                     cpu.registers.pc = 0xC000;
+                    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
                     nestest = 0x0;
                 }
                 spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
