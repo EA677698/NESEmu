@@ -66,7 +66,7 @@ public:
 
     CPU(PPU ppu);
 
-    struct {
+    struct Register {
         uint8_t ac; //accumulator
         uint8_t x; //x index
         uint8_t y; //y  index
@@ -80,8 +80,9 @@ public:
         uint32_t cycles;
         uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
         uint16_t operand; // operand for the current instruction
-    } registers;
+    };
 
+    Register registers;
 
     void execute_opcode(int opcode);
 

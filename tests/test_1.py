@@ -16,7 +16,6 @@ def test_nestest():
     rom_path = "nestest/nestest.nes"
     rom_log = "nestest/nestest_log.txt"
     NESEmu_log = "latestLog.txt"
-    #NESEmu_log = "../cmake-build-debug/bin/latestLog.txt"
     subprocess.run([executable_path, rom_path, 'nestest', '1', '1'],
                    capture_output=True, text=False, timeout=exec_time_out)
     result = fd.compare_logs(rom_log, NESEmu_log)

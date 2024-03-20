@@ -61,6 +61,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     time_t CPU = time(NULL);
     char* test_type = argv[2];
     uint8_t nestest = 0x1;
+    CPU::Register snapshot;
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
                 if(nestest) {
                     spdlog::info("NESTEST: setting PC to 0xC000");
                     cpu.registers.pc = 0xC000;
+                    cpu.registers.sr = 0x24;
                     spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
                     nestest = 0x0;
                 }
@@ -94,10 +96,10 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
 
         if(cpu.registers.cycles < 1790000) {
             // First three are the following: Address in $PC, opcode, and operand
-            uint16_t currPC = cpu.registers.pc;
+            std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
-            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                             A:0x{:X} X:0x{:X} Y:0x{:X} SP:0x{:X} SR:0x{:X}", // PC:0x{:X}",
-                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sr, cpu.registers.sp);//, cpu.registers.pc);
+            spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
+                          snapshot.pc, cpu.mem[snapshot.pc], cpu.registers.operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
             cpu.registers.operand = 0x0;
         }
 

@@ -38,13 +38,17 @@ def compare_lines(line1, line2):
     nestest_token = 0
     while emu_token < len(nesemu_tokens):
         token1 = nestest_tokens[nestest_token].replace("$", "")
-        if nestest_token == 2:
+        if len(nestest_tokens) == 9 and nestest_token == 2:
             token1 = nestest_tokens[nestest_token + 1].replace("$", "") + token1
             nestest_token += 1
         token2 = nesemu_tokens[emu_token]
+        if "A:" in token1:
+            if "A:" not in token2:
+                emu_token += 1
+                token2 = nesemu_tokens[emu_token]
         val1 = int(token1.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("P:", ""),
                    16)
-        val2 = int(token2.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("P:", ""),
+        val2 = int(token2.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("SR:", ""),
                    16)
         if val1 != val2:
             print("nestest:")
