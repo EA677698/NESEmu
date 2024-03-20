@@ -101,6 +101,7 @@ void CPU::execute_opcode(int opcode){
 
         //BCC
         case 0x90:
+            registers.operand = mem[registers.pc];
             bcc(mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
@@ -108,6 +109,7 @@ void CPU::execute_opcode(int opcode){
 
         //BCS
         case 0xB0:
+            registers.operand = mem[registers.pc];
             bcs(mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
@@ -115,6 +117,7 @@ void CPU::execute_opcode(int opcode){
 
         //BEQ
         case 0xF0:
+            registers.operand = mem[registers.pc];
             beq(mem[registers.pc++]);
             //TODO special cycle case
             registers.cycles += 2;
@@ -132,6 +135,7 @@ void CPU::execute_opcode(int opcode){
 
         //BMI
         case 0x30:
+            registers.operand = mem[registers.pc];
             bmi(mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
@@ -139,6 +143,7 @@ void CPU::execute_opcode(int opcode){
 
         //BNE
         case 0xD0:
+            registers.operand = mem[registers.pc];
             bne(mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
@@ -146,6 +151,7 @@ void CPU::execute_opcode(int opcode){
 
         //BPL
         case 0x10:
+            registers.operand = mem[registers.pc];
             bpl(mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
@@ -159,6 +165,7 @@ void CPU::execute_opcode(int opcode){
 
         //BVC
         case 0x50:
+            registers.operand = mem[registers.pc];
             bvc(mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case
@@ -166,6 +173,7 @@ void CPU::execute_opcode(int opcode){
 
         //BVS
         case 0x70:
+            registers.operand = mem[registers.pc];
             bvs(mem[registers.pc++]);
             registers.cycles += 2;
             //TODO special cycle case

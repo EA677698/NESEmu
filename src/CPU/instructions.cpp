@@ -146,11 +146,13 @@ void CPU::bit(uint8_t operand){
     } else{
         clear_zero_flag();
     }
+
     if(is_bit_set(operand,6)){
         set_overflow_flag();
     } else{
         clv();
     }
+
     assign_negative_status(operand);
 
 }
@@ -562,9 +564,9 @@ void CPU::usbc() {
 // Memory Addressing Modes
 void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {(this->*instruction)(registers.ac);}
 void CPU::immediate(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); (this->*instruction)(this->registers.operand = operand);}
-void CPU::zero_page(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(this->registers.operand = read(address));}
-void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(this->registers.operand = read(address + registers.x));}
-void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)){uint8_t address = read(registers.pc++); (this->*instruction)(this->registers.operand = read(address + registers.y));}
+void CPU::zero_page(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand));}
+void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand + registers.x));}
+void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand + registers.y));}
 void CPU::absolute(void (CPU::*instruction)(uint16_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);

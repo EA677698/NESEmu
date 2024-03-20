@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
                     spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
                     nestest = 0x0;
                 }
-                spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
+                //spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
             }
 
         if(cpu.registers.cycles < 1790000) {
