@@ -1,9 +1,34 @@
 import pytest
 import find_diff as fd
 import subprocess
+import os
 
-executable_path = "../build/bin/Release/emulator.exe"
-#executable_path = "../cmake-build-debug/bin/emulator.exe"
+executable_paths = [
+    "../build/bin/Release/emulator.exe",
+    "../cmake-build-debug/bin/emulator.exe"
+]
+
+# Function to find the valid executable path
+def find_executable_path(paths):
+    for path in paths:
+        if os.path.isfile(path):  # Check if the path exists and is a file
+            try:
+                # Attempt to run the executable with a simple command or just check if it's accessible
+                subprocess.run([path], capture_output=True, timeout=1)
+                return path
+            except Exception as e:
+                # Log or print the exception if needed
+                print(f"Attempted path {path} but encountered an error: {e}")
+                continue
+    raise FileNotFoundError("No valid executable path found among provided options.")
+
+# Attempt to find the valid executable path
+try:
+    executable_path = find_executable_path(executable_paths)
+except FileNotFoundError as e:
+    print(e)
+    pytest.exit("Terminating tests due to lack of valid emulator executable path.")
+
 exec_time_out = 10
 
 
