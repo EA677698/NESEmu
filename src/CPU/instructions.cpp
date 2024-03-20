@@ -55,13 +55,13 @@ void CPU::stack_increment(){
 }
 
 void CPU::push(uint8_t operand) {
-    stack_decrement();
     write(0x100 + registers.sp, operand);
+    stack_decrement();
 }
 
 uint8_t CPU::pop() {
-    uint8_t value = read(0x100 + registers.sp);
     stack_increment();
+    uint8_t value = read(0x100 + registers.sp);
     return value;
 
 }
@@ -103,6 +103,12 @@ void CPU::adc(uint8_t operand){
         sec();
     } else {
         clc();
+    }
+    uint8_t overflow = ((registers.ac ^ operand) & 0x80) == 0 && ((registers.ac ^ temp) & 0x80) != 0;
+    if (overflow) {
+        set_overflow_flag();
+    } else {
+        clv();
     }
     registers.ac = temp & 0xFF;
     assign_zero_status(registers.ac);
@@ -363,7 +369,7 @@ void CPU::pha(){
 }
 
 void CPU::php(){
-    push(registers.sr);
+    push(registers.sr | 0x10);
 }
 
 void CPU::pla(){
@@ -375,6 +381,8 @@ void CPU::pla(){
 void CPU::plp(){
     registers.sr &= 0x0;
     registers.sr |= pop();
+    registers.sr &= 0xEF;
+    registers.sr |= 0x20;
 }
 
 void CPU::rol(uint16_t address){
@@ -427,14 +435,22 @@ void CPU::rts(){
 }
 
 void CPU::sbc(uint8_t operand){
-    int16_t res = registers.ac - operand - !is_bit_set(registers.sr, 0);
-    if(res < 0){
-        clc();
-        set_overflow_flag();
-    } else{
+    uint16_t temp = registers.ac - operand - (1 - is_bit_set(registers.sr, 0));
+    if(temp <= 0xFF){
         sec();
+
+    } else{
+        clc();
     }
-    registers.ac -= operand - !is_bit_set(registers.sr, 0);
+
+    uint8_t overflow = ((registers.ac ^ temp) & 0x80) && ((registers.ac ^ operand) & 0x80);
+    if(overflow) {
+        set_overflow_flag();
+    } else {
+        clv();
+    }
+
+    registers.ac = temp & 0xFF;
     assign_zero_status(registers.ac);
     assign_negative_status(registers.ac);
 }
@@ -480,8 +496,6 @@ void CPU::txa(){
 
 void CPU::txs(){
     registers.sp = registers.x;
-    assign_zero_status(registers.sp);
-    assign_negative_status(registers.sp);
 }
 
 void CPU::tya(){
@@ -572,7 +586,8 @@ void CPU::absolute(void (CPU::*instruction)(uint8_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    (this->*instruction)(this->registers.operand = read(address));
+    this->registers.operand = address;
+    (this->*instruction)(read(address));
 }
 bool CPU::absolute_x(void (CPU::*instruction)(uint8_t)) {
     uint16_t lowByte = read(registers.pc++);
