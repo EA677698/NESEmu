@@ -58,6 +58,8 @@ private:
     void assign_negative_status(uint8_t operand); // Sets the negative flag based on operand's sign.
     void stack_decrement(); // Decrements the stack pointer.
     void stack_increment(); // Increments the stack pointer.
+    void push(uint8_t operand);
+    uint8_t pop();
 
 public:
     uint8_t mem[65536];

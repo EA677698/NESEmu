@@ -54,6 +54,19 @@ void CPU::stack_increment(){
     registers.sp++;
 }
 
+void CPU::push(uint8_t operand) {
+    stack_decrement();
+    write(0x100 + registers.sp, operand);
+}
+
+uint8_t CPU::pop() {
+    uint8_t value = read(0x100 + registers.sp);
+    stack_increment();
+    return value;
+
+}
+
+
 // ----------------------------------------- DEFINED INSTRUCTIONS -----------------------------------------
 
 void CPU::sec(){
@@ -182,13 +195,10 @@ void CPU::brk(){
     registers.pc++;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    stack_decrement();
-    write(0x100 + registers.sp, front);
-    stack_decrement();
-    write(0x100 + registers.sp, back);
-    stack_decrement();
+    push(front);
+    push(back);
     uint8_t status = registers.sr | 0x30;
-    write(0x100 + registers.sp, status);
+    push(status);
     uint16_t interrupt_vector = read(0xFFFE) | ((uint16_t) (read(0xFFFF) << 8));
     registers.pc = interrupt_vector;
     spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
@@ -303,10 +313,8 @@ void CPU::jsr(uint16_t operand){
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
     spdlog::info("Storing address 0x{:X} into stack", registers.pc);
-    stack_decrement();
-    write(0x100 + registers.sp, back);
-    stack_decrement();
-    write(0x100 + registers.sp, front);
+    push(back);
+    push(front);
     registers.pc = operand;
     registers.rw_register_mode = 0x0;
 }
@@ -351,30 +359,22 @@ void CPU::ora(uint8_t operand){
 }
 
 void CPU::pha(){
-    registers.pc++;
-    write(0x100 + registers.sp, registers.ac);
-    stack_decrement();
+    push(registers.ac);
 }
 
 void CPU::php(){
-    registers.pc++;
-    write(0x100 + registers.sp, registers.sr);
-    stack_decrement();
+    push(registers.sr);
 }
 
 void CPU::pla(){
-    registers.pc++;
-    stack_increment();
-    registers.ac = read(0x100 + registers.sp);
+    registers.ac = pop();
     assign_zero_status(registers.ac);
     assign_negative_status(registers.ac);
 }
 
 void CPU::plp(){
-    registers.pc++;
-    stack_increment();
     registers.sr &= 0x0;
-    registers.sr |= read(0x100 + registers.sp);
+    registers.sr |= pop();
 }
 
 void CPU::rol(uint16_t address){
@@ -409,26 +409,21 @@ void CPU::ror(uint16_t address){
 
 void CPU::rti(){
     registers.pc++;
-    stack_increment();
-    uint8_t status = read(0x100 + registers.sp);
+    uint8_t status = pop();
     registers.sr = status & ~0x30;
-    stack_increment();
-    uint16_t address = read(0x100 + registers.sp);
+    uint16_t address = pop();
     address <<= 8;
-    stack_increment();
-    address |= read(0x100 + registers.sp);
+    address |= pop();
     registers.pc = address;
 }
 
 void CPU::rts(){
     registers.pc++;
-    stack_increment();
-    uint16_t address = read(0x100 + registers.sp);
+    uint16_t address = pop();
     address <<= 8;
-    stack_increment();
-    address |= read(0x100 + registers.sp);
+    address |= pop();
     spdlog::info("Retrieving address from stack: 0x{:X}",address);
-    registers.pc = address + 1;
+    registers.pc = address;
 }
 
 void CPU::sbc(uint8_t operand){

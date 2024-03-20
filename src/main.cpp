@@ -96,8 +96,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
             // First three are the following: Address in $PC, opcode, and operand
             uint16_t currPC = cpu.registers.pc;
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
-            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                A: 0x{:X} X: 0x{:X} Y: 0x{:X} SP: 0x{:X} SR: 0x{:X} PC: 0x{:X}",
-                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sp, cpu.registers.sr, cpu.registers.pc);
+            spdlog::debug("0x{:X}  0x{:X}  0x{:X}                             A:0x{:X} X:0x{:X} Y:0x{:X} SP:0x{:X} SR:0x{:X}", // PC:0x{:X}",
+                          currPC, cpu.mem[currPC], cpu.registers.operand, cpu.registers.ac, cpu.registers.x, cpu.registers.y, cpu.registers.sr, cpu.registers.sp);//, cpu.registers.pc);
             cpu.registers.operand = 0x0;
         }
 

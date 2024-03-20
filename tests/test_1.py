@@ -1,8 +1,10 @@
 import pytest
-
+import find_diff as fd
 import subprocess
 
 executable_path = "../build/bin/Release/emulator.exe"
+#executable_path = "../cmake-build-debug/bin/emulator.exe"
+exec_time_out = 10
 
 
 def test_check():
@@ -10,10 +12,12 @@ def test_check():
     print("Basic check succeeded, 1 + 1 == 2")
 
 
-def test_basics():
-    rom_path = "instr_test-v5/rom_singles/01-basics.nes"
-    result = subprocess.run([executable_path, rom_path, '-1', '0x6000', '0x6004', '~'],
-                            capture_output=True, text=True)
-    print(f"Return code: {result.returncode}")
-    print(f"Stderr: {result.stderr}")
-    assert result.returncode == 0, f"Expected return code 0, got {result.returncode}"
+def test_nestest():
+    rom_path = "nestest/nestest.nes"
+    rom_log = "nestest/nestest_log.txt"
+    NESEmu_log = "latestLog.txt"
+    #NESEmu_log = "../cmake-build-debug/bin/latestLog.txt"
+    subprocess.run([executable_path, rom_path, 'nestest', '1', '1'],
+                   capture_output=True, text=False, timeout=exec_time_out)
+    result = fd.compare_logs(rom_log, NESEmu_log)
+    assert result == (0, 0), f"Mismatch at line {result[0]} in nestest log and {result[1]} in NESEmu log"
