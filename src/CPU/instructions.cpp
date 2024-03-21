@@ -269,10 +269,12 @@ void CPU::cpy(uint8_t operand){
     assign_negative_status(result);
 }
 
-void CPU::dec(uint8_t operand){
-    operand--;
-    assign_zero_status(operand);
-    assign_negative_status(operand);
+void CPU::dec(uint16_t operand){
+    uint8_t res = read(operand);
+    res--;
+    write(operand,res);
+    assign_zero_status(res);
+    assign_negative_status(res);
 }
 
 void CPU::dex(){
@@ -293,10 +295,12 @@ void CPU::eor(uint8_t operand){
     assign_negative_status(registers.ac);
 }
 
-void CPU::inc(uint8_t operand){
-    operand++;
-    assign_zero_status(operand);
-    assign_negative_status(operand);
+void CPU::inc(uint16_t operand){
+    uint8_t res = read(operand);
+    res++;
+    write(operand,res);
+    assign_zero_status(res);
+    assign_negative_status(res);
 }
 
 void CPU::inx(){
@@ -354,7 +358,6 @@ void CPU::lsr(uint16_t address){
     write(address, operand >>= 1);
     assign_zero_status(operand);
     clear_negative_flag();
-    registers.rw_register_mode = 0x0;
 }
 
 void CPU::nop(){}
@@ -461,12 +464,10 @@ void CPU::sta(uint16_t address){
 
 void CPU::stx(uint16_t address){
     write(address, registers.x);
-    registers.rw_register_mode = 0x0;
 }
 
 void CPU::sty(uint16_t address){
     write(address, registers.y);
-    registers.rw_register_mode = 0x0;
 }
 
 void CPU::tax(){
@@ -570,11 +571,30 @@ void CPU::usbc() {
 
 
 // Memory Addressing Modes
-void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {(this->*instruction)(registers.ac);}
-void CPU::immediate(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); (this->*instruction)(this->registers.operand = operand);}
-void CPU::zero_page(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand));}
-void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand + registers.x));}
-void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)){uint8_t operand = read(registers.pc++); this->registers.operand = operand; (this->*instruction)(read(operand + registers.y));}
+void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {
+    (this->*instruction)(registers.ac);
+}
+void CPU::immediate(void (CPU::*instruction)(uint8_t)) {
+    uint8_t operand = read(registers.pc++);
+    (this->*instruction)(this->registers.operand = operand);
+}
+void CPU::zero_page(void (CPU::*instruction)(uint8_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    (this->*instruction)(read(operand));
+}
+void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    uint8_t address = operand + registers.x;
+    (this->*instruction)(read(address));
+}
+void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    uint8_t address = operand + registers.y;
+    (this->*instruction)(read(address));
+}
 void CPU::absolute(void (CPU::*instruction)(uint16_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
@@ -592,14 +612,16 @@ bool CPU::absolute_x(void (CPU::*instruction)(uint8_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    (this->*instruction)(this->registers.operand = read(address + registers.x));
+    this->registers.operand = address;
+    (this->*instruction)(read(address + registers.x));
     return is_page_crossed(address, registers.x);
 }
 bool CPU::absolute_y(void (CPU::*instruction)(uint8_t)){
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    (this->*instruction)(this->registers.operand = read(address + registers.y));
+    this->registers.operand = address;
+    (this->*instruction)(read(address + registers.y));
     return is_page_crossed(address, registers.y);
 }
 void CPU::indirect(void (CPU::*instruction)(uint16_t)){
@@ -611,28 +633,50 @@ void CPU::indirect(void (CPU::*instruction)(uint16_t)){
         spdlog::critical("INVALID ADDRESSING MODE FOR JMP INSTRUCTION (INDIRECT ADDRESSING MODE)");
         exit(1);
     }
-    (this->*instruction)(this->registers.operand = read(address) | (read((address & 0xFF00) | ((address + 1) & 0x00FF)) << 8));
+    this->registers.operand = address;
+    (this->*instruction)(read(address) | (read((address & 0xFF00) | ((address + 1) & 0x00FF)) << 8));
 }
 void CPU::indirect_x(void (CPU::*instruction)(uint8_t)) {
     uint8_t address = read(registers.pc++);
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
-    (this->*instruction)(this->registers.operand = read(effective_address));
+    this->registers.operand = address;
+    (this->*instruction)(read(effective_address));
 }
 bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
     uint8_t address = read(registers.pc++);
     uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
-    (this->*instruction)(this->registers.operand = read(effective_address));
+    this->registers.operand = address;
+    (this->*instruction)(read(effective_address));
     return is_page_crossed(registers.pc - 1, effective_address);
 }
 
 void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
+    registers.rw_register_mode = 0x1;
     (this->*instruction)(0x0);
+    registers.rw_register_mode = 0x0;
 }
-void CPU::immediate(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = &mem[registers.pc++] - mem);}
-void CPU::zero_page(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = read(&mem[registers.pc++] - mem));}
-void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = read((&mem[registers.pc++] - mem) + registers.x));}
-void CPU::zero_page_y(void (CPU::*instruction)(uint16_t)){(this->*instruction)(this->registers.operand = read((&mem[registers.pc++] - mem) + registers.y));}
+void CPU::immediate(void (CPU::*instruction)(uint16_t)) {
+    this->registers.operand = read(registers.pc);
+    (this->*instruction)(registers.pc++);
+}
+void CPU::zero_page(void (CPU::*instruction)(uint16_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    (this->*instruction)(operand);
+}
+void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    uint8_t address = operand + registers.x;
+    (this->*instruction)(address);
+}
+void CPU::zero_page_y(void (CPU::*instruction)(uint16_t)) {
+    uint8_t operand = read(registers.pc++);
+    this->registers.operand = operand;
+    uint8_t address = operand + registers.y;
+    (this->*instruction)(address);
+}
 
 /*
  * Unused supposedly...
@@ -649,22 +693,26 @@ void CPU::absolute_x(void (CPU::*instruction)(uint16_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    (this->*instruction)(this->registers.operand = &mem[address + registers.x] - mem);
+    this->registers.operand = address;
+    (this->*instruction)(address + registers.x);
 }
 void CPU::absolute_y(void (CPU::*instruction)(uint16_t)){
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    (this->*instruction)(this->registers.operand = &mem[address + registers.y] - mem);
+    this->registers.operand = address;
+    (this->*instruction)(address + registers.y);
 }
 void CPU::indirect_x(void (CPU::*instruction)(uint16_t)) {
     uint8_t address = read(registers.pc++);
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
     uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
-    (this->*instruction)(this->registers.operand = &mem[effective_address] - mem);
+    this->registers.operand = address;
+    (this->*instruction)(effective_address);
 }
 void CPU::indirect_y(void (CPU::*instruction)(uint16_t)) {
     uint8_t address = read(registers.pc++);
     uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
-    (this->*instruction)(this->registers.operand = &mem[effective_address] - mem);
+    this->registers.operand = address;
+    (this->*instruction)(effective_address);
 }

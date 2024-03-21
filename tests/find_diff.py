@@ -51,6 +51,12 @@ def compare_lines(line1, line2):
         val2 = int(token2.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("SR:", ""),
                    16)
         if val1 != val2:
+            if "P:" in token1:
+                bits = val1 ^ val2
+                if bits == 0x20 or bits == 0x10 or bits == 0x30:
+                    emu_token += 1
+                    nestest_token += 1
+                    continue
             print("nestest:")
             print(line1)
             print(nestest_tokens)

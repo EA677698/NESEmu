@@ -97,6 +97,9 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
         if(cpu.registers.cycles < 1790000) {
             // First three are the following: Address in $PC, opcode, and operand
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
+//            if(cpu.registers.pc == 0xC6BC) {
+//                spdlog::info("Here!");
+ //           }
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
                           snapshot.pc, cpu.mem[snapshot.pc], cpu.registers.operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);

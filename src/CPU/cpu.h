@@ -296,7 +296,7 @@ public:
      * Absolute        | 0xCE
      * Absolute,X      | 0xDE
      */
-    void dec(uint8_t operand);
+    void dec(uint16_t operand);
 
     /* Decrement X Register
      *
@@ -338,7 +338,7 @@ public:
      * Absolute        | 0xEE
      * Absolute,X      | 0xFE
      */
-    void inc(uint8_t operand);
+    void inc(uint16_t operand);
 
     /* Increment X Register
      *
