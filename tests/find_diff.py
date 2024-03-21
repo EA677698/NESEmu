@@ -75,7 +75,7 @@ def compare_logs(nestest_log, nesemu_log):
         nestest_line = 0
         while nestest_line < len(nestest_lines):
             if emu_line >= len(nesemu_lines):
-                break
+                return nestest_line + 1, emu_line + 1
             if is_valid_line(nesemu_lines[emu_line]):
                 if not compare_lines(nestest_lines[nestest_line], nesemu_lines[emu_line]):
                     return nestest_line + 1, emu_line + 1

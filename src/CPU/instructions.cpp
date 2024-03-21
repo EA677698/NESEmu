@@ -240,7 +240,7 @@ void CPU::cmp(uint8_t operand){
 }
 
 void CPU::cpx(uint8_t operand){
-    uint8_t result = registers.x - operand;
+    uint16_t result = registers.x - operand;
     if (registers.x >= operand) {
         sec();
     } else {
@@ -251,7 +251,7 @@ void CPU::cpx(uint8_t operand){
     } else {
         clear_zero_flag();
     }
-    assign_negative_status(result);
+    assign_negative_status(result & 0xFF);
 }
 
 void CPU::cpy(uint8_t operand){
@@ -316,11 +316,12 @@ void CPU::jmp(uint16_t address){
 }
 
 void CPU::jsr(uint16_t operand){
+    registers.pc--;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
     spdlog::info("Storing address 0x{:X} into stack", registers.pc);
-    push(back);
     push(front);
+    push(back);
     registers.pc = operand;
     registers.rw_register_mode = 0x0;
 }
@@ -418,20 +419,18 @@ void CPU::ror(uint16_t address){
 void CPU::rti(){
     registers.pc++;
     uint8_t status = pop();
-    registers.sr = status & ~0x30;
+    registers.sr = status;
     uint16_t address = pop();
-    address <<= 8;
-    address |= pop();
+    address |= pop() << 8;
     registers.pc = address;
 }
 
 void CPU::rts(){
     registers.pc++;
     uint16_t address = pop();
-    address <<= 8;
-    address |= pop();
+    address |= pop() << 8;
     spdlog::info("Retrieving address from stack: 0x{:X}",address);
-    registers.pc = address;
+    registers.pc = address + 1;
 }
 
 void CPU::sbc(uint8_t operand){
