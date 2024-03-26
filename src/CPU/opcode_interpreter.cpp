@@ -480,6 +480,53 @@ void CPU::execute_opcode(int opcode){
             nop();
             registers.cycles += 2;
             break;
+        //UNOFFICIAL NOPS
+        case 0x1A:
+        case 0x3A:
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA:
+            nop();
+            registers.cycles += 2;
+            break;
+        case 0x80:
+        case 0x82:
+        case 0x89:
+        case 0xC2:
+        case 0xE2:
+            immediate(&CPU::nop);
+            registers.cycles += 2;
+            break;
+        case 0x04:
+        case 0x44:
+        case 0x64:
+            zero_page(&CPU::nop);
+            registers.cycles += 3;
+            break;
+        case 0x14:
+        case 0x34:
+        case 0x54:
+        case 0x74:
+        case 0xD4:
+        case 0xF4:
+            zero_page_x(&CPU::nop);
+            registers.cycles += 4;
+            break;
+        case 0x0C:
+            absolute(&CPU::nop);
+            registers.cycles += 4;
+            break;
+        case 0x1C:
+        case 0x3C:
+        case 0x5C:
+        case 0x7C:
+        case 0xDC:
+        case 0xFC:
+            registers.cycles += (4 + absolute_x(&CPU::nop));
+            //TODO special cycle case
+            break;
+
 
         //ORA
         case 0x09:
@@ -740,6 +787,125 @@ void CPU::execute_opcode(int opcode){
             tya();
             registers.cycles += 2;
             break;
+
+        //ALL OTHER UNOFFICIAL OPS
+
+        //ALR
+        case 0x4B:
+            immediate(&CPU::alr);
+            registers.cycles += 2;
+            break;
+
+        //ANC
+        case 0x0B:
+            immediate(&CPU::anc);
+            registers.cycles += 2;
+            break;
+        //ANC2
+        case 0x2B:
+            immediate(&CPU::anc2);
+            registers.cycles += 2;
+            break;
+        //ANE (XAA)
+        case 0x8B:
+            immediate(&CPU::ane);
+            registers.cycles += 2;
+            break;
+        //ARR
+        case 0x6B:
+            immediate(&CPU::arr);
+            registers.cycles += 2;
+            break;
+        //DCP
+        case 0xC7:
+            zero_page(&CPU::dcp);
+            registers.cycles += 5;
+            break;
+        case 0xD7:
+            zero_page_x(&CPU::dcp);
+            registers.cycles += 6;
+            break;
+        case 0xCF:
+            absolute(&CPU::dcp);
+            registers.cycles += 6;
+            break;
+        case 0xDF:
+            absolute_x(&CPU::dcp);
+            registers.cycles += 7;
+            break;
+        case 0xDB:
+            absolute_y(&CPU::dcp);
+            registers.cycles += 7;
+            break;
+        case 0xC3:
+            indirect_x(&CPU::dcp);
+            registers.cycles += 8;
+            break;
+        case 0xD3:
+            indirect_y(&CPU::dcp);
+            registers.cycles += 8;
+            break;
+        //ISC
+        case 0xE7:
+            zero_page(&CPU::isc);
+            registers.cycles += 5;
+            break;
+        case 0xF7:
+            zero_page_x(&CPU::isc);
+            registers.cycles += 6;
+            break;
+        case 0xEF:
+            absolute(&CPU::isc);
+            registers.cycles += 6;
+            break;
+        case 0xFF:
+            absolute_x(&CPU::isc);
+            registers.cycles += 7;
+            break;
+        case 0xFB:
+            absolute_y(&CPU::isc);
+            registers.cycles += 7;
+            break;
+        case 0xE3:
+            indirect_x(&CPU::isc);
+            registers.cycles += 8;
+            break;
+        case 0xF3:
+            indirect_y(&CPU::isc);
+            registers.cycles += 8;
+            break;
+        //LAS
+        case 0xBB:
+            absolute_y(&CPU::las);
+            registers.cycles += 4;
+            break;
+        //LAX
+        case 0xA7:
+            zero_page(&CPU::lax);
+            registers.cycles += 3;
+            break;
+        case 0xB7:
+            zero_page_y(&CPU::lax);
+            registers.cycles += 4;
+            break;
+        case 0xAF:
+            absolute(&CPU::lax);
+            registers.cycles += 4;
+            break;
+        case 0xBF:
+            absolute_y(&CPU::lax);
+            registers.cycles += 4;
+            break;
+        case 0xA3:
+            indirect_x(&CPU::lax);
+            registers.cycles += 6;
+            break;
+        case 0xB3:
+            indirect_y(&CPU::lax);
+            registers.cycles += 5;
+            break;
+
+
 
         default:
             spdlog::critical("INVALID INSTRUCTION. OPCODE: 0x{:X}",opcode);

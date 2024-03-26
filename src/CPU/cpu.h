@@ -36,6 +36,13 @@
 #define READ 0x1
 #define WRITE 0x2
 
+#define AC_ADDRESS 0x0
+#define X_ADDRESS 0x1
+#define Y_ADDRESS 0x2
+#define PC_ADDRESS 0x3
+#define SP_ADDRESS 0x4
+#define SR_ADDRESS 0x5
+
 class CPU {
 
 private:
@@ -463,6 +470,7 @@ public:
      * Absolute,X      | 0xFC
      */
     void nop();
+    void nop(uint8_t operand);
 
     /* Logical Inclusive OR
      *
@@ -683,7 +691,7 @@ public:
      * ------------------------
      * Immediate       | 0x4B
      */
-    void alr();
+    void alr(uint16_t operand);
 
     /* AND operation + set C as ASL
      *
@@ -691,7 +699,7 @@ public:
      * ------------------------
      * Immediate       | 0x0B
      */
-    void anc();
+    void anc(uint8_t operand);
 
     /* AND operation + set C as ROL
      *
@@ -699,15 +707,15 @@ public:
      * ------------------------
      * Immediate       | 0x2B
      */
-    void anc2();
+    void anc2(uint8_t operand);
 
-    /* And X + AND operation
+    /* OR X + AND operation (XAA)
      *
      * Addressing Mode | Opcode
      * ------------------------
      * Immediate       | 0x8B
      */
-    void ane();
+    void ane(uint8_t operand);
 
     /* AND operation + ROR
      *
@@ -715,7 +723,7 @@ public:
      * ------------------------
      * Immediate       | 0x6B
      */
-    void arr();
+    void arr(uint8_t operand);
 
     /* Decrement operation + CMP operation
      *
@@ -729,7 +737,7 @@ public:
      * (Indirect,X)    | 0xC3
      * (Indirect),Y    | 0xD3
      */
-    void dcp();
+    void dcp(uint16_t operand);
 
     /* Increment operation + SBC operation
      *
@@ -743,7 +751,7 @@ public:
      * (Indirect,X)    | 0xE3
      * (Indirect),Y    | 0xF3
      */
-    void isc();
+    void isc(uint16_t operand);
 
     /* LDA/TSX operation
      *
@@ -751,7 +759,7 @@ public:
      * ------------------------
      * Absolute,Y      | 0xBB
      */
-    void las();
+    void las(uint16_t operand);
 
     /* LDA operation + LDX operation
      *
@@ -764,7 +772,7 @@ public:
      * (Indirect,X)    | 0xA3
      * (Indirect),Y    | 0xB3
      */
-    void lax();
+    void lax(uint8_t operand);
 
     /* Store * AND operation in A and X
      *
@@ -892,6 +900,7 @@ public:
 
 
     // Memory Addressing Modes
+
     void accumulator(void (CPU::*instruction)(uint8_t));
 
     void immediate(void (CPU::*instruction)(uint8_t));

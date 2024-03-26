@@ -362,6 +362,8 @@ void CPU::lsr(uint16_t address){
 
 void CPU::nop(){}
 
+void CPU::nop(uint8_t operand){}
+
 void CPU::ora(uint8_t operand){
     registers.ac |= operand;
     assign_zero_status(registers.ac);
@@ -506,31 +508,82 @@ void CPU::tya(){
 
 // ----------------------- UNOFFICIAL OPCODES -----------------------
 
-void CPU::alr() {
+void CPU::alr(uint16_t operand) {
+    uint8_t value = read(operand);
+    registers.ac &= value;
+    registers.rw_register_mode = 0x1;
+    lsr(AC_ADDRESS);
+    registers.rw_register_mode = 0x0;
 }
 
-void CPU::anc() {
+void CPU::anc(uint8_t operand) {
+    registers.ac &= operand;
+    if(is_bit_set(registers.ac, 7)){
+        sec();
+    } else{
+        clc();
+    }
+    assign_negative_status(registers.ac);
+    assign_zero_status(registers.ac);
 }
 
-void CPU::anc2() {
+void CPU::anc2(uint8_t operand) {
+    anc(operand);
 }
 
-void CPU::ane() {
+void CPU::ane(uint8_t operand) {
+    uint8_t value = registers.ac | 0x0;
+    value &= registers.x;
+    value &= operand;
+    registers.ac = value;
+    assign_negative_status(registers.ac);
+    assign_zero_status(registers.ac);
 }
 
-void CPU::arr() {
+void CPU::arr(uint8_t operand) {
+    registers.ac &= operand;
+    uint8_t newCarry = is_bit_set(registers.ac, 0);
+    registers.ac = (registers.ac >> 1) | (is_bit_set(registers.sr, 0) << 7);
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
+    registers.sr = (registers.sr & 0xFE) | (newCarry ? 1 : 0);
+    uint8_t bit5 = is_bit_set(registers.ac, 5);
+    uint8_t bit6 = is_bit_set(registers.ac, 6);
+    if (bit5 ^ bit6) {
+        registers.sr |= (1 << 6);
+    } else {
+        registers.sr &= ~(1 << 6);
+    }
 }
 
-void CPU::dcp() {
+
+void CPU::dcp(uint16_t operand) {
+    uint8_t value = read(operand);
+    value--;
+    write(operand, value);
+    cmp(value);
 }
 
-void CPU::isc() {
+void CPU::isc(uint16_t operand) {
+    uint8_t value = read(operand);
+    value++;
+    write(operand, value);
+    sbc(value);
 }
 
-void CPU::las() {
+void CPU::las(uint16_t operand) {
+    registers.ac = read(operand) & registers.sp;
+    registers.x = registers.ac;
+    registers.sp = registers.ac;
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void CPU::lax() {
+void CPU::lax(uint8_t operand) {
+    registers.ac = operand;
+    registers.x = operand;
+    assign_zero_status(operand);
+    assign_negative_status(operand);
 }
 
 void CPU::lxa() {
@@ -571,6 +624,7 @@ void CPU::usbc() {
 
 
 // Memory Addressing Modes
+
 void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {
     (this->*instruction)(registers.ac);
 }
@@ -653,7 +707,7 @@ bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
 
 void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
     registers.rw_register_mode = 0x1;
-    (this->*instruction)(0x0);
+    (this->*instruction)(AC_ADDRESS);
     registers.rw_register_mode = 0x0;
 }
 void CPU::immediate(void (CPU::*instruction)(uint16_t)) {
