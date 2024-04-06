@@ -904,6 +904,179 @@ void CPU::execute_opcode(int opcode){
             indirect_y(&CPU::lax);
             registers.cycles += 5;
             break;
+        //LXA
+        case 0xAB:
+            immediate(&CPU::lax);
+            registers.cycles += 2;
+            break;
+        //RLA
+        case 0x27:
+            zero_page(&CPU::rla);
+            registers.cycles += 5;
+            break;
+        case 0x37:
+            zero_page_x(&CPU::rla);
+            registers.cycles += 6;
+            break;
+        case 0x2F:
+            absolute(&CPU::rla);
+            registers.cycles += 6;
+            break;
+        case 0x3F:
+            absolute_x(&CPU::rla);
+            registers.cycles += 7;
+            break;
+        case 0x3B:
+            absolute_y(&CPU::rla);
+            registers.cycles += 7;
+            break;
+        case 0x23:
+            indirect_x(&CPU::rla);
+            registers.cycles += 8;
+            break;
+        case 0x33:
+            indirect_y(&CPU::rla);
+            registers.cycles += 8;
+            break;
+        //RRA
+        case 0x67:
+            zero_page(&CPU::rra);
+            registers.cycles += 5;
+            break;
+        case 0x77:
+            zero_page_x(&CPU::rra);
+            registers.cycles += 6;
+            break;
+        case 0x6F:
+            absolute(&CPU::rra);
+            registers.cycles += 6;
+            break;
+        case 0x7F:
+            absolute_x(&CPU::rra);
+            registers.cycles += 7;
+            break;
+        case 0x7B:
+            absolute_y(&CPU::rra);
+            registers.cycles += 7;
+            break;
+        case 0x63:
+            indirect_x(&CPU::rra);
+            registers.cycles += 8;
+            break;
+        case 0x73:
+            indirect_y(&CPU::rra);
+            registers.cycles += 8;
+            break;
+        //SAX
+        case 0x87:
+            zero_page(&CPU::sax);
+            registers.cycles += 3;
+            break;
+        case 0x97:
+            zero_page_y(&CPU::sax);
+            registers.cycles += 4;
+            break;
+        case 0x8F:
+            absolute(&CPU::sax);
+            registers.cycles += 4;
+            break;
+        case 0x83:
+            indirect_x(&CPU::sax);
+            registers.cycles += 6;
+            break;
+        //SBX
+        case 0xCB:
+            immediate(&CPU::sbx);
+            registers.cycles += 2;
+            break;
+        //SHA
+        case 0x9F:
+            absolute_y(&CPU::sha);
+            registers.cycles += 5;
+            break;
+        case 0x93:
+            indirect_y(&CPU::sha);
+            registers.cycles += 6;
+            break;
+        //SHX
+        case 0x9E:
+            absolute_y(&CPU::shx);
+            registers.cycles += 5;
+            break;
+        //SHY
+        case 0x9C:
+            absolute_x(&CPU::shy);
+            registers.cycles += 5;
+            break;
+        //SLO
+        case 0x07:
+            zero_page(&CPU::slo);
+            registers.cycles += 5;
+            break;
+        case 0x17:
+            zero_page_x(&CPU::slo);
+            registers.cycles += 6;
+            break;
+        case 0x0F:
+            absolute(&CPU::slo);
+            registers.cycles += 6;
+            break;
+        case 0x1F:
+            absolute_x(&CPU::slo);
+            registers.cycles += 7;
+            break;
+        case 0x1B:
+            absolute_y(&CPU::slo);
+            registers.cycles += 7;
+            break;
+        case 0x03:
+            indirect_x(&CPU::slo);
+            registers.cycles += 8;
+            break;
+        case 0x13:
+            indirect_y(&CPU::slo);
+            registers.cycles += 8;
+            break;
+        //SRE
+        case 0x47:
+            zero_page(&CPU::sre);
+            registers.cycles += 5;
+            break;
+        case 0x57:
+            zero_page_x(&CPU::sre);
+            registers.cycles += 6;
+            break;
+        case 0x4F:
+            absolute(&CPU::sre);
+            registers.cycles += 6;
+            break;
+        case 0x5F:
+            absolute_x(&CPU::sre);
+            registers.cycles += 7;
+            break;
+        case 0x5B:
+            absolute_y(&CPU::sre);
+            registers.cycles += 7;
+            break;
+        case 0x43:
+            indirect_x(&CPU::sre);
+            registers.cycles += 8;
+            break;
+        case 0x53:
+            indirect_y(&CPU::sre);
+            registers.cycles += 8;
+            break;
+        //TAS
+        case 0x9B:
+            absolute_y(&CPU::tas);
+            registers.cycles += 5;
+            break;
+        //USBC
+        case 0xEB:
+            immediate(&CPU::usbc);
+            registers.cycles += 2;
+            break;
+
 
 
 

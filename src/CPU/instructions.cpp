@@ -586,40 +586,107 @@ void CPU::lax(uint8_t operand) {
     assign_negative_status(operand);
 }
 
-void CPU::lxa() {
+void CPU::lxa(uint8_t operand) {
+    uint8_t value = (registers.ac | 0x0) & operand;
+    registers.ac = value;
+    registers.x = value;
+    assign_negative_status(registers.ac);
+    assign_zero_status(registers.ac);
+
 }
 
-void CPU::rla() {
+void CPU::rla(uint16_t operand) {
+    rol(operand);
+    uint8_t value = read(operand);
+    registers.ac &= value;
+    assign_negative_status(registers.ac);
+    assign_zero_status(registers.ac);
 }
 
-void CPU::rra() {
+void CPU::rra(uint16_t operand) {
+    ror(operand);
+    uint8_t value = read(operand);
+    adc(value);
 }
 
-void CPU::sax() {
+void CPU::sax(uint16_t operand) {
+    write(operand, registers.ac & registers.x);
 }
 
-void CPU::sbx() {
+void CPU::sbx(uint8_t operand) {
+    uint16_t value = registers.x & registers.ac;
+    value -= operand;
+    registers.x = value & 0xFF;
+    if (value >= operand) {
+        sec();
+    } else {
+        clc();
+    }
+    if (registers.x == operand) {
+        set_zero_flag();
+    } else {
+        clear_zero_flag();
+    }
+    assign_negative_status(registers.x);
 }
 
-void CPU::sha() {
+void CPU::sha(uint16_t operand) {
+    uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
+    uint8_t value = registers.ac & registers.x & highBytePlusOne;
+    write(operand, value);
 }
 
-void CPU::shx() {
+void CPU::shx(uint16_t operand) {
+    uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
+    uint8_t value = registers.x & highBytePlusOne;
+    write(operand, value);
 }
 
-void CPU::shy() {
+void CPU::shy(uint16_t operand) {
+    uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
+    uint8_t value = registers.y & highBytePlusOne;
+    write(operand, value);
 }
 
-void CPU::slo() {
+void CPU::slo(uint16_t operand) {
+    uint8_t value = read(operand);
+    uint8_t original = value;
+    value <<= 1;
+    write(operand, value);
+    registers.ac |= value;
+    if(is_bit_set(original, 7)){
+        sec();
+    } else{
+        clc();
+    }
+    assign_zero_status(registers.ac); // Update zero flag based on A.
+    assign_negative_status(registers.ac); // Update negative flag based on A.
 }
 
-void CPU::sre() {
+void CPU::sre(uint16_t operand) {
+    uint8_t value = read(operand);
+    uint8_t original = value;
+    value >>= 1;
+    write(operand, value);
+    registers.ac ^= value;
+    if(is_bit_set(original, 0)){
+        sec();
+    } else{
+        clc();
+    }
+    assign_zero_status(registers.ac);
+    assign_negative_status(registers.ac);
 }
 
-void CPU::tas() {
+void CPU::tas(uint16_t operand) {
+    uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
+    registers.sp = registers.ac & registers.x;
+    write(operand, registers.sp & highBytePlusOne);
 }
 
-void CPU::usbc() {
+void CPU::usbc(uint8_t operand) {
+    sbc(operand);
+    nop();
 }
 
 

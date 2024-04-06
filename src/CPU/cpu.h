@@ -780,7 +780,7 @@ public:
      * ------------------------
      * Immediate       | 0xAB
      */
-    void lxa();
+    void lxa(uint8_t operand);
 
     /* ROL operation + AND operation
      *
@@ -794,7 +794,7 @@ public:
      * (Indirect,X)    | 0x23
      * (Indirect),Y    | 0x33
      */
-    void rla();
+    void rla(uint16_t operand);
 
     /* ROR operation + ADC operation
      *
@@ -808,7 +808,7 @@ public:
      * (Indirect,X)    | 0x63
      * (Indirect),Y    | 0x73
      */
-    void rra();
+    void rra(uint16_t operand);
 
     /* A and X on the bus at the same time and stored in M
      *
@@ -819,7 +819,7 @@ public:
      * Absolute        | 0x8F
      * (Indirect,X)    | 0x83
      */
-    void sax();
+    void sax(uint16_t operand);
 
     /* CMP and DEX at once. Sets CMP flags
      *
@@ -827,7 +827,7 @@ public:
      * ------------------------
      * Immediate       | 0xCB
      */
-    void sbx();
+    void sbx(uint8_t operand);
 
     /* Stores A AND X and high byte of addr + 1 at addr
      *
@@ -836,7 +836,7 @@ public:
      * Absolute,Y      | 0x9F
      * (Indirect),Y    | 0x93
      */
-    void sha();
+    void sha(uint16_t operand);
 
     /* Stores X AND high byte of addr + 1 at addr
      *
@@ -844,7 +844,7 @@ public:
      * ------------------------
      * Absolute,Y      | 0x9E
      */
-    void shx();
+    void shx(uint16_t operand);
 
     /* Stores Y AND high byte of addr + 1 at addr
      *
@@ -852,7 +852,7 @@ public:
      * ------------------------
      * Absolute,X      | 0x9C
      */
-    void shy();
+    void shy(uint16_t operand);
 
     /* ASL operation + ORA operation
      *
@@ -866,7 +866,7 @@ public:
      * (Indirect,X)    | 0x03
      * (Indirect),Y    | 0x13
      */
-    void slo();
+    void slo(uint16_t operand);
 
     /* LSR operation + EOR operation
      *
@@ -880,7 +880,7 @@ public:
      * (Indirect,X)    | 0x43
      * (Indirect),Y    | 0x53
      */
-    void sre();
+    void sre(uint16_t operand);
 
     /* puts A AND X in SP and store A AND X AND high byte of addr + 1 at addr
      *
@@ -888,7 +888,7 @@ public:
      * ------------------------
      * Absolute,Y      | 0x9B
      */
-    void tas();
+    void tas(uint16_t operand);
 
      /* SBC operation + NOP
      *
@@ -896,7 +896,7 @@ public:
      * ------------------------
      * Immediate       | 0xEB
      */
-    void usbc();
+    void usbc(uint8_t operand);
 
 
     // Memory Addressing Modes
