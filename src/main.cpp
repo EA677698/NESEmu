@@ -61,6 +61,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     time_t CPU = time(NULL);
     char* test_type = argv[2];
     uint8_t nestest = 0x1;
+    bool delay_finished = false;
     CPU::Register snapshot;
     while (!quit) {
         while (SDL_PollEvent(&event) != 0) {
@@ -69,7 +70,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
             }
         }
         if(time(NULL) - CPU >= 1){
-            cpu.registers.cycles = 0;
+            delay_finished = true;
+            cpu.cycles = 0;
             CPU = time(NULL);
         }
 
@@ -77,8 +79,9 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
             if(!strcmp(test_type, "blargg")) {
                 uint8_t status = cpu.mem[0x6000];
                 spdlog::debug("Status: 0x{:X}", status);
-                if(status == 0x81 || status <= 0x7F) {
+                if((status == 0x81 || status <= 0x7F) && delay_finished) {
                     spdlog::debug("Test finished or requires reset");
+                    spdlog::debug(cpu.mem[0x6004]);
                     exit();
                     exit(status);
                 }
@@ -94,7 +97,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
                 //spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
             }
 
-        if(cpu.registers.cycles < 1790000) {
+        if(cpu.cycles < 1790000) {
             // First three are the following: Address in $PC, opcode, and operand
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
 //            if(cpu.registers.pc == 0xC6BC) {
@@ -102,8 +105,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
  //           }
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
-                          snapshot.pc, cpu.mem[snapshot.pc], cpu.registers.operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
-            cpu.registers.operand = 0x0;
+                          snapshot.pc, cpu.mem[snapshot.pc], cpu.current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
+            cpu.current_operand = 0x0;
         }
 
         }

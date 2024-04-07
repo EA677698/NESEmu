@@ -70,6 +70,9 @@ private:
 
 public:
     uint8_t mem[65536];
+    uint32_t cycles;
+    uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
+    uint16_t current_operand; // operand for the current instruction
 
     CPU(PPU ppu);
 
@@ -79,14 +82,8 @@ public:
         uint8_t y; //y  index
         uint16_t pc; //program counter
         uint8_t sp; //stack pointer
-
         //bits: Negative flag, Overflow flag, Reserved, Break command, Decimal mode, IRQ disable, Zero flag, Carry flag
         uint8_t sr; //sr register (flags)
-
-        // NOT ACTUAL REGISTERS VVVVVVV
-        uint32_t cycles;
-        uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
-        uint16_t operand; // operand for the current instruction
     };
 
     Register registers;

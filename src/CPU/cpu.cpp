@@ -6,7 +6,7 @@ CPU::CPU(PPU ppu) : ppu(ppu){
 }
 
 void CPU::write(uint16_t address, uint8_t operand){
-    if(registers.rw_register_mode){
+    if(rw_register_mode){
         switch (address) {
             case 0x0000:
                 registers.ac = operand;
@@ -46,7 +46,7 @@ void CPU::write(uint16_t address, uint8_t operand){
 
 
 uint8_t CPU::read(uint16_t address){
-    if(registers.rw_register_mode){
+    if(rw_register_mode){
         switch (address) {
             case 0x0000:
                 return registers.ac;
@@ -78,10 +78,11 @@ uint8_t CPU::read(uint16_t address){
 
 void CPU::power_up(const std::string &rom_path){
     memset(mem, 0, 65536);
+    cycles = 0;
     registers.sr = 0x34;
     registers.ac = 0, registers.x = 0, registers.y = 0;
     registers.sp = 0xFD;
-    registers.rw_register_mode = 0x0;
+    rw_register_mode = 0x0;
     mem[0x4017] = 0;
     mem[0x4015] = 0;
     for(int i = 0x4000; i <= 0x400F; i++){
@@ -94,5 +95,5 @@ void CPU::power_up(const std::string &rom_path){
     registers.pc = RESET_VECTOR;
     printf("PC Register: 0x%X\n", registers.pc);
     spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
-    registers.cycles = 0;
+    cycles = 0;
 }

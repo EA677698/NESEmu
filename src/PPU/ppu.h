@@ -22,6 +22,7 @@ class PPU {
     uint8_t OAM[256]; // object attribute memory (OAM)
     uint8_t ppu_mem[16384]; // VRAM
     uint8_t ppudata_buffer; // For accuracy, buffer prefetches for next PPUDATA read
+    uint16_t scanline;
 
 
 public:
