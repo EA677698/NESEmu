@@ -55,10 +55,29 @@ def test_01_basics():
     NESEmu_log = "latestLog.txt"
     status = 1
     message = ""
+    test_message = ""
     try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '1', '1'],
+        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
                        capture_output=True, text=False, timeout=exec_time_out)
-        message = f"Test failed with status {status}"
+        message = f"Test failed with status {status.returncode}"
+        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
     except TimeoutExpired:
         message = "Program timed out"
-    assert status == 0, message
+    res = test_message.find("Passed") != -1
+    assert res == True, message
+
+#def test_02_implied():
+#    rom_path = "instr_test-v5/rom_singles/02_implied.nes"
+#    NESEmu_log = "latestLog.txt"
+#    status = 1
+#    message = ""
+#    test_message = ""
+#    try:
+#        status = subprocess.run([executable_path, rom_path, 'blargg', '1', '1'],
+#                                capture_output=True, text=False, timeout=exec_time_out)
+#        message = f"Test failed with status {status.returncode}"
+#        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
+#    except TimeoutExpired:
+#        message = "Program timed out"
+#    res = test_message.find("Passed") != -1
+#    assert res == True, message

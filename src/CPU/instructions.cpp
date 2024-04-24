@@ -323,7 +323,7 @@ void CPU::jsr(uint16_t operand){
     registers.pc--;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    spdlog::info("Storing address 0x{:X} into stack", registers.pc);
+    //spdlog::info("Storing address 0x{:X} into stack", registers.pc);
     push(front);
     push(back);
     registers.pc = operand;
@@ -434,7 +434,7 @@ void CPU::rts(){
     registers.pc++;
     uint16_t address = pop();
     address |= pop() << 8;
-    spdlog::info("Retrieving address from stack: 0x{:X}",address);
+    //spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address + 1;
 }
 

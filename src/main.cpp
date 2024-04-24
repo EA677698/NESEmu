@@ -57,10 +57,10 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     CPU cpu(ppu);
     power_up(cpu, argv[1]);
     debug_mode = argc > 3; // DEBUGGING/TESTING MODE
-    if(debug_mode) {
+    if(strcmp(argv[3], "1") == 0) {
         spdlog::set_level(spdlog::level::debug);
     }
-    if(strcmp(argv[3], "1") == 0){
+    if(strcmp(argv[4], "1") == 0){
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
     spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
@@ -84,25 +84,26 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
             CPU = time(NULL);
         }
 
-        if(debug_mode) {
-            if(!strcmp(test_type, "blargg")) {
-                uint8_t status = cpu.mem[0x6000];
-                if(status == 0x80){
-                    blargg_initiated = true;
-                }
-                spdlog::debug("Status: 0x{:X}", status);
-                if(status != 0x80 && blargg_initiated) {
-                    char* res = (char*) &cpu.mem[0x6004];
-                    spdlog::debug("Test finished or requires reset");
-                    if(cpu.mem[0x6001] != 0xDE && cpu.mem[0x6002] != 0xB0 && cpu.mem[0x6003] != 0x61){
-                        spdlog::warn("Unexpected validation values: 0x{:X} 0x{:X} 0x{:X}"
-                                     " expected 0xDE 0xB0 0x61", cpu.mem[0x6001], cpu.mem[0x6002], cpu.mem[0x6003]);
-                    }
-                    spdlog::info("Test result: {}", res);
-                    exit();
-                    exit(status);
-                }
+        if(!strcmp(test_type, "blargg")) {
+            uint8_t status = cpu.mem[0x6000];
+            if(status == 0x80){
+                blargg_initiated = true;
             }
+            spdlog::debug("Status: 0x{:X}", status);
+            if(status != 0x80 && blargg_initiated) {
+                char* res = (char*) &cpu.mem[0x6004];
+                spdlog::debug("Test finished or requires reset");
+                if(cpu.mem[0x6001] != 0xDE && cpu.mem[0x6002] != 0xB0 && cpu.mem[0x6003] != 0x61){
+                    spdlog::warn("Unexpected validation values: 0x{:X} 0x{:X} 0x{:X}"
+                                 " expected 0xDE 0xB0 0x61", cpu.mem[0x6001], cpu.mem[0x6002], cpu.mem[0x6003]);
+                }
+                spdlog::info("Test result: {}", res);
+                exit();
+                exit(status);
+            }
+        }
+
+        if(debug_mode) {
             if(!strcmp(test_type, "nestest")) {
                 if(nestest) {
                     spdlog::info("NESTEST: setting PC to 0xC000");
@@ -117,9 +118,6 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
         if(cpu.cycles < 1790000) {
             // First three are the following: Address in $PC, opcode, and operand
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
-//            if(cpu.registers.pc == 0xC6BC) {
-//                spdlog::info("Here!");
- //           }
             cpu.execute_opcode(cpu.mem[cpu.registers.pc++]);
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
                           snapshot.pc, cpu.mem[snapshot.pc], cpu.current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
