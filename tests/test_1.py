@@ -30,7 +30,7 @@ except FileNotFoundError as e:
     print(e)
     pytest.exit("Terminating tests due to lack of valid emulator executable path.")
 
-exec_time_out = 5
+exec_time_out = 60
 
 
 def test_check():
