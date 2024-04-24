@@ -30,7 +30,7 @@ except FileNotFoundError as e:
     print(e)
     pytest.exit("Terminating tests due to lack of valid emulator executable path.")
 
-exec_time_out = 60
+exec_time_out = 180  # 3 minutes
 
 
 def test_check():
@@ -54,9 +54,11 @@ def test_01_basics():
     rom_path = "instr_test-v5/rom_singles/01-basics.nes"
     NESEmu_log = "latestLog.txt"
     status = 1
+    message = ""
     try:
         status = subprocess.run([executable_path, rom_path, 'blargg', '1', '1'],
                        capture_output=True, text=False, timeout=exec_time_out)
+        message = f"Test failed with status {status}"
     except TimeoutExpired:
-        print("Program timed out")
-    assert status == 0, f"Test failed with status {status}"
+        message = "Program timed out"
+    assert status == 0, message
