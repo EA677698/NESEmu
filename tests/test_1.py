@@ -50,12 +50,13 @@ def test_nestest():
     result = fd.compare_logs(rom_log, NESEmu_log)
     assert result == (0, 0), f"Mismatch at line {result[0]} in nestest log and {result[1]} in NESEmu log"
 
-#def test_instr_test_v5():
-#    rom_path = "instr_test-v5/rom_singles/01-basics.nes"
-#    NESEmu_log = "latestLog.txt"
-#    try:
-#        status = subprocess.run([executable_path, rom_path, 'blargg', '1', '1'],
-#                       capture_output=True, text=False, timeout=exec_time_out)
-#    except TimeoutExpired:
-#        print("Program timed out")
-#    assert status == (0, 0), f"Mismatch at line {result[0]} in instr_test-v5 log and {result[1]} in NESEmu log"
+def test_01_basics():
+    rom_path = "instr_test-v5/rom_singles/01-basics.nes"
+    NESEmu_log = "latestLog.txt"
+    status = 1
+    try:
+        status = subprocess.run([executable_path, rom_path, 'blargg', '1', '1'],
+                       capture_output=True, text=False, timeout=exec_time_out)
+    except TimeoutExpired:
+        print("Program timed out")
+    assert status == 0, f"Test failed with status {status}"

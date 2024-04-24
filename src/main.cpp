@@ -1,6 +1,7 @@
 #include "global.h"
 #include <SDL_events.h>
 #include <SDL.h>
+#include <fstream>
 
 #include "romLoader.h"
 #include "CPU/cpu.h"
@@ -12,6 +13,8 @@
 #include "spdlog/async.h"
 
 ROM rom;
+std::ofstream dump;
+uint8_t * final_mem;
 
 bool is_bit_set(uint8_t operand, char bit){
     return (operand & (0x1 << bit)) >> bit;
@@ -22,6 +25,10 @@ void power_up(CPU &cpu, std::string rom_path){
 }
 
 void exit(){
+    if(dump.is_open()){
+        dump.write((char*)final_mem, 0x10000);
+        dump.close();
+    }
     SDL_DestroyTexture(pixels);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -38,7 +45,7 @@ void init_spdlog(){
     set_default_logger(async_logger);
 }
 
-int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
+int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dump end memory]
     uint8_t debug_mode = 0x0;
     if(argc < 2) {
         spdlog::error("No rom file provided");
@@ -50,9 +57,11 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     CPU cpu(ppu);
     power_up(cpu, argv[1]);
     debug_mode = argc > 3; // DEBUGGING/TESTING MODE
-
     if(debug_mode) {
         spdlog::set_level(spdlog::level::debug);
+    }
+    if(strcmp(argv[3], "1") == 0){
+        dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
     spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
     spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
@@ -61,16 +70,16 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
     time_t CPU = time(NULL);
     char* test_type = argv[2];
     uint8_t nestest = 0x1;
-    bool delay_finished = false;
+    bool blargg_initiated = false;
     CPU::Register snapshot;
     while (!quit) {
+        final_mem = cpu.mem;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true;
             }
         }
         if(time(NULL) - CPU >= 1){
-            delay_finished = true;
             cpu.cycles = 0;
             CPU = time(NULL);
         }
@@ -78,10 +87,18 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode]
         if(debug_mode) {
             if(!strcmp(test_type, "blargg")) {
                 uint8_t status = cpu.mem[0x6000];
+                if(status == 0x80){
+                    blargg_initiated = true;
+                }
                 spdlog::debug("Status: 0x{:X}", status);
-                if((status == 0x81 || status <= 0x7F) && delay_finished) {
+                if(status != 0x80 && blargg_initiated) {
+                    char* res = (char*) &cpu.mem[0x6004];
                     spdlog::debug("Test finished or requires reset");
-                    spdlog::debug(cpu.mem[0x6004]);
+                    if(cpu.mem[0x6001] != 0xDE && cpu.mem[0x6002] != 0xB0 && cpu.mem[0x6003] != 0x61){
+                        spdlog::warn("Unexpected validation values: 0x{:X} 0x{:X} 0x{:X}"
+                                     " expected 0xDE 0xB0 0x61", cpu.mem[0x6001], cpu.mem[0x6002], cpu.mem[0x6003]);
+                    }
+                    spdlog::info("Test result: {}", res);
                     exit();
                     exit(status);
                 }
