@@ -29,7 +29,7 @@ Support for other operating systems is planned and will be added in the future.
 
 The emulator can be testing by passing arguments to it. The following are the available arguments:
 
-```./emulator (path to the ROM file) (Optional initial PC value, otherwise set to -1) (Memory address 1) (Memory address 2)...```
+```./emulator [rom path] [test author] [debug mode] [dump end memory]```
 
 Memory addresses passed as arguments will have their contents printed every cycle.
 if '~' is passed in place of a memory address, the emulator will read continuously from the last specified address until
