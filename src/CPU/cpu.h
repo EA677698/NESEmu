@@ -10,6 +10,7 @@
 #include "../global.h"
 
 #define RESET_VECTOR ((((uint16_t) mem[0xFFFD]) << 8) | mem[0xFFFC])
+#define NMI_VECTOR ((((uint16_t) mem[0xFFFB]) << 8) | mem[0xFFFA])
 
 #define PPUCTRL_ADDR 0x2000
 #define PPUMASK_ADDR 0x2001
@@ -71,7 +72,7 @@ private:
 public:
     uint8_t mem[65536];
     uint32_t cycles;
-    uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack, but it'll do
+    uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack imo, but it'll do
     uint16_t current_operand; // operand for the current instruction
 
     CPU(PPU ppu);
@@ -90,11 +91,15 @@ public:
 
     void execute_opcode(int opcode);
 
+    void NMI_handler();
+
     void write(uint16_t address, uint8_t operand);
 
     uint8_t read(uint16_t address);
 
     void power_up(const std::string &rom_path);
+
+private:
 
     //--------------------------------INSTRUCTIONS ---------------------------------
 

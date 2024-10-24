@@ -5,7 +5,6 @@
 
 #include "../global.h"
 #include "ppu.h"
-#include "../CPU/cpu.h"
 
 
 PPU::PPU() {
@@ -68,6 +67,10 @@ uint8_t PPU::read(uint16_t address) {
     }
 }
 
+void PPU::set_cpu(CPU cpu) {
+    this->cpu = cpu;
+}
+
 
 void PPU::ppu_power_up() {
     registers.ppuctrl = 0x0;
@@ -79,6 +82,38 @@ void PPU::ppu_power_up() {
     registers.ppudata = 0x0;
     registers.w = 0x0;
     ppudata_buffer = 0x0;
+    nmi_triggered = 0;
+}
+
+void PPU::execute_cycle() {
+    if (scanline == 241 && cycles == 1) {
+        set_vblank();
+    }
+    if(is_in_vblank() && get_NMI() && !nmi_triggered){
+        cpu.NMI_handler();
+        nmi_triggered = 1;
+    }
+
+    if (scanline == 261 && cycles == 1) {
+        clear_vblank();
+        nmi_triggered = 0;
+    }
+}
+
+void PPU::render_background() {
+    uint16_t table_address = get_base_nametable_address();
+    uint16_t pattern_table_address = get_background_pattern_table_address();
+    for(int i = 0; i <= 0x1D; i++){
+        for(int e = 0; e <= 0x1F; e++){
+            uint8_t tile = ppu_mem[table_address + (i * 0x1F) + e];
+            uint16_t pattern_address = pattern_table_address + (tile * 16);
+            uint8_t data[2][8];
+            for(int j = 0; j < 16; j++){
+                data[j / 8][j % 8] = ppu_mem[pattern_address + j];
+            }
+
+        }
+    }
 }
 
 //PPUCTRL
@@ -183,4 +218,14 @@ uint8_t PPU::sprite_zero_hit() {
 
 uint8_t PPU::is_in_vblank() {
     return is_bit_set(registers.ppustatus, 7);
+}
+
+// NMI
+
+void PPU::set_vblank(){
+    registers.ppustatus |= 0x80;
+}
+
+void PPU::clear_vblank(){
+    registers.ppustatus &= 0x7F;
 }

@@ -6,6 +6,7 @@
 #define EMULATOR_PPU_H
 
 #include <cstdint>
+#include "../CPU/cpu.h"
 
 #define PATTERN_TABLE_0 0x0000
 #define PATTERN_TABLE_1 0x1000
@@ -22,10 +23,19 @@ class PPU {
     uint8_t OAM[256]; // object attribute memory (OAM)
     uint8_t ppu_mem[16384]; // VRAM
     uint8_t ppudata_buffer; // For accuracy, buffer prefetches for next PPUDATA read
+    uint8_t frame[256][240];
+    uint8_t frame_buffer[256][240];
     uint16_t scanline;
+    uint8_t nmi_triggered;
+    CPU cpu;
+
+    void set_vblank();
+    void clear_vblank();
 
 
 public:
+
+    uint32_t cycles;
 
     PPU();
 
@@ -50,7 +60,12 @@ public:
     void write(uint16_t address, uint8_t operand);
     uint8_t read(uint16_t address);
 
+    void execute_cycle();
+    void set_cpu(CPU cpu);
+
     void ppu_power_up();
+
+    void render_background();
     uint16_t get_base_nametable_address();
     uint8_t get_vram_address_increment();
     uint16_t get_sprite_pattern_table_address();

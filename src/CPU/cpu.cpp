@@ -76,6 +76,16 @@ uint8_t CPU::read(uint16_t address){
     return mem[address];
 }
 
+void CPU::NMI_handler() {
+    uint8_t front = registers.pc >> 8;
+    uint8_t back = registers.pc & 0xFF;
+    push(front);
+    push(back);
+    php();
+    registers.sr |= 0x04;
+    jmp(NMI_VECTOR);
+}
+
 void CPU::power_up(const std::string &rom_path){
     memset(mem, 0, 65536);
     cycles = 0;
