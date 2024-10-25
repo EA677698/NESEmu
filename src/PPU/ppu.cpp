@@ -67,7 +67,7 @@ uint8_t PPU::read(uint16_t address) {
     }
 }
 
-void PPU::set_cpu(CPU cpu) {
+void PPU::set_cpu(CPU *cpu) {
     this->cpu = cpu;
 }
 
@@ -120,13 +120,13 @@ void PPU::render_background() {
 uint16_t PPU::get_base_nametable_address() {
     switch (registers.ppuctrl & 0x3) {
         case 0x1:
-            return 0x2400;
+            return NAMETABLE_1;
         case 0x2:
-            return 0x2800;
+            return NAMETABLE_2;
         case 0x3:
-            return 0x2C00;
+            return NAMETABLE_3;
         default:
-            return 0x2000;
+            return NAMETABLE_0;
     }
 }
 
@@ -139,9 +139,9 @@ uint8_t PPU::get_vram_address_increment() {
 
 uint16_t PPU::get_sprite_pattern_table_address() {
     if (is_bit_set(registers.ppuctrl, 3)) {
-        return 0x1000;
+        return PATTERN_TABLE_1;
     } else {
-        return 0x0000;
+        return PATTERN_TABLE_0;
     }
 }
 

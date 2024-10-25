@@ -6,7 +6,8 @@
 #define EMULATOR_PPU_H
 
 #include <cstdint>
-#include "../CPU/cpu.h"
+
+class CPU;
 
 #define PATTERN_TABLE_0 0x0000
 #define PATTERN_TABLE_1 0x1000
@@ -27,7 +28,7 @@ class PPU {
     uint8_t frame_buffer[256][240];
     uint16_t scanline;
     uint8_t nmi_triggered;
-    CPU cpu;
+    CPU* cpu;
 
     void set_vblank();
     void clear_vblank();
@@ -61,7 +62,7 @@ public:
     uint8_t read(uint16_t address);
 
     void execute_cycle();
-    void set_cpu(CPU cpu);
+    void set_cpu(CPU* cpu);
 
     void ppu_power_up();
 
