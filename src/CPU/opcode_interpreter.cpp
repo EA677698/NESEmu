@@ -8,6 +8,8 @@
 // low byte then high byte
 
 void CPU::execute_opcode(int opcode){
+    uint8_t prev_mode;
+    uint8_t operand;
     switch (opcode) {
         //ADC
         case 0x69:
@@ -24,18 +26,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0x7D:
             absolute_x(&CPU::adc);
-            //TODO special cycle case
             break;
         case 0x79:
             absolute_y(&CPU::adc);
-            //TODO special cycle case
             break;
         case 0x61:
             indirect_x(&CPU::adc);
             break;
         case 0x71:
             indirect_y(&CPU::adc);
-            //TODO special cycle case
             break;
 
         //AND
@@ -53,18 +52,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0x3D:
             absolute_x(&CPU::logical_and);
-            //TODO special cycle case
             break;
         case 0x39:
             absolute_y(&CPU::logical_and);
-            //TODO special cycle case
             break;
         case 0x21:
             indirect_x(&CPU::logical_and);
             break;
         case 0x31:
             indirect_y(&CPU::logical_and);
-            //TODO special cycle case
             break;
 
         //ASL
@@ -86,23 +82,32 @@ void CPU::execute_opcode(int opcode){
 
         //BCC
         case 0x90:
-            current_operand = mem[registers.pc];
-            bcc(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bcc(operand);
             break;
 
         //BCS
         case 0xB0:
-            current_operand = mem[registers.pc];
-            bcs(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bcs(operand);
             break;
 
         //BEQ
         case 0xF0:
-            current_operand = mem[registers.pc];
-            beq(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            beq(operand);
             break;
 
         //BIT
@@ -115,23 +120,32 @@ void CPU::execute_opcode(int opcode){
 
         //BMI
         case 0x30:
-            current_operand = mem[registers.pc];
-            bmi(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bmi(operand);
             break;
 
         //BNE
         case 0xD0:
-            current_operand = mem[registers.pc];
-            bne(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bne(operand);
             break;
 
         //BPL
         case 0x10:
-            current_operand = mem[registers.pc];
-            bpl(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bpl(operand);
             break;
 
         //BRK
@@ -141,16 +155,22 @@ void CPU::execute_opcode(int opcode){
 
         //BVC
         case 0x50:
-            current_operand = mem[registers.pc];
-            bvc(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bvc(operand);
             break;
 
         //BVS
         case 0x70:
-            current_operand = mem[registers.pc];
-            bvs(mem[registers.pc++]);
-            //TODO special cycle case
+            prev_mode = rw_register_mode;
+            rw_register_mode = 0x0;
+            current_operand = read(registers.pc);
+            operand = read(registers.pc++);
+            rw_register_mode = prev_mode;
+            bvs(operand);
             break;
 
         //CLC
@@ -188,18 +208,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0xDD:
             absolute_x(&CPU::cmp);
-            //TODO special cycle case
             break;
         case 0xD9:
             absolute_y(&CPU::cmp);
-            //TODO special cycle case
             break;
         case 0xC1:
             indirect_x(&CPU::cmp);
             break;
         case 0xD1:
             indirect_y(&CPU::cmp);
-            //TODO special cycle case
             break;
 
         //CPX
@@ -263,18 +280,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0x5D:
             absolute_x(&CPU::eor);
-            //TODO special cycle case
             break;
         case 0x59:
             absolute_y(&CPU::eor);
-            //TODO special cycle case
             break;
         case 0x41:
             indirect_x(&CPU::eor);
             break;
         case 0x51:
             indirect_y(&CPU::eor);
-            //TODO special cycle case
             break;
 
         //INC
@@ -329,18 +343,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0xBD:
             absolute_x(&CPU::lda);
-            //TODO special cycle case
             break;
         case 0xB9:
             absolute_y(&CPU::lda);
-            //TODO special cycle case
             break;
         case 0xA1:
             indirect_x(&CPU::lda);
             break;
         case 0xB1:
             indirect_y(&CPU::lda);
-            //TODO special cycle case
             break;
 
         //LDX
@@ -358,7 +369,6 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0xBE:
             absolute_y(&CPU::ldx);
-            //TODO special cycle case
             break;
 
         //LDY
@@ -376,7 +386,6 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0xBC:
             absolute_x(&CPU::ldy);
-            //TODO special cycle case
             break;
 
         //LSR
@@ -437,7 +446,6 @@ void CPU::execute_opcode(int opcode){
         case 0xDC:
         case 0xFC:
             absolute_x(&CPU::nop);
-            //TODO special cycle case
             break;
 
 
@@ -456,18 +464,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0x1D:
             absolute_x(&CPU::ora);
-            //TODO special cycle case
             break;
         case 0x19:
             absolute_y(&CPU::ora);
-            //TODO special cycle case
             break;
         case 0x01:
             indirect_x(&CPU::ora);
             break;
         case 0x11:
             indirect_y(&CPU::ora);
-            //TODO special cycle case
             break;
 
         //PHA
@@ -549,18 +554,15 @@ void CPU::execute_opcode(int opcode){
             break;
         case 0xFD:
             absolute_x(&CPU::sbc);
-            //TODO special cycle case
             break;
         case 0xF9:
             absolute_y(&CPU::sbc);
-            //TODO special cycle case
             break;
         case 0xE1:
             indirect_x(&CPU::sbc);
             break;
         case 0xF1:
             indirect_y(&CPU::sbc);
-            //TODO special cycle case
             break;
 
         //SEC
