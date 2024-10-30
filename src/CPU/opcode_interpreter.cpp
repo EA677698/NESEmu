@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "cpu.h"
+#include "../global.h"
 
 // low byte then high byte
 

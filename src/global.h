@@ -6,6 +6,7 @@
 #define EMULATOR_GLOBAL_H
 
 #include <fstream>
+#include <cstdint>
 
 struct ROM{
     std::ifstream rom_file;

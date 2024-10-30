@@ -7,20 +7,11 @@
 #include <cstdint>
 #include "../PPU/ppu.h"
 #include "spdlog/spdlog.h"
-#include "../global.h"
 
 #define RESET_VECTOR ((((uint16_t) mem[0xFFFD]) << 8) | mem[0xFFFC])
 #define NMI_VECTOR ((((uint16_t) mem[0xFFFB]) << 8) | mem[0xFFFA])
 
-#define PPUCTRL_ADDR 0x2000
-#define PPUMASK_ADDR 0x2001
-#define PPUSTATUS_ADDR 0x2002
-#define OAMADDR_ADDR 0x2003
-#define OAMDATA_ADDR 0x2004
-#define PPUSCROLL_ADDR 0x2005
-#define PPUADDR_ADDR 0x2006
-#define PPUDATA_ADDR 0x2007
-#define OAMDMA_ADDR 0x4014
+
 
 #define ZERO_PAGE_BEGIN 0x0
 #define ZERO_PAGE_END 0xFF
@@ -45,8 +36,6 @@
 #define SR_ADDRESS 0x5
 
 class CPU {
-
-private:
 
     PPU ppu;
 

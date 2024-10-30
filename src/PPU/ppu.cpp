@@ -5,6 +5,7 @@
 
 #include "../global.h"
 #include "ppu.h"
+#include "../CPU/cpu.h"
 
 
 PPU::PPU() {
@@ -86,11 +87,25 @@ void PPU::ppu_power_up() {
 }
 
 void PPU::execute_cycle() {
+
+
+    if (cycles >= 0 && cycles < 256) {
+
+    } else if (cycles >= 256 && cycles < 321) {
+
+    } else if (cycles >= 321 && cycles < 341) {
+
+    } else if (cycles >= 341) {
+        cycles = 0;
+        scanline++;
+    }
+
+
     if (scanline == 241 && cycles == 1) {
         set_vblank();
     }
     if(is_in_vblank() && get_NMI() && !nmi_triggered){
-        cpu.NMI_handler();
+        cpu->NMI_handler();
         nmi_triggered = 1;
     }
 
@@ -103,21 +118,41 @@ void PPU::execute_cycle() {
 void PPU::render_background() {
     uint16_t table_address = get_base_nametable_address();
     uint16_t pattern_table_address = get_background_pattern_table_address();
-    for(int i = 0; i <= 0x1D; i++){
-        for(int e = 0; e <= 0x1F; e++){
-            uint8_t tile = ppu_mem[table_address + (i * 0x1F) + e];
-            uint16_t pattern_address = pattern_table_address + (tile * 16);
-            uint8_t data[2][8];
-            for(int j = 0; j < 16; j++){
-                data[j / 8][j % 8] = ppu_mem[pattern_address + j];
+    static uint8_t i = 0;
+    static uint16_t address;
+    static uint8_t tile;
+    static uint8_t attribute;
+    static uint16_t pattern_address;
+    static uint8_t data[2][8];
+    switch (cycles % 8) {
+        case 0:
+            i = i % 32;
+            address = table_address + (scanline * 0x20) + i;
+            i++;
+            break;
+        case 1:
+            tile = read(address);
+            break;
+        case 2:
+            address = table_address + ((scanline - (scanline % 2)) * (0x20 / 4)) + i;
+            break;
+        case 4:
+            pattern_address = pattern_table_address + (tile * 16);
+            for(int j = 0; j < 8; j++){
+                data[0][j] = read(pattern_address + j);
+            }
+            break;
+        case 5:
+            for(int j = 0; j < 8; j++){
+                data[1][j] = read(pattern_address + (j + 8));
             }
 
-        }
     }
+
 }
 
 //PPUCTRL
-uint16_t PPU::get_base_nametable_address() {
+uint16_t PPU::get_base_nametable_address() const {
     switch (registers.ppuctrl & 0x3) {
         case 0x1:
             return NAMETABLE_1;
@@ -130,93 +165,91 @@ uint16_t PPU::get_base_nametable_address() {
     }
 }
 
-uint8_t PPU::get_vram_address_increment() {
+uint8_t PPU::get_vram_address_increment() const {
     if (is_bit_set(registers.ppuctrl, 2)) {
         return 32;
     }
     return 1;
 }
 
-uint16_t PPU::get_sprite_pattern_table_address() {
+uint16_t PPU::get_sprite_pattern_table_address() const {
     if (is_bit_set(registers.ppuctrl, 3)) {
         return PATTERN_TABLE_1;
-    } else {
-        return PATTERN_TABLE_0;
     }
+    return PATTERN_TABLE_0;
 }
 
-uint16_t PPU::get_background_pattern_table_address() {
+uint16_t PPU::get_background_pattern_table_address() const {
     if (is_bit_set(registers.ppuctrl, 4)) {
         return 0x1000;
-    } else {
-        return 0x0000;
     }
+    return 0x0000;
 }
 
-uint8_t PPU::get_sprite_size() {
+uint8_t PPU::get_sprite_size() const {
     if (is_bit_set(registers.ppuctrl, 5)) {
         return 16;
     }
     return 8;
 }
 
-uint8_t PPU::get_PPU_select() {
+uint8_t PPU::get_PPU_select() const {
     return is_bit_set(registers.ppuctrl, 6);
 }
 
-uint8_t PPU::get_NMI() {
+uint8_t PPU::get_NMI() const {
     return is_bit_set(registers.ppuctrl, 7);
 }
 
 //PPUMASK
 
-uint8_t PPU::is_greyscale() {
+uint8_t PPU::is_greyscale() const {
     return is_bit_set(registers.ppumask, 0);
 }
 
-uint8_t PPU::background_visibility() {
+uint8_t PPU::background_visibility() const {
     return is_bit_set(registers.ppumask, 1);
 }
 
-uint8_t PPU::sprites_visibility() {
+uint8_t PPU::sprites_visibility() const {
     return is_bit_set(registers.ppumask, 2);
 }
 
-uint8_t PPU::background_shown() {
+uint8_t PPU::background_shown() const {
     return is_bit_set(registers.ppumask, 3);
 }
 
-uint8_t PPU::sprites_shown() {
+uint8_t PPU::sprites_shown() const {
     return is_bit_set(registers.ppumask, 4);
 }
 
-uint8_t PPU::is_red_emphasized() {
+uint8_t PPU::is_red_emphasized() const {
     return is_bit_set(registers.ppumask, 5);
 }
 
-uint8_t PPU::is_green_emphasized() {
+uint8_t PPU::is_green_emphasized() const {
     return is_bit_set(registers.ppumask, 6);
 }
 
-uint8_t PPU::is_blue_emphasized() {
+uint8_t PPU::is_blue_emphasized() const {
     return is_bit_set(registers.ppumask, 7);
 }
 
 //PPUSTATUS
 
-uint8_t PPU::PPU_open_bus() {
+uint8_t PPU::PPU_open_bus() const {
     return registers.ppustatus & 0x1F;
 }
 
-uint8_t PPU::sprite_overflow() {
+uint8_t PPU::sprite_overflow() const {
     return is_bit_set(registers.ppustatus, 5);
 }
 
-uint8_t PPU::sprite_zero_hit() {
+uint8_t PPU::sprite_zero_hit() const {
     return is_bit_set(registers.ppustatus, 6);
 }
 
-uint8_t PPU::is_in_vblank() {
+uint8_t PPU::is_in_vblank() const {
     return is_bit_set(registers.ppustatus, 7);
 }
 

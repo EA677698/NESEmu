@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "cpu.h"
+#include "../global.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
 bool is_page_crossed(uint16_t initial_address, uint16_t change){

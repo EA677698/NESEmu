@@ -1,11 +1,16 @@
 #include "cpu.h"
 #include "../romLoader.h"
+#include "../global.h"
 
 
 CPU::CPU(PPU ppu) : ppu(ppu){
 }
 
 void CPU::write(uint16_t address, uint8_t operand){
+    cycles++;
+    ppu.execute_cycle();
+    ppu.execute_cycle();
+    ppu.execute_cycle();
     if(rw_register_mode){
         switch (address) {
             case 0x0000:
@@ -46,6 +51,10 @@ void CPU::write(uint16_t address, uint8_t operand){
 
 
 uint8_t CPU::read(uint16_t address){
+    cycles++;
+    ppu.execute_cycle();
+    ppu.execute_cycle();
+    ppu.execute_cycle();
     if(rw_register_mode){
         switch (address) {
             case 0x0000:
