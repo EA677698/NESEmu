@@ -29,20 +29,26 @@ void PPU::write(uint16_t address, uint8_t operand) {
             break;
         case PPUSCROLL_ADDR:
             registers.w = !registers.w;
-            registers.ppuscroll = operand;
+            if (registers.w == 0) {
+                registers.t = (registers.t & 0x7FE0) | ((operand & 0xF8) >> 3);  // Coarse X
+                registers.x = operand & 0x07;
+            } else {
+                registers.t = (registers.t & 0x0C1F) | ((operand & 0x07) << 12); // Fine Y
+                registers.t = (registers.t & 0xFC1F) | ((operand & 0xF8) << 2);   // Coarse Y
+            }
             break;
         case PPUADDR_ADDR:
             registers.w = !registers.w;
-            registers.ppuaddr |= operand << (8 * registers.w);
+            if(!registers.w){
+                registers.t = (registers.t & 0x00FF) | ((operand & 0x3F) << 8);
+            } else {
+                registers.t = (registers.t & 0xFF00) | operand;
+                registers.v = registers.t;
+            }
             break;
         case PPUDATA_ADDR:
             registers.ppudata = operand;
-            if (registers.ppuaddr >= NAMETABLE_MIRRORS && registers.ppuaddr <= PALETTE_RAM) {
-                ppu_mem[registers.ppuaddr - 0x2000] = registers.ppudata;
-            }
-            if (registers.ppuaddr >= PALETTE_RAM_MIRRORS) {
-                ppu_mem[registers.ppuaddr - 0x3F00] = registers.ppudata;
-            }
+            ppu_mem[registers.v & 0x3FFF] = registers.ppudata;
             registers.ppuaddr += get_vram_address_increment();
             break;
         default:
@@ -53,17 +59,19 @@ void PPU::write(uint16_t address, uint8_t operand) {
 
 
 uint8_t PPU::read(uint16_t address) {
+    uint8_t status;
     switch (address) {
         case PPUSTATUS_ADDR:
+            status = registers.ppustatus;
             registers.ppustatus &= 0x7F;
             registers.w = 0x0;
-            return registers.ppustatus;
+            return status;
         case OAMDATA_ADDR:
             return OAM[registers.oamaddr];
         default:
             registers.ppudata = ppudata_buffer;
-            registers.ppuaddr += get_vram_address_increment();
-            ppudata_buffer = ppu_mem[registers.ppuaddr];
+            ppudata_buffer = ppu_mem[registers.v & 0x3FFF];
+            registers.v += get_vram_address_increment();
             return registers.ppudata;
     }
 }
@@ -125,18 +133,18 @@ void PPU::render_background() {
     static uint16_t pattern_address;
     static uint8_t data[2][8];
     switch (cycles % 8) {
-        case 0:
+        case 0: // Compute nametable tile address
             i = i % 32;
             address = table_address + (scanline * 0x20) + i;
             i++;
             break;
-        case 1:
+        case 1: // Read nametable tile
             tile = read(address);
             break;
-        case 2:
+        case 2: // Compute attribute address
             address = table_address + ((scanline - (scanline % 2)) * (0x20 / 4)) + i;
             break;
-        case 4:
+        case 4: // Read attribute
             pattern_address = pattern_table_address + (tile * 16);
             for(int j = 0; j < 8; j++){
                 data[0][j] = read(pattern_address + j);
