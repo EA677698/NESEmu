@@ -96,16 +96,17 @@ void PPU::ppu_power_up() {
 
 void PPU::execute_cycle() {
 
+    if (!cycles) {
 
-    if (cycles < 256) {
+    }
+    else if (cycles < 256) {
 
-    } else if (cycles >= 256 && cycles < 321) {
+    } else if (cycles < 321) {
 
-    } else if (cycles >= 321 && cycles < 341) {
+    } else if (cycles < 341) {
 
-    } else if (cycles >= 341) {
+    } else {
         cycles = 0;
-        scanline++;
     }
 
 
@@ -130,31 +131,37 @@ void PPU::render_background() {
     static uint16_t address;
     static uint8_t tile;
     static uint8_t attribute;
-    static uint16_t pattern_address;
-    static uint8_t data[2][8];
+    static uint8_t pattern_low_byte;
+    static uint8_t pattern_high_byte;
+    uint8_t data[8];
     switch (cycles % 8) {
-        case 0: // Compute nametable tile address
+        case 1: // Retrieve nametable tile
             tile_column = tile_column % 32;
             address = table_address + (scanline * 0x20) + tile_column;
+            tile = read(address);
             tile_column++;
             break;
-        case 1: // Read nametable tile
-            tile = read(address);
+        case 3: // Retrieve attribute byte (2x2 tile quadrant)
+            address = (table_address + 0x3C0) + ((scanline / 2) * 16) + (tile_column / 2);
+            attribute = read(address);
             break;
-        case 2: // Compute attribute address
-            address = table_address + ((scanline - (scanline % 2)) * (0x20 / 4)) + tile_column;
+        case 5: // Fetch Tile pattern low byte
+            address = pattern_table_address + tile;
+            pattern_low_byte = read(address);
             break;
-        case 4: // Read attribute
-            pattern_address = pattern_table_address + (tile * 16);
-            for(int j = 0; j < 8; j++){
-                data[0][j] = read(pattern_address + j);
+        case 7: // Fetch Tile pattern high byte
+            address = pattern_table_address + tile + 8;
+            pattern_high_byte = read(address);
+            for (char i = 0; i < 8; i++) {
+                data[i] = (is_bit_set(pattern_high_byte,i) << 1) | is_bit_set(pattern_low_byte,i);
             }
-            break;
-        case 5:
-            for(int j = 0; j < 8; j++){
-                data[1][j] = read(pattern_address + (j + 8));
+            for(int i = 0; i < 8; i++){
+                frame[scanline][i * tile_column] = ppu_mem[PALETTE_BACKGROUND + (attribute * 4) + data[i]];
             }
-
+            scanline++;
+            break;
+        default:
+            break;
     }
 
 }
@@ -189,9 +196,9 @@ uint16_t PPU::get_sprite_pattern_table_address() const {
 
 uint16_t PPU::get_background_pattern_table_address() const {
     if (is_bit_set(registers.ppuctrl, 4)) {
-        return 0x1000;
+        return PATTERN_TABLE_1;
     }
-    return 0x0000;
+    return PATTERN_TABLE_0;
 }
 
 uint8_t PPU::get_sprite_size() const {

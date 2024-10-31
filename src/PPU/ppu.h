@@ -16,8 +16,10 @@ class CPU;
 #define NAMETABLE_2 0x2800
 #define NAMETABLE_3 0x2C00
 #define NAMETABLE_MIRRORS 0x3000
-#define PALETTE_RAM 0x3F00
+#define PALETTE_BACKGROUND 0x3F00
 #define PALETTE_RAM_MIRRORS 0x4000
+
+#define RW_HALT 0xFFFF
 
 // register addresses
 #define PPUCTRL_ADDR 0x2000
