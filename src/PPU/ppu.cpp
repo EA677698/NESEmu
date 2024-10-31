@@ -97,7 +97,7 @@ void PPU::ppu_power_up() {
 void PPU::execute_cycle() {
 
 
-    if (cycles >= 0 && cycles < 256) {
+    if (cycles < 256) {
 
     } else if (cycles >= 256 && cycles < 321) {
 
@@ -126,7 +126,7 @@ void PPU::execute_cycle() {
 void PPU::render_background() {
     uint16_t table_address = get_base_nametable_address();
     uint16_t pattern_table_address = get_background_pattern_table_address();
-    static uint8_t i = 0;
+    static uint8_t tile_column = 0;
     static uint16_t address;
     static uint8_t tile;
     static uint8_t attribute;
@@ -134,15 +134,15 @@ void PPU::render_background() {
     static uint8_t data[2][8];
     switch (cycles % 8) {
         case 0: // Compute nametable tile address
-            i = i % 32;
-            address = table_address + (scanline * 0x20) + i;
-            i++;
+            tile_column = tile_column % 32;
+            address = table_address + (scanline * 0x20) + tile_column;
+            tile_column++;
             break;
         case 1: // Read nametable tile
             tile = read(address);
             break;
         case 2: // Compute attribute address
-            address = table_address + ((scanline - (scanline % 2)) * (0x20 / 4)) + i;
+            address = table_address + ((scanline - (scanline % 2)) * (0x20 / 4)) + tile_column;
             break;
         case 4: // Read attribute
             pattern_address = pattern_table_address + (tile * 16);
