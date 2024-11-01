@@ -92,6 +92,7 @@ void PPU::ppu_power_up() {
     registers.w = 0x0;
     ppudata_buffer = 0x0;
     nmi_triggered = 0;
+    load_system_palette("../../Composite_wiki.pal");
 }
 
 void PPU::execute_cycle() {
@@ -100,7 +101,7 @@ void PPU::execute_cycle() {
 
     }
     else if (cycles < 256) {
-
+        render_background();
     } else if (cycles < 321) {
 
     } else if (cycles < 341) {
@@ -122,6 +123,7 @@ void PPU::execute_cycle() {
         clear_vblank();
         nmi_triggered = 0;
     }
+    cycles++;
 }
 
 void PPU::render_background() {
@@ -156,7 +158,7 @@ void PPU::render_background() {
                 data[i] = (is_bit_set(pattern_high_byte,i) << 1) | is_bit_set(pattern_low_byte,i);
             }
             for(int i = 0; i < 8; i++){
-                frame[scanline][i * tile_column] = ppu_mem[PALETTE_BACKGROUND + (attribute * 4) + data[i]];
+                frame[scanline][i * tile_column] = get_rgb_from_composite_palette(ppu_mem[PALETTE_BACKGROUND + (attribute * 4) + data[i]]);
             }
             scanline++;
             break;
@@ -277,3 +279,19 @@ void PPU::set_vblank(){
 void PPU::clear_vblank(){
     registers.ppustatus &= 0x7F;
 }
+
+void PPU::load_system_palette(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if(file.is_open()){
+        file.read((char*)system_palette, 0xC0);
+        file.close();
+    } else{
+        spdlog::error("Error loading system palette file");
+    }
+}
+
+RGB PPU::get_rgb_from_composite_palette(uint8_t nes_color_index) {
+    int base_index = nes_color_index * 3;
+    return { system_palette[base_index], system_palette[base_index + 1], system_palette[base_index + 2] };
+}
+

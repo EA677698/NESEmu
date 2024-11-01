@@ -29,7 +29,7 @@ void exit(){
         dump.write((char*)final_mem, 0x10000);
         dump.close();
     }
-    SDL_DestroyTexture(pixels);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     spdlog::shutdown();
@@ -125,6 +125,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
         }
 
         }
+
+        render_frame(ppu.frame);
 
         // ... (update pixels and rendering code here)
     }

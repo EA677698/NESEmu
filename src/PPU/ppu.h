@@ -6,6 +6,7 @@
 #define EMULATOR_PPU_H
 
 #include <cstdint>
+#include "../global.h"
 
 class CPU;
 
@@ -37,9 +38,10 @@ class PPU {
     uint8_t OAM[256]; // object attribute memory (OAM)
     uint8_t ppu_mem[16384]; // VRAM
     uint8_t ppudata_buffer; // For accuracy, buffer prefetches for next PPUDATA read
-    uint8_t frame[256][240];
-    uint8_t frame_buffer[256][240];
     uint16_t scanline;
+    uint8_t system_palette[192];
+
+private:
     uint8_t nmi_triggered;
     CPU* cpu;
 
@@ -50,6 +52,7 @@ class PPU {
 public:
 
     uint32_t cycles;
+    RGB frame[256][240];
 
     PPU();
 
@@ -116,6 +119,8 @@ public:
     uint8_t sprite_overflow() const;
     uint8_t sprite_zero_hit() const;
     uint8_t is_in_vblank() const;
+    void load_system_palette(const std::string& filename);
+    RGB get_rgb_from_composite_palette(uint8_t nes_color_index);
 
 };
 

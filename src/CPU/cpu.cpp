@@ -4,6 +4,8 @@
 
 
 CPU::CPU(PPU ppu) : ppu(ppu){
+    ppu.ppu_power_up();
+    ppu.set_cpu(this);
 }
 
 void CPU::write(uint16_t address, uint8_t operand){

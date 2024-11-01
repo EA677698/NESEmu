@@ -8,6 +8,12 @@
 #include <fstream>
 #include <cstdint>
 
+struct RGB{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
+
 struct ROM{
     std::ifstream rom_file;
     uint8_t header[16];
