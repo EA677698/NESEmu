@@ -52,7 +52,7 @@ private:
 public:
 
     uint32_t cycles;
-    RGB frame[256][240];
+    RGB frame[VIDEO_HEIGHT][VIDEO_WIDTH];
 
     PPU();
 

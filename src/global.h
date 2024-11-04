@@ -8,6 +8,9 @@
 #include <fstream>
 #include <cstdint>
 
+#define VIDEO_WIDTH 256
+#define VIDEO_HEIGHT 240
+
 struct RGB{
     uint8_t r;
     uint8_t g;

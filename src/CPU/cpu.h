@@ -37,7 +37,7 @@
 
 class CPU {
 
-    PPU ppu;
+    PPU *ppu;
 
     const uint8_t CPU_PPU_PERM[9] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE, WRITE, READ | WRITE, WRITE};
 
@@ -64,7 +64,7 @@ public:
     uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack imo, but it'll do
     uint16_t current_operand; // operand for the current instruction
 
-    CPU(PPU ppu);
+    CPU(PPU *ppu);
 
     struct Register {
         uint8_t ac; //accumulator

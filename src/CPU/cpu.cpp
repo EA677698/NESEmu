@@ -3,16 +3,16 @@
 #include "../global.h"
 
 
-CPU::CPU(PPU ppu) : ppu(ppu){
-    ppu.ppu_power_up();
-    ppu.set_cpu(this);
+CPU::CPU(PPU *ppu) : ppu(ppu){
+    ppu->set_cpu(this);
+    ppu->ppu_power_up();
 }
 
 void CPU::write(uint16_t address, uint8_t operand){
     cycles++;
-    ppu.execute_cycle();
-    ppu.execute_cycle();
-    ppu.execute_cycle();
+    ppu->execute_cycle();
+    ppu->execute_cycle();
+    ppu->execute_cycle();
     if(rw_register_mode){
         switch (address) {
             case 0x0000:
@@ -42,7 +42,7 @@ void CPU::write(uint16_t address, uint8_t operand){
     if(address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END){
         address = NES_PPU_REGISTER_START + (address % 8);
         if(CPU_PPU_PERM[address % 8] > READ){
-            ppu.write(address, operand);
+            ppu->write(address, operand);
         } else{
             spdlog::error("Invalid CPU write to PPU: 0x{:X}", address);
         }
@@ -54,9 +54,9 @@ void CPU::write(uint16_t address, uint8_t operand){
 
 uint8_t CPU::read(uint16_t address){
     cycles++;
-    ppu.execute_cycle();
-    ppu.execute_cycle();
-    ppu.execute_cycle();
+    ppu->execute_cycle();
+    ppu->execute_cycle();
+    ppu->execute_cycle();
     if(rw_register_mode){
         switch (address) {
             case 0x0000:
@@ -79,7 +79,7 @@ uint8_t CPU::read(uint16_t address){
     if(address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END){
         address = NES_PPU_REGISTER_START + (address % 8);
         if(CPU_PPU_PERM[address % 8] & READ){
-            return ppu.read(address);
+            return ppu->read(address);
         }
         spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
         return 0;
@@ -98,7 +98,7 @@ void CPU::NMI_handler() {
 }
 
 void CPU::power_up(const std::string &rom_path){
-    memset(mem, 0, 65536);
+    memset(mem, 0, sizeof(mem));
     cycles = 0;
     registers.sr = 0x34;
     registers.ac = 0, registers.x = 0, registers.y = 0;

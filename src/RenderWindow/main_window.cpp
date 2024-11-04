@@ -12,7 +12,7 @@ SDL_Renderer* renderer;
 SDL_Texture* texture;
 
 
-void render_frame(RGB frame_buffer[256][240]) {
+void render_frame(RGB frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
     void* pixels;
     int pitch;
 
@@ -22,8 +22,8 @@ void render_frame(RGB frame_buffer[256][240]) {
     }
 
     uint32_t* texture_pixels = static_cast<uint32_t*>(pixels);
-    for (int y = 0; y < 256; y++) {
-        for (int x = 0; x < 240; x++) {
+    for (int y = 0; y < VIDEO_HEIGHT; y++) {
+        for (int x = 0; x < VIDEO_WIDTH; x++) {
             RGB color = frame_buffer[y][x];
             uint32_t packed_color = (color.r << 16) | (color.g << 8) | color.b;
             texture_pixels[y * (pitch / 4) + x] = packed_color;

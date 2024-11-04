@@ -9,16 +9,13 @@
 #include <SDL_render.h>
 #include "../global.h"
 
-#define VIDEO_WIDTH 256
-#define VIDEO_HEIGHT 240
-
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 extern SDL_Texture *texture;
 
 void init_video();
 
-void render_frame(RGB frame_buffer[256][240]);
+void render_frame(RGB frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]);
 
 
 #endif //EMULATOR_MAIN_WINDOW_H
