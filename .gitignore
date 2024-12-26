@@ -10,5 +10,3 @@ libs/
 venv/
 tests/.pytest_cache
 tests/__pycache__
-tests/dump.bin
-tests/logs

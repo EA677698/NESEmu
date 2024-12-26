@@ -54,7 +54,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     init_spdlog();
     init_video();
     PPU ppu;
-    CPU cpu(&ppu);
+    // CPU cpu(&ppu);
+    CPU cpu(nullptr);
     power_up(cpu, argv[1]);
     debug_mode = argc > 3; // DEBUGGING/TESTING MODE
     if(strcmp(argv[3], "1") == 0) {

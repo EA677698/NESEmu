@@ -10,7 +10,6 @@ def sanitize_nestest_log(log):
         match = re.match(pattern, line)
         if match:
             address, codes, a, x, y, p, sp = match.groups()
-            # Rearrange and process the matched parts as needed
             output.append(f"{address} {codes.strip()} A:{a} X:{x} Y:{y} P:{p} SP:{sp}")
         else:
             output.append("No match found for line: " + line)
@@ -18,6 +17,8 @@ def sanitize_nestest_log(log):
 
 
 def is_valid_line(line):
+    if len(line) == 0:
+        return False
     if "INITIAL" in line:
         return False
     if "PC REGISTER" in line:
@@ -57,12 +58,12 @@ def compare_lines(line1, line2):
                     emu_token += 1
                     nestest_token += 1
                     continue
-            print("nestest:")
+            print("\nnestest:")
             print(line1)
             print(nestest_tokens)
             print(token1)
             print(val1)
-            print("nesemu:")
+            print("\nnesemu:")
             print(nesemu_tokens)
             print(token2)
             print(val2)
