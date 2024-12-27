@@ -13,29 +13,16 @@ SDL_Texture* texture;
 
 
 void render_frame(RGB frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
-    void* pixels;
-    int pitch;
-
-    if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0) {
-        spdlog::critical("SDL_LockTexture failed: {}\n", SDL_GetError());
+    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_WIDTH * sizeof(RGB)) != 0) {
+        spdlog::critical("SDL_UpdateTexture failed: {}\n", SDL_GetError());
         return;
     }
-
-    uint32_t* texture_pixels = static_cast<uint32_t*>(pixels);
-    for (int y = 0; y < VIDEO_HEIGHT; y++) {
-        for (int x = 0; x < VIDEO_WIDTH; x++) {
-            RGB color = frame_buffer[y][x];
-            uint32_t packed_color = (color.r << 16) | (color.g << 8) | color.b;
-            texture_pixels[y * (pitch / 4) + x] = packed_color;
-        }
-    }
-
-    SDL_UnlockTexture(texture);
 
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 }
+
 
 
 void init_video(){

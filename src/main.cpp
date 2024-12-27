@@ -54,14 +54,14 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     init_spdlog();
     init_video();
     PPU ppu;
-    // CPU cpu(&ppu);
-    CPU cpu(nullptr);
+    CPU cpu(&ppu);
+    // CPU cpu(nullptr);
     power_up(cpu, argv[1]);
     debug_mode = argc > 3; // DEBUGGING/TESTING MODE
-    if(strcmp(argv[3], "1") == 0) {
+    if(argc > 3 && strcmp(argv[3], "1") == 0) {
         spdlog::set_level(spdlog::level::debug);
     }
-    if(strcmp(argv[4], "1") == 0){
+    if(argc > 4 && strcmp(argv[4], "1") == 0){
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
     spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     SDL_Event event;
     bool quit = false;
     time_t CPU = time(NULL);
-    char* test_type = argv[2];
+    const char *test_type = argc > 2 ? argv[2] : "";
     uint8_t nestest = 0x1;
     bool blargg_initiated = false;
     CPU::Register snapshot;
@@ -116,6 +116,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
                 //spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
             }
 
+        }
+
         if(cpu.cycles < 1790000) {
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
             cpu.execute_opcode(cpu.read(cpu.registers.pc++));
@@ -126,8 +128,6 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
             if(ppu.is_in_vblank()){
                 render_frame(ppu.frame);
             }
-        }
-
         }
 
         // ... (update pixels and rendering code here)

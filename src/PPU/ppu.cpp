@@ -94,11 +94,23 @@ void PPU::ppu_power_up() {
     ppudata_buffer = 0x0;
     nmi_triggered = 0;
     scanline = 0;
+    cycles = -1;
     memset(frame, 0, sizeof(frame));
     load_system_palette("../../Composite_wiki.pal");
 }
 
 void PPU::execute_cycle() {
+
+    // Advance the cycle and manage scanline/cycle reset
+    cycles++;
+    if (cycles >= 341) { // End of scanline
+        cycles = 0;
+        scanline++;
+        if (scanline > 261) {
+            scanline = 0; // Wrap around to the first scanline of the next frame
+        }
+    }
+
     // Rendering cycle ranges:
     // 0-255: Visible cycles for rendering the background and potentially sprites.
     // 256-319: Cycles for sprite evaluation (preparation for next scanline).
@@ -120,9 +132,9 @@ void PPU::execute_cycle() {
     } else if (scanline == 241 && cycles == 1) {
         // Begin VBlank
         set_vblank(); // Set VBlank flag in PPUSTATUS (signals CPU rendering is done)
-        if (get_NMI()) { // Trigger NMI if enabled in PPUCTRL
-            cpu->NMI_handler(); // This NMI signals the CPU to process VBlank routines
+        if (get_NMI() && !nmi_triggered) { // Trigger NMI if enabled in PPUCTRL
             nmi_triggered = true;
+            cpu->NMI_handler(); // This NMI signals the CPU to process VBlank routines
         }
     } else if (scanline == 261) { // Pre-render scanline
         if (cycles == 1) {
@@ -130,16 +142,6 @@ void PPU::execute_cycle() {
             nmi_triggered = false; // Reset NMI trigger status
         }
         // Pre-render setup could go here, such as resetting PPU scroll registers if implemented
-    }
-
-    // Advance the cycle and manage scanline/cycle reset
-    cycles++;
-    if (cycles >= 341) { // End of scanline
-        cycles = 0;
-        scanline++;
-        if (scanline > 261) {
-            scanline = 0; // Wrap around to the first scanline of the next frame
-        }
     }
 }
 

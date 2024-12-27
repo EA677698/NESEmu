@@ -29,6 +29,8 @@ def is_valid_line(line):
         return False
     if "[critical]" in line:
         return False
+    if "[error]" in line:
+        return False
     return True
 
 
