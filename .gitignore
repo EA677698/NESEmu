@@ -10,3 +10,4 @@ libs/
 venv/
 tests/.pytest_cache
 tests/__pycache__
+tests/nestest/

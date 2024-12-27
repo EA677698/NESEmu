@@ -117,12 +117,9 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
             }
 
         if(cpu.cycles < 1790000) {
-            if(cpu.cycles >= 90000){
-                cpu.cycles = cpu.cycles;
-            }
-            // First three are the following: Address in $PC, opcode, and operand
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
             cpu.execute_opcode(cpu.read(cpu.registers.pc++));
+            // First three are the following: Address in $PC, opcode, and operand
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
                           snapshot.pc, cpu.mem[snapshot.pc], cpu.current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
             cpu.current_operand = 0x0;

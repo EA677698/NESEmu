@@ -47,6 +47,8 @@ def compare_lines(line1, line2):
             if "A:" not in token2:
                 emu_token += 1
                 token2 = nesemu_tokens[emu_token]
+
+        # Strips extra characters and converts into hex to compare
         val1 = int(token1.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("P:", ""),
                    16)
         val2 = int(token2.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("SR:", ""),
@@ -84,7 +86,9 @@ def compare_logs(nestest_log, nesemu_log):
             if emu_line >= len(nesemu_lines):
                 return nestest_line + 1, emu_line + 1
             if is_valid_line(nesemu_lines[emu_line]):
-                if not compare_lines(nestest_lines[nestest_line], nesemu_lines[emu_line]):
+                nestest_curr_line = nestest_lines[nestest_line]
+                nesemu_curr_line = nesemu_lines[emu_line]
+                if not compare_lines(nestest_curr_line, nesemu_curr_line):
                     return nestest_line + 1, emu_line + 1
                 nestest_line += 1
                 emu_line += 1

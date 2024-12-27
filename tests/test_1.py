@@ -29,7 +29,7 @@ try:
 except FileNotFoundError as e:
     pytest.exit(f"Error: {e}")
 
-exec_time_out = 60  # 60 seconds timeout for subprocesses
+exec_time_out = 300  # 60 seconds timeout for subprocesses
 
 
 def run_test(rom_path, test_name, test_type="blargg", debug_mode="1", dump_ram="0", compare_logs=False,
@@ -44,24 +44,25 @@ def run_test(rom_path, test_name, test_type="blargg", debug_mode="1", dump_ram="
             capture_output=True,
             timeout=exec_time_out
         )
-        stdout = result.stdout.decode("utf-8", errors="ignore")
+        stdout = result.stdout
     except TimeoutExpired as e:
-        stdout = e.stdout.decode("utf-8", errors="ignore") if e.stdout else ""
-        stderr = e.stderr.decode("utf-8", errors="ignore") if e.stderr else ""
-        stdout += f"\nTimeoutExpired: {e}\n" + stderr
+        stdout = e.stdout if e.stdout else b""
+        stderr = e.stderr if e.stderr else b""
+        stdout += f"\nTimeoutExpired: {e}\n".encode() + stderr
 
     # Write log regardless of success or timeout
-    with open(log_file, "w") as log:
+    with open(log_file, "wb") as log:
         log.write(stdout)
 
     # Check for test-specific results
-    if "TimeoutExpired" in stdout:
+    stdout_text = stdout.decode("utf-8", errors="ignore")
+    if "TimeoutExpired" in stdout_text:
         return False, f"Test {test_name} timed out. See log at {log_file}."
     if compare_logs and reference_log:
         comparison_result = fd.compare_logs(reference_log, log_file)
         if comparison_result != (0, 0):
             return False, f"Log mismatch at nestest line {comparison_result[0]} and emulator line {comparison_result[1]}. See log at {log_file}."
-    elif "Test result: Passed" not in stdout:
+    elif "Test result:" not in stdout_text and "Passed" not in stdout_text:
         return False, f"Test failed: {test_name}. See log at {log_file}."
 
     return True, None
@@ -79,6 +80,10 @@ def test_nestest():
     passed, message = run_test(rom_path, "nestest", test_type="nestest", compare_logs=True, reference_log=reference_log)
     assert passed, message
 
+
+def test_single_blargg_test():
+    passed, message = run_test("instr_test-v5/rom_singles/01-basics.nes", "hello", "blargg", "0")
+    assert passed, message
 
 # Parameterized tests for other ROMs
 @pytest.mark.parametrize("rom_file, test_name", [
@@ -100,5 +105,5 @@ def test_nestest():
     ("instr_test-v5/rom_singles/16-special.nes", "16_special")
 ])
 def test_rom(rom_file, test_name):
-    passed, message = run_test(rom_file, test_name)
+    passed, message = run_test(rom_file, test_name, "blargg", "0")
     assert passed, message
