@@ -11,10 +11,11 @@
 #define VIDEO_WIDTH 256
 #define VIDEO_HEIGHT 240
 
-struct RGB{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+struct RGBA{
+    uint8_t b = 0;
+    uint8_t g = 0;
+    uint8_t r = 0;
+    uint8_t a = 0xFF;
 };
 
 struct ROM{

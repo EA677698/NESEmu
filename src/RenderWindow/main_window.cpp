@@ -12,8 +12,9 @@ SDL_Renderer* renderer;
 SDL_Texture* texture;
 
 
-void render_frame(RGB frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
-    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_WIDTH * sizeof(RGB)) != 0) {
+void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
+
+    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_WIDTH * sizeof(RGBA)) != 0) {
         spdlog::critical("SDL_UpdateTexture failed: {}\n", SDL_GetError());
         return;
     }

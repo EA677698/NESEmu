@@ -310,7 +310,7 @@ void PPU::load_system_palette(const std::string& filename) {
     }
 }
 
-RGB PPU::get_rgb_from_composite_palette(uint8_t nes_color_index) {
+RGBA PPU::get_rgb_from_composite_palette(uint8_t nes_color_index) {
     int base_index = nes_color_index * 3;
     return { system_palette[base_index], system_palette[base_index + 1], system_palette[base_index + 2] };
 }

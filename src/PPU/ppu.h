@@ -52,7 +52,7 @@ private:
 public:
 
     uint32_t cycles;
-    RGB frame[VIDEO_HEIGHT][VIDEO_WIDTH];
+    RGBA frame[VIDEO_HEIGHT][VIDEO_WIDTH];
 
     PPU();
 
@@ -120,7 +120,7 @@ public:
     uint8_t sprite_zero_hit() const;
     uint8_t is_in_vblank() const;
     void load_system_palette(const std::string& filename);
-    RGB get_rgb_from_composite_palette(uint8_t nes_color_index);
+    RGBA get_rgb_from_composite_palette(uint8_t nes_color_index);
 
 };
 

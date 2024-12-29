@@ -46,6 +46,7 @@ void init_spdlog(){
 }
 
 int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dump end memory]
+    uint64_t render_start = SDL_GetPerformanceCounter();;
     uint8_t debug_mode = 0x0;
     if(argc < 2) {
         spdlog::error("No rom file provided");
@@ -74,6 +75,8 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     bool blargg_initiated = false;
     CPU::Register snapshot;
     while (!quit) {
+        uint64_t current_time = SDL_GetPerformanceCounter();
+        double elapsed_render = (current_time - render_start) / (double)SDL_GetPerformanceFrequency();
         final_mem = cpu.mem;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -121,11 +124,15 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
         if(cpu.cycles < 1790000) {
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
             cpu.execute_opcode(cpu.read(cpu.registers.pc++));
+            if (cpu.registers.pc == 0xC6A2 && cpu.registers.y == 0x15) {
+                spdlog::debug("Breakpoint reached");
+            }
             // First three are the following: Address in $PC, opcode, and operand
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
                           snapshot.pc, cpu.mem[snapshot.pc], cpu.current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
             cpu.current_operand = 0x0;
-            if(ppu.is_in_vblank()){
+            if(elapsed_render >= (1.0 / 60.0) && ppu.is_in_vblank()){
+                render_start = current_time;
                 render_frame(ppu.frame);
             }
         }

@@ -9,7 +9,8 @@
 #include "spdlog/spdlog.h"
 
 #define RESET_VECTOR ((((uint16_t) mem[0xFFFD]) << 8) | mem[0xFFFC])
-#define NMI_VECTOR ((((uint16_t) mem[0xFFFB]) << 8) | mem[0xFFFA])
+#define NMI_VECTOR ((((uint16_t) read(0xFFFB)) << 8) | read(0xFFFA))
+
 
 
 
