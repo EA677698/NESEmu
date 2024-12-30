@@ -8,8 +8,9 @@
 #include "../PPU/ppu.h"
 #include "spdlog/spdlog.h"
 
-#define RESET_VECTOR ((((uint16_t) mem[0xFFFD]) << 8) | mem[0xFFFC])
+#define RESET_VECTOR ((((uint16_t) read(0xFFFD)) << 8) | read(0xFFFC))
 #define NMI_VECTOR ((((uint16_t) read(0xFFFB)) << 8) | read(0xFFFA))
+#define IRQ_VECTOR ((((uint16_t) read(0xFFFF)) << 8) | read(0xFFFE))
 
 
 

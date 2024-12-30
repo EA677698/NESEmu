@@ -204,13 +204,11 @@ void CPU::brk(){
     uint8_t back = registers.pc & 0xFF;
     push(front);
     push(back);
-    uint8_t status = registers.sr | 0x30;
+    uint8_t status = registers.sr | 0x10;
     push(status);
-    uint16_t interrupt_vector = read(0xFFFF);
-    interrupt_vector <<= 8;
-    interrupt_vector |= read(0xFFFE);
-    registers.pc = interrupt_vector;
-    spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
+    registers.sr |= 0x04;
+    registers.pc = IRQ_VECTOR;
+    // spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",registers.pc);
 }
 
 void CPU::bvc(int8_t operand){
@@ -326,7 +324,7 @@ void CPU::jsr(uint16_t operand){
     registers.pc--;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    //spdlog::info("Storing address 0x{:X} into stack", registers.pc);
+    // spdlog::info("Storing address 0x{:X} into stack", registers.pc);
     push(front);
     push(back);
     registers.pc = operand;
@@ -425,19 +423,19 @@ void CPU::ror(uint16_t address){
 }
 
 void CPU::rti(){
-    registers.pc++;
     uint8_t status = pop();
-    registers.sr = status;
+    registers.sr = status & 0xEF;
     uint16_t address = pop();
-    address |= pop() << 8;
+    address |= ((uint16_t) pop()) << 8;
+    // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address;
 }
 
 void CPU::rts(){
     registers.pc++;
     uint16_t address = pop();
-    address |= pop() << 8;
-    spdlog::info("Retrieving address from stack: 0x{:X}",address);
+    address |= ((uint16_t) pop()) << 8;
+    // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address + 1;
 }
 

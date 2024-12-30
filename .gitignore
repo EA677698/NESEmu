@@ -6,8 +6,10 @@ cmake-build-debug/
 cmake-build-release
 Super_mario_brothers.nes
 Excite_bike.nes
+dk.nes
 libs/
 venv/
 tests/.pytest_cache
 tests/__pycache__
 tests/nestest/
+debug/

@@ -106,10 +106,12 @@ void CPU::NMI_handler() {
 void CPU::power_up(const std::string &rom_path) {
     memset(mem, 0, sizeof(mem));
     cycles = 0;
-    registers.sr = 0x34;
+    // registers.sr = 0x34;
+    registers.sr = 0x4;
     registers.ac = 0, registers.x = 0, registers.y = 0;
     registers.sp = 0xFD;
     rw_register_mode = 0x0;
+    current_operand = 0;
     mem[0x4017] = 0;
     mem[0x4015] = 0;
     for (int i = 0x4000; i <= 0x400F; i++) {
@@ -120,6 +122,6 @@ void CPU::power_up(const std::string &rom_path) {
     }
     load_rom(this, rom_path);
     registers.pc = RESET_VECTOR;
-    spdlog::info("RESET_VECTOR: 0x{:X}",RESET_VECTOR);
+    spdlog::info("RESET_VECTOR: 0x{:X}",registers.pc);
     cycles = 0;
 }
