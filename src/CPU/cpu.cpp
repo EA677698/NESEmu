@@ -10,13 +10,18 @@ CPU::CPU(PPU *ppu) : ppu(ppu) {
     }
 }
 
-void CPU::write(uint16_t address, uint8_t operand) {
-    cycles++;
+void CPU::increment_cycle_counter(uint32_t cycles) {
+    this->cycles += cycles;
     if (ppu) {
-        ppu->execute_cycle();
-        ppu->execute_cycle();
-        ppu->execute_cycle();
+        unsigned int ppu_cycles = cycles * 3;
+        for (unsigned int i = 0; i < ppu_cycles; i++) {
+            ppu->execute_cycle();
+        }
     }
+}
+
+void CPU::write(uint16_t address, uint8_t operand) {
+    increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
             case 0x0000:
@@ -57,12 +62,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
 
 
 uint8_t CPU::read(uint16_t address) {
-    cycles++;
-    if (ppu) {
-        ppu->execute_cycle();
-        ppu->execute_cycle();
-        ppu->execute_cycle();
-    }
+    increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
             case 0x0000:
@@ -120,8 +120,10 @@ void CPU::power_up(const std::string &rom_path) {
     for (int i = 0x4010; i <= 0x4013; i++) {
         mem[i] = 0;
     }
+    for (unsigned int i = 0; i < 20; i++) {
+        ppu->execute_cycle();
+    }
     load_rom(this, rom_path);
     registers.pc = RESET_VECTOR;
     spdlog::info("RESET_VECTOR: 0x{:X}",registers.pc);
-    cycles = 0;
 }

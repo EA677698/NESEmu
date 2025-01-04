@@ -36,6 +36,10 @@ void exit(){
     SDL_Quit();
 }
 
+void test_cycle_counts() {
+
+}
+
 void init_spdlog(){
     spdlog::init_thread_pool(8192, 1);
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -57,6 +61,23 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     PPU ppu;
     CPU cpu(&ppu);
     // CPU cpu(nullptr);
+
+    if (CYCLE_TESTING) { // internal testing for cycles
+        cpu.cycles = 0;
+        power_up(cpu, argv[1]);
+        spdlog::info("POWER UP CYCLES: {}", cpu.cycles);
+        for (int i = 0; i<0xFF; i++) {
+            cpu.cycles = 1;
+            cpu.execute_opcode(i);
+            if (cpu.cycles > 1) {
+                spdlog::info("CYCLES FOR OPCODE 0x{:X}: {}", i, cpu.cycles);
+            }
+        }
+        exit();
+        exit(0);
+    }
+
+
     power_up(cpu, argv[1]);
     debug_mode = argc > 3; // DEBUGGING/TESTING MODE
     if(argc > 3 && strcmp(argv[3], "1") == 0) {

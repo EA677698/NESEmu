@@ -11,6 +11,8 @@
 #define VIDEO_WIDTH 256
 #define VIDEO_HEIGHT 240
 
+#define CYCLE_TESTING 1
+
 struct RGBA{
     uint8_t b = 0;
     uint8_t g = 0;

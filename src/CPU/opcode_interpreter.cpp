@@ -879,17 +879,17 @@ void CPU::execute_opcode(int opcode){
             immediate(&CPU::usbc);
             break;
 
-
-
-
         default:
-            spdlog::critical("INVALID INSTRUCTION. OPCODE: 0x{:X}",opcode);
-            spdlog::critical("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
-              registers.pc, opcode, current_operand, registers.ac, registers.x, registers.y, registers.sr, registers.sp);
-            spdlog::critical("Halting CPU...");
-            exit();
-            exit(1);
+            if (!CYCLE_TESTING) {
+                spdlog::critical("INVALID INSTRUCTION. OPCODE: 0x{:X}",opcode);
+                spdlog::critical("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
+                  registers.pc, opcode, current_operand, registers.ac, registers.x, registers.y, registers.sr, registers.sp);
+                spdlog::critical("Halting CPU...");
+                exit();
+                exit(1);
+            }
     }
+
 
 }
 

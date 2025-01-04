@@ -91,6 +91,9 @@ void PPU::ppu_power_up() {
     registers.ppuaddr = 0x0;
     registers.ppudata = 0x0;
     registers.w = 0x0;
+    registers.v = 0x0;
+    registers.t = 0x0;
+    registers.x = 0x0;
     ppudata_buffer = 0x0;
     nmi_triggered = 0;
     scanline = 0;
@@ -118,7 +121,7 @@ void PPU::execute_cycle() {
     // 337-340: Idle cycles (no visible effect, padding for timing).
 
     if (scanline < 240) { // Visible scanlines
-        if (cycles >= 0 && cycles < 256) {
+        if (cycles < 256) {
             render_background(); // Background rendering for each pixel on this scanline
         } else if (cycles >= 256 && cycles < 321) {
             // Placeholder: Sprite evaluation for the next scanline (fetching OAM data)
