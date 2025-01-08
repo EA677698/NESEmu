@@ -11,8 +11,6 @@
 #define VIDEO_WIDTH 256
 #define VIDEO_HEIGHT 240
 
-#define CYCLE_TESTING 1
-
 struct RGBA{
     uint8_t b = 0;
     uint8_t g = 0;
@@ -36,11 +34,22 @@ struct ROM{
     uint8_t PRG_RAM_SIZE;
 };
 
+struct Arguments {
+    std::string rom_path;
+    std::string test_type;
+    bool debug_mode;
+    bool dump_memory;
+    bool instruction_cycles;
+    bool disable_ppu;
+};
+
+extern Arguments args;
+
 extern ROM rom;
 
 extern bool is_bit_set(uint8_t operand, char bit);
 
-extern void exit();
+extern void emulator_exit(int status);
 
 
 

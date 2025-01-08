@@ -2,6 +2,7 @@
 #include <SDL_events.h>
 #include <SDL.h>
 #include <fstream>
+#include <iostream>
 
 #include "romLoader.h"
 #include "CPU/cpu.h"
@@ -11,8 +12,10 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/async_logger.h"
 #include "spdlog/async.h"
+#include "cxxopts.hpp"
 
 ROM rom;
+Arguments args;
 std::ofstream dump;
 uint8_t * final_mem;
 
@@ -20,11 +23,11 @@ bool is_bit_set(uint8_t operand, char bit){
     return (operand & (0x1 << bit)) >> bit;
 }
 
-void power_up(CPU &cpu, std::string rom_path){
+void power_up(CPU &cpu, const std::string& rom_path){
     cpu.power_up(rom_path);
 }
 
-void exit(){
+void emulator_exit(int status){
     if(dump.is_open()){
         dump.write((char*)final_mem, 0x10000);
         dump.close();
@@ -34,6 +37,7 @@ void exit(){
     SDL_DestroyWindow(window);
     spdlog::shutdown();
     SDL_Quit();
+    exit(status);
 }
 
 void test_cycle_counts() {
@@ -49,20 +53,45 @@ void init_spdlog(){
     set_default_logger(async_logger);
 }
 
-int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dump end memory]
-    uint64_t render_start = SDL_GetPerformanceCounter();;
-    uint8_t debug_mode = 0x0;
-    if(argc < 2) {
-        spdlog::error("No rom file provided");
+int main(int argc, char* argv[]) {
+
+    cxxopts::Options options("NES Emulator", "An emulator for the NES system");
+    options.add_options()
+            ("r,rom", "Path to the ROM file", cxxopts::value<std::string>())
+            ("t,test", "Test type (e.g., nestest, blargg)", cxxopts::value<std::string>()->default_value(""))
+            ("d,debug", "Enable debug mode logging", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("m,dump_memory", "Dump end memory", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("i, instruction_cycles", "Print instruction cycles", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("p, disable_ppu", "Disable PPU", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+
+            ("h,help", "Print help")
+    ;
+    auto result = options.parse(argc, argv);
+    if (result.count("help"))
+    {
+        std::cout << options.help() << std::endl;
+        exit(0);
+    }
+    if (!result.count("rom") && !result.count("instruction_count")) {
+        spdlog::error("No ROM file provided. Use --rom to specify the ROM path.");
         exit(1);
     }
+
+    uint64_t render_start = SDL_GetPerformanceCounter();;
+    args.rom_path = result["rom"].as<std::string>();
+    args.test_type = result["test"].as<std::string>();
+    args.debug_mode = result["debug"].as<bool>();
+    args.dump_memory = result["dump_memory"].as<bool>();
+    args.instruction_cycles = result["instruction_cycles"].as<bool>();
+    args.disable_ppu = result["disable_ppu"].as<bool>();
+
     init_spdlog();
     init_video();
     PPU ppu;
-    CPU cpu(&ppu);
+    CPU cpu = args.disable_ppu ? CPU(nullptr) : CPU(&ppu);
     // CPU cpu(nullptr);
 
-    if (CYCLE_TESTING) { // internal testing for cycles
+    if (args.instruction_cycles) { // internal testing for cycles
         cpu.cycles = 0;
         power_up(cpu, argv[1]);
         spdlog::info("POWER UP CYCLES: {}", cpu.cycles);
@@ -70,20 +99,18 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
             cpu.cycles = 1;
             cpu.execute_opcode(i);
             if (cpu.cycles > 1) {
-                spdlog::info("CYCLES FOR OPCODE 0x{:X}: {}", i, cpu.cycles);
+                spdlog::info("0x{:X}: {}", i, cpu.cycles);
             }
         }
-        exit();
-        exit(0);
+        emulator_exit(0);
     }
 
 
-    power_up(cpu, argv[1]);
-    debug_mode = argc > 3; // DEBUGGING/TESTING MODE
-    if(argc > 3 && strcmp(argv[3], "1") == 0) {
+    power_up(cpu, args.rom_path);
+    if(args.debug_mode) {
         spdlog::set_level(spdlog::level::debug);
     }
-    if(argc > 4 && strcmp(argv[4], "1") == 0){
+    if(args.dump_memory){
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
     spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
@@ -91,7 +118,6 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
     SDL_Event event;
     bool quit = false;
     time_t CPU = time(NULL);
-    const char *test_type = argc > 2 ? argv[2] : "";
     uint8_t nestest = 0x1;
     bool blargg_initiated = false;
     CPU::Register snapshot;
@@ -109,7 +135,7 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
             CPU = time(NULL);
         }
 
-        if(!strcmp(test_type, "blargg")) {
+        if(!strcmp(args.test_type.c_str(), "blargg")) {
             uint8_t status = cpu.mem[0x6000];
             if(status == 0x80){
                 blargg_initiated = true;
@@ -123,13 +149,12 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
                                  " expected 0xDE 0xB0 0x61", cpu.mem[0x6001], cpu.mem[0x6002], cpu.mem[0x6003]);
                 }
                 spdlog::info("Test result: {}", res);
-                exit();
-                exit(status);
+                emulator_exit(status);
             }
         }
 
-        if(debug_mode) {
-            if(!strcmp(test_type, "nestest")) {
+        if(args.debug_mode) {
+            if(!strcmp(args.test_type.c_str(), "nestest")) {
                 if(nestest) {
                     spdlog::info("NESTEST: setting PC to 0xC000");
                     cpu.registers.pc = 0xC000;
@@ -157,6 +182,5 @@ int main(int argc, char* argv[]) { // [rom path] [test author] [debug mode] [dum
 
         // ... (update pixels and rendering code here)
     }
-    exit();
-    return 0;
+    emulator_exit(0);
 }

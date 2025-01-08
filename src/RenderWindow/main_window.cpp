@@ -29,7 +29,7 @@ void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
 void init_video(){
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         spdlog::critical("Could not initialize SDL: {}\n", SDL_GetError());
-        exit();
+        emulator_exit(1);
     }
     window = SDL_CreateWindow("NESEmu",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_RESIZABLE);

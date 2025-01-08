@@ -44,7 +44,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
                 break;
             default:
                 spdlog::error("Invalid CPU write to illegal register: 0x{:X}", address);
-                exit();
+                emulator_exit(1);
         }
         return;
     }
@@ -79,7 +79,7 @@ uint8_t CPU::read(uint16_t address) {
                 return registers.sr;
             default:
                 spdlog::error("Invalid CPU read to illegal register: 0x{:X}", address);
-                exit();
+                emulator_exit(1);
         }
     }
     if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END && ppu) {
@@ -120,8 +120,10 @@ void CPU::power_up(const std::string &rom_path) {
     for (int i = 0x4010; i <= 0x4013; i++) {
         mem[i] = 0;
     }
-    for (unsigned int i = 0; i < 20; i++) {
-        ppu->execute_cycle();
+    if (ppu) {
+        for (unsigned int i = 0; i < 20; i++) {
+            ppu->execute_cycle();
+        }
     }
     load_rom(this, rom_path);
     registers.pc = RESET_VECTOR;
