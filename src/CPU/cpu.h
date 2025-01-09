@@ -7,20 +7,13 @@
 #include <cstdint>
 #include "../PPU/ppu.h"
 #include "spdlog/spdlog.h"
-#include "../global.h"
 
-#define RESET_VECTOR ((((uint16_t) mem[0xFFFD]) << 8) | mem[0xFFFC])
-#define NMI_VECTOR ((((uint16_t) mem[0xFFFB]) << 8) | mem[0xFFFA])
+#define RESET_VECTOR ((((uint16_t) read(0xFFFD)) << 8) | read(0xFFFC))
+#define NMI_VECTOR ((((uint16_t) read(0xFFFB)) << 8) | read(0xFFFA))
+#define IRQ_VECTOR ((((uint16_t) read(0xFFFF)) << 8) | read(0xFFFE))
 
-#define PPUCTRL_ADDR 0x2000
-#define PPUMASK_ADDR 0x2001
-#define PPUSTATUS_ADDR 0x2002
-#define OAMADDR_ADDR 0x2003
-#define OAMDATA_ADDR 0x2004
-#define PPUSCROLL_ADDR 0x2005
-#define PPUADDR_ADDR 0x2006
-#define PPUDATA_ADDR 0x2007
-#define OAMDMA_ADDR 0x4014
+
+
 
 #define ZERO_PAGE_BEGIN 0x0
 #define ZERO_PAGE_END 0xFF
@@ -46,9 +39,7 @@
 
 class CPU {
 
-private:
-
-    PPU ppu;
+    PPU *ppu;
 
     const uint8_t CPU_PPU_PERM[9] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE, WRITE, READ | WRITE, WRITE};
 
@@ -61,6 +52,8 @@ private:
     void set_negative_flag();
 
     void set_overflow_flag();
+
+    void increment_cycle_counter(uint32_t = 1);
 
     void assign_zero_status(uint8_t operand); // Sets the zero flag based on whether the operand is zero.
     void assign_negative_status(uint8_t operand); // Sets the negative flag based on operand's sign.
@@ -75,7 +68,7 @@ public:
     uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack imo, but it'll do
     uint16_t current_operand; // operand for the current instruction
 
-    CPU(PPU ppu);
+    CPU(PPU *ppu);
 
     struct Register {
         uint8_t ac; //accumulator
@@ -946,6 +939,8 @@ private:
     void indirect_x(void (CPU::*instruction)(uint16_t));
 
     void indirect_y(void (CPU::*instruction)(uint16_t));
+
+    void no_addressing_mode(void (CPU::*instruction)());
 };
 
 #endif //EMULATOR_CPU_H

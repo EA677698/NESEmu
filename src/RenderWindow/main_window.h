@@ -7,15 +7,15 @@
 
 #include <SDL_video.h>
 #include <SDL_render.h>
-
-#define VIDEO_WIDTH 256
-#define VIDEO_HEIGHT 240
+#include "../global.h"
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
-extern SDL_Texture *pixels;
+extern SDL_Texture *texture;
 
 void init_video();
+
+void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]);
 
 
 #endif //EMULATOR_MAIN_WINDOW_H

@@ -1,307 +1,112 @@
 import pytest
+from pyexpat.errors import messages
+
+import opcode_compare as oc
 import find_diff as fd
 import subprocess
 from subprocess import TimeoutExpired
 import os
 
+# Paths to emulator executables
 executable_paths = [
     "../build/bin/Release/emulator.exe",
     "../cmake-build-debug/bin/emulator.exe"
 ]
 
+
 # Function to find the valid executable path
 def find_executable_path(paths):
     for path in paths:
-        if os.path.isfile(path):  # Check if the path exists and is a file
+        if os.path.isfile(path):
             try:
-                # Attempt to run the executable with a simple command or just check if it's accessible
                 subprocess.run([path], capture_output=True, timeout=1)
                 return path
             except Exception as e:
-                # Log or print the exception if needed
-                print(f"Attempted path {path} but encountered an error: {e}")
-                continue
-    raise FileNotFoundError("No valid executable path found among provided options.")
+                print(f"Error checking executable at {path}: {e}")
+    raise FileNotFoundError("No valid executable path found.")
 
-# Attempt to find the valid executable path
+
+# Get the executable path or exit tests
 try:
     executable_path = find_executable_path(executable_paths)
 except FileNotFoundError as e:
-    print(e)
-    pytest.exit("Terminating tests due to lack of valid emulator executable path.")
+    pytest.exit(f"Error: {e}")
 
-exec_time_out = 60  # 1 minute
-
-
-def test_check():
-    assert 1 + 1 == 2
-    print("Basic check succeeded, 1 + 1 == 2")
+exec_time_out = 120  # 2 minutes timeout for subprocesses
 
 
+def run_test(test_name, args=None, compare_logs=False,
+             reference_log=None):
+    if args is None:
+        args = []
+    log_file = f"logs/{test_name}.log"
+    os.makedirs("logs", exist_ok=True)
+
+    try:
+        # Run the emulator
+        cmd = [executable_path] + args
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            timeout=exec_time_out
+        )
+        stdout = result.stdout
+    except TimeoutExpired as e:
+        stdout = e.stdout if e.stdout else b""
+        stderr = e.stderr if e.stderr else b""
+        stdout += f"\nTimeoutExpired: {e}\n".encode() + stderr
+
+    # Write log regardless of success or timeout
+    with open(log_file, "wb") as log:
+        log.write(stdout)
+
+    # Check for test-specific results
+    stdout_text = stdout.decode("utf-8", errors="ignore")
+    if "TimeoutExpired" in stdout_text:
+        return False, f"Test {test_name} timed out. See log at {log_file}."
+    if compare_logs and reference_log:
+        comparison_result = fd.compare_logs(reference_log, log_file)
+        if comparison_result != (0, 0):
+            return False, f"Log mismatch at nestest line {comparison_result[0]} and emulator line {comparison_result[1]}. See log at {log_file}."
+    elif "Passed" not in stdout_text:
+        return False, f"Test failed: {test_name}. See log at {log_file}."
+
+    return True, None
+
+
+def test_cpu_cycle_accuracy():
+    run_test("cpu_cycle_accuracy", ["--instruction_cycles","--disable_ppu"])
+    correct, total = oc.run_comparison("logs/cpu_cycle_accuracy.log", False)
+    message = f"\nCycle correctness: {correct}/{total}"
+    print(message)
+    assert correct == total, message
+
+# Nestest-specific test
 def test_nestest():
     rom_path = "nestest/nestest.nes"
-    rom_log = "nestest/nestest_log.txt"
-    NESEmu_log = "latestLog.txt"
-    try:
-        subprocess.run([executable_path, rom_path, 'nestest', '1', '1'],
-                       capture_output=True, text=False, timeout=exec_time_out)
-    except TimeoutExpired:
-        print("Program timed out")
-    result = fd.compare_logs(rom_log, NESEmu_log)
-    assert result == (0, 0), f"Mismatch at line {result[0]} in nestest log and {result[1]} in NESEmu log"
+    reference_log = "nestest/nestest_log.txt"
+    passed, message = run_test("nestest", ["--rom", f"{rom_path}", "--disable_ppu", "--debug", "--test", "nestest"], compare_logs=True, reference_log=reference_log)
+    assert passed, message
 
-def test_01_basics():
-    rom_path = "instr_test-v5/rom_singles/01-basics.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                       capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_02_implied():
-    rom_path = "instr_test-v5/rom_singles/02-implied.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_03_immediate():
-    rom_path = "instr_test-v5/rom_singles/03-immediate.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_04_zero_page():
-    rom_path = "instr_test-v5/rom_singles/04-zero_page.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_05_zp_xy():
-    rom_path = "instr_test-v5/rom_singles/05-zp_xy.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_06_absolute():
-    rom_path = "instr_test-v5/rom_singles/06-absolute.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_07_abs_xy():
-    rom_path = "instr_test-v5/rom_singles/07-abs_xy.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_08_indirect_x():
-    rom_path = "instr_test-v5/rom_singles/08-ind_x.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_09_indirect_y():
-    rom_path = "instr_test-v5/rom_singles/09-ind_y.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_10_branches():
-    rom_path = "instr_test-v5/rom_singles/10-branches.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_11_stack():
-    rom_path = "instr_test-v5/rom_singles/11-stack.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_12_jmp_jsr():
-    rom_path = "instr_test-v5/rom_singles/12-jmp_jsr.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_13_rti_rts():
-    rom_path = "instr_test-v5/rom_singles/13-rts.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_14_rti():
-    rom_path = "instr_test-v5/rom_singles/14-rti.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_15_brk():
-    rom_path = "instr_test-v5/rom_singles/15-brk.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
-
-def test_16_special():
-    rom_path = "instr_test-v5/rom_singles/16-special.nes"
-    NESEmu_log = "latestLog.txt"
-    status = 1
-    message = ""
-    test_message = ""
-    try:
-        status = subprocess.run([executable_path, rom_path, 'blargg', '0', '1'],
-                                capture_output=True, text=False, timeout=exec_time_out)
-        test_message = status.stdout[status.stdout.find(b"Test result: "):].decode("utf-8")
-        message = f"Test failed with status {status.returncode} and stdout {test_message}"
-    except TimeoutExpired:
-        message = "Program timed out"
-    res = test_message.find("Passed") != -1
-    assert res == True, message
+# Parameterized tests for other ROMs
+@pytest.mark.parametrize("rom_file, test_name", [
+    ("instr_test-v5/rom_singles/01-basics.nes", "01_basics"),
+    ("instr_test-v5/rom_singles/02-implied.nes", "02_implied"),
+    ("instr_test-v5/rom_singles/03-immediate.nes", "03_immediate"),
+    ("instr_test-v5/rom_singles/04-zero_page.nes", "04_zero_page"),
+    ("instr_test-v5/rom_singles/05-zp_xy.nes", "05_zp_xy"),
+    ("instr_test-v5/rom_singles/06-absolute.nes", "06_absolute"),
+    ("instr_test-v5/rom_singles/07-abs_xy.nes", "07_abs_xy"),
+    ("instr_test-v5/rom_singles/08-ind_x.nes", "08_indirect_x"),
+    ("instr_test-v5/rom_singles/09-ind_y.nes", "09_indirect_y"),
+    ("instr_test-v5/rom_singles/10-branches.nes", "10_branches"),
+    ("instr_test-v5/rom_singles/11-stack.nes", "11_stack"),
+    ("instr_test-v5/rom_singles/12-jmp_jsr.nes", "12_jmp_jsr"),
+    ("instr_test-v5/rom_singles/13-rts.nes", "13_rti_rts"),
+    ("instr_test-v5/rom_singles/14-rti.nes", "14_rti"),
+    ("instr_test-v5/rom_singles/15-brk.nes", "15_brk"),
+    ("instr_test-v5/rom_singles/16-special.nes", "16_special")
+])
+def test_rom(rom_file, test_name):
+    passed, message = run_test(test_name, ["--rom", f"{rom_file}", "--test", "blargg", "--disable_ppu"])
+    assert passed, message

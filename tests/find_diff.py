@@ -10,7 +10,6 @@ def sanitize_nestest_log(log):
         match = re.match(pattern, line)
         if match:
             address, codes, a, x, y, p, sp = match.groups()
-            # Rearrange and process the matched parts as needed
             output.append(f"{address} {codes.strip()} A:{a} X:{x} Y:{y} P:{p} SP:{sp}")
         else:
             output.append("No match found for line: " + line)
@@ -18,6 +17,8 @@ def sanitize_nestest_log(log):
 
 
 def is_valid_line(line):
+    if len(line) == 0:
+        return False
     if "INITIAL" in line:
         return False
     if "PC REGISTER" in line:
@@ -27,6 +28,8 @@ def is_valid_line(line):
     if "SETTING" in line:
         return False
     if "[critical]" in line:
+        return False
+    if "[error]" in line:
         return False
     return True
 
@@ -46,6 +49,8 @@ def compare_lines(line1, line2):
             if "A:" not in token2:
                 emu_token += 1
                 token2 = nesemu_tokens[emu_token]
+
+        # Strips extra characters and converts into hex to compare
         val1 = int(token1.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("P:", ""),
                    16)
         val2 = int(token2.replace("A:", "").replace("X:", "").replace("Y:", "").replace("SP:", "").replace("SR:", ""),
@@ -57,12 +62,12 @@ def compare_lines(line1, line2):
                     emu_token += 1
                     nestest_token += 1
                     continue
-            print("nestest:")
+            print("\nnestest:")
             print(line1)
             print(nestest_tokens)
             print(token1)
             print(val1)
-            print("nesemu:")
+            print("\nnesemu:")
             print(nesemu_tokens)
             print(token2)
             print(val2)
@@ -83,7 +88,9 @@ def compare_logs(nestest_log, nesemu_log):
             if emu_line >= len(nesemu_lines):
                 return nestest_line + 1, emu_line + 1
             if is_valid_line(nesemu_lines[emu_line]):
-                if not compare_lines(nestest_lines[nestest_line], nesemu_lines[emu_line]):
+                nestest_curr_line = nestest_lines[nestest_line]
+                nesemu_curr_line = nesemu_lines[emu_line]
+                if not compare_lines(nestest_curr_line, nesemu_curr_line):
                     return nestest_line + 1, emu_line + 1
                 nestest_line += 1
                 emu_line += 1

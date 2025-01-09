@@ -7,6 +7,7 @@ This emulator is the NTSC version of the NES. There are no current plans to add 
 
 - [SDL2](https://www.libsdl.org/download-2.0.php)
 - [SPDLOG](https://github.com/gabime/spdlog)
+- [cxxopts](https://github.com/jarro2783/cxxopts)
 
 ## Building
 
@@ -18,23 +19,36 @@ Currently, NESEMU is only compiled using Visual Studio 2022's compiler on Window
 
 1. Clone the repository: `git clone https://github.com/EA677698/NESEmu`.
 2. Open the project in your perferred IDE.
-3. Make sure SDL2 and SPDLOG are properly linked.
+3. Make sure SDL2, SPDLOG, and cxxopts are properly linked.
 4. Build and run the project.
 
 ### Other Operating Systems
 
 Support for other operating systems is planned and will be added in the future.
 
-## Testing (CLI)
+## CLI Usage
 
-The emulator can be testing by passing arguments to it. The following are the available arguments:
+The emulator can be used through the CLI.
 
-```./emulator [rom path] [test author] [debug mode] [dump end memory]```
-
-Memory addresses passed as arguments will have their contents printed every cycle.
-if '~' is passed in place of a memory address, the emulator will read continuously from the last specified address until
-it reaches a null terminator then will continue with the rest of the arguments
-
+The following options are available:
+```shell
+Usage: NESEmu [options]
+Options:
+  -h, --help
+    Print help
+  -r, --rom <path>
+    Path to the NES ROM file
+  -t  --test
+    Test type
+  -d, --debug
+    Enable debug mode logging
+  -m, --dump_memory
+    Dump end memory to a file
+  -i, --instruction_cycles
+    Print instruction cycles
+  -p --disable_ppu
+    Disable PPU rendering
+```
 
 ## Resources
 

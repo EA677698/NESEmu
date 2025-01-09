@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "cpu.h"
+#include "../global.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
 bool is_page_crossed(uint16_t initial_address, uint16_t change){
@@ -138,7 +139,7 @@ void CPU::asl(uint16_t address){
 
 void CPU::bcc(int8_t operand){
     if(!is_bit_set(registers.sr, 0)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -147,14 +148,14 @@ void CPU::bcs(int8_t operand){
     if(is_bit_set(registers.sr, 0)){
         uint16_t old_pc = registers.pc;
         registers.pc += operand;
-        cycles += (1 + is_page_crossed(old_pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(old_pc, operand));
 
     }
 }
 
 void CPU::beq(int8_t operand){
     if(is_bit_set(registers.sr, 1)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -178,21 +179,21 @@ void CPU::bit(uint8_t operand){
 
 void CPU::bmi(int8_t operand){
     if(is_bit_set(registers.sr, 7)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void CPU::bne(int8_t operand){
     if(!is_bit_set(registers.sr, 1)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void CPU::bpl(int8_t operand){
     if(!is_bit_set(registers.sr, 7)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -203,23 +204,23 @@ void CPU::brk(){
     uint8_t back = registers.pc & 0xFF;
     push(front);
     push(back);
-    uint8_t status = registers.sr | 0x30;
+    uint8_t status = registers.sr | 0x10;
     push(status);
-    uint16_t interrupt_vector = read(0xFFFE) | ((uint16_t) (read(0xFFFF) << 8));
-    registers.pc = interrupt_vector;
-    spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",interrupt_vector);
+    registers.sr |= 0x04;
+    registers.pc = IRQ_VECTOR;
+    // spdlog::debug("SETTING PC COUNTER TO INTERRUPT VECTOR: 0x{:X}",registers.pc);
 }
 
 void CPU::bvc(int8_t operand){
     if(!is_bit_set(registers.sr, 6)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
 
 void CPU::bvs(int8_t operand){
     if(is_bit_set(registers.sr, 6)){
-        cycles += (1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
         registers.pc += operand;
     }
 }
@@ -323,7 +324,7 @@ void CPU::jsr(uint16_t operand){
     registers.pc--;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    //spdlog::info("Storing address 0x{:X} into stack", registers.pc);
+    // spdlog::info("Storing address 0x{:X} into stack", registers.pc);
     push(front);
     push(back);
     registers.pc = operand;
@@ -422,19 +423,19 @@ void CPU::ror(uint16_t address){
 }
 
 void CPU::rti(){
-    registers.pc++;
     uint8_t status = pop();
-    registers.sr = status;
+    registers.sr = status & 0xEF;
     uint16_t address = pop();
-    address |= pop() << 8;
+    address |= ((uint16_t) pop()) << 8;
+    // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address;
 }
 
 void CPU::rts(){
     registers.pc++;
     uint16_t address = pop();
-    address |= pop() << 8;
-    //spdlog::info("Retrieving address from stack: 0x{:X}",address);
+    address |= ((uint16_t) pop()) << 8;
+    // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address + 1;
 }
 
@@ -692,6 +693,8 @@ void CPU::usbc(uint8_t operand) {
 
 // Memory Addressing Modes
 
+
+
 void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {
     (this->*instruction)(registers.ac);
 }
@@ -836,4 +839,9 @@ void CPU::indirect_y(void (CPU::*instruction)(uint16_t)) {
     uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
     this->current_operand = address;
     (this->*instruction)(effective_address);
+}
+
+void CPU::no_addressing_mode(void (CPU::*instruction)()) {
+    increment_cycle_counter();
+    (this->*instruction)();
 }

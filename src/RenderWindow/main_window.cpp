@@ -9,24 +9,32 @@
 
 SDL_Window* window;
 SDL_Renderer* renderer;
-SDL_Texture* pixels;
+SDL_Texture* texture;
 
 
-void renderVideo(){
+void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
+
+    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_WIDTH * sizeof(RGBA)) != 0) {
+        spdlog::critical("SDL_UpdateTexture failed: {}\n", SDL_GetError());
+        return;
+    }
+
     SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, pixels, NULL, NULL);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 }
+
+
 
 void init_video(){
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         spdlog::critical("Could not initialize SDL: {}\n", SDL_GetError());
-        exit();
+        emulator_exit(1);
     }
     window = SDL_CreateWindow("NESEmu",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    pixels = SDL_CreateTexture(renderer,
+    texture = SDL_CreateTexture(renderer,
                                  SDL_PIXELFORMAT_ARGB8888,
                                  SDL_TEXTUREACCESS_STREAMING,
                                  VIDEO_WIDTH, VIDEO_HEIGHT);
