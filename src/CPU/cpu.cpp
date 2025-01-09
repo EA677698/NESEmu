@@ -125,7 +125,9 @@ void CPU::power_up(const std::string &rom_path) {
             ppu->execute_cycle();
         }
     }
-    load_rom(this, rom_path);
+    if (!args.instruction_cycles) {
+        load_rom(this, rom_path);
+    }
     registers.pc = RESET_VECTOR;
     spdlog::info("RESET_VECTOR: 0x{:X}",registers.pc);
 }

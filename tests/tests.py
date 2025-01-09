@@ -1,4 +1,7 @@
 import pytest
+from pyexpat.errors import messages
+
+import opcode_compare as oc
 import find_diff as fd
 import subprocess
 from subprocess import TimeoutExpired
@@ -29,18 +32,21 @@ try:
 except FileNotFoundError as e:
     pytest.exit(f"Error: {e}")
 
-exec_time_out = 300  # 60 seconds timeout for subprocesses
+exec_time_out = 120  # 2 minutes timeout for subprocesses
 
 
-def run_test(rom_path, test_name, test_type="blargg", debug_mode="1", dump_ram="0", compare_logs=False,
+def run_test(test_name, args=None, compare_logs=False,
              reference_log=None):
+    if args is None:
+        args = []
     log_file = f"logs/{test_name}.log"
     os.makedirs("logs", exist_ok=True)
 
     try:
         # Run the emulator
+        cmd = [executable_path] + args
         result = subprocess.run(
-            [executable_path, rom_path, test_type, debug_mode, dump_ram],
+            cmd,
             capture_output=True,
             timeout=exec_time_out
         )
@@ -62,27 +68,24 @@ def run_test(rom_path, test_name, test_type="blargg", debug_mode="1", dump_ram="
         comparison_result = fd.compare_logs(reference_log, log_file)
         if comparison_result != (0, 0):
             return False, f"Log mismatch at nestest line {comparison_result[0]} and emulator line {comparison_result[1]}. See log at {log_file}."
-    elif "Test result:" not in stdout_text and "Passed" not in stdout_text:
+    elif "Passed" not in stdout_text:
         return False, f"Test failed: {test_name}. See log at {log_file}."
 
     return True, None
 
 
-# Example of a basic test
-def test_check():
-    assert 1 + 1 == 2
-
+def test_cpu_cycle_accuracy():
+    run_test("cpu_cycle_accuracy", ["--instruction_cycles","--disable_ppu"])
+    correct, total = oc.run_comparison("logs/cpu_cycle_accuracy.log", False)
+    message = f"\nCycle correctness: {correct}/{total}"
+    print(message)
+    assert correct == total, message
 
 # Nestest-specific test
 def test_nestest():
     rom_path = "nestest/nestest.nes"
     reference_log = "nestest/nestest_log.txt"
-    passed, message = run_test(rom_path, "nestest", test_type="nestest", compare_logs=True, reference_log=reference_log)
-    assert passed, message
-
-
-def test_single_blargg_test():
-    passed, message = run_test("instr_test-v5/rom_singles/01-basics.nes", "hello", "blargg", "0")
+    passed, message = run_test("nestest", ["--rom", f"{rom_path}", "--disable_ppu", "--debug", "--test", "nestest"], compare_logs=True, reference_log=reference_log)
     assert passed, message
 
 # Parameterized tests for other ROMs
@@ -105,5 +108,5 @@ def test_single_blargg_test():
     ("instr_test-v5/rom_singles/16-special.nes", "16_special")
 ])
 def test_rom(rom_file, test_name):
-    passed, message = run_test(rom_file, test_name, "blargg", "0")
+    passed, message = run_test(test_name, ["--rom", f"{rom_file}", "--test", "blargg", "--disable_ppu"])
     assert passed, message

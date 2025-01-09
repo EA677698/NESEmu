@@ -3,7 +3,7 @@
 NESEMU is a software emulator for the Nintendo Entertainment System (NES), a popular 8-bit home video game console from the 1980s.
 This emulator is the NTSC version of the NES. There are no current plans to add PAL compatibility.
 
-## Dependencies
+  ---------------## Dependencies
 
 - [SDL2](https://www.libsdl.org/download-2.0.php)
 - [SPDLOG](https://github.com/gabime/spdlog)
@@ -38,8 +38,10 @@ Options:
     Print help
   -r, --rom <path>
     Path to the NES ROM file
+  -t  --test
+    Test type
   -d, --debug
-    Enable debug mode
+    Enable debug mode logging
   -m, --dump_memory
     Dump end memory to a file
   -i, --instruction_cycles

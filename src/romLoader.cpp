@@ -56,7 +56,7 @@ void load_rom_fd(std::string rom_path){
     rom.rom_file.open(rom_path, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
         //TODO throw error
-        spdlog::error("UNABLE TO OPEN ROM FILE");
+        spdlog::error("UNABLE TO OPEN ROM FILE: {}", rom_path);
         emulator_exit(1);
     }
     spdlog::info("Loaded ROM: {}",rom_path);

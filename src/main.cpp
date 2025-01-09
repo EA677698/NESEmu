@@ -55,14 +55,16 @@ void init_spdlog(){
 
 int main(int argc, char* argv[]) {
 
+    init_spdlog();
     cxxopts::Options options("NES Emulator", "An emulator for the NES system");
+    options.allow_unrecognised_options();
     options.add_options()
-            ("r,rom", "Path to the ROM file", cxxopts::value<std::string>())
+            ("r,rom", "Path to the ROM file", cxxopts::value<std::string>()->default_value(""))
             ("t,test", "Test type (e.g., nestest, blargg)", cxxopts::value<std::string>()->default_value(""))
             ("d,debug", "Enable debug mode logging", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("m,dump_memory", "Dump end memory", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("i, instruction_cycles", "Print instruction cycles", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("p, disable_ppu", "Disable PPU", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("i,instruction_cycles", "Print instruction cycles", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("p,disable_ppu", "Disable PPU", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
 
             ("h,help", "Print help")
     ;
@@ -71,10 +73,6 @@ int main(int argc, char* argv[]) {
     {
         std::cout << options.help() << std::endl;
         exit(0);
-    }
-    if (!result.count("rom") && !result.count("instruction_count")) {
-        spdlog::error("No ROM file provided. Use --rom to specify the ROM path.");
-        exit(1);
     }
 
     uint64_t render_start = SDL_GetPerformanceCounter();;
@@ -85,7 +83,11 @@ int main(int argc, char* argv[]) {
     args.instruction_cycles = result["instruction_cycles"].as<bool>();
     args.disable_ppu = result["disable_ppu"].as<bool>();
 
-    init_spdlog();
+    if (!strcmp(args.rom_path.c_str(), "") && !args.instruction_cycles) {
+        spdlog::error("No ROM file provided. Use --rom to specify the ROM path.");
+        spdlog::error("Provided arguments: {}", result.arguments_string());
+        exit(1);
+    }
     init_video();
     PPU ppu;
     CPU cpu = args.disable_ppu ? CPU(nullptr) : CPU(&ppu);
