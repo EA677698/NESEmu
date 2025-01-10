@@ -24,22 +24,22 @@ void CPU::write(uint16_t address, uint8_t operand) {
     increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
-            case 0x0000:
+            case AC_ADDRESS:
                 registers.ac = operand;
                 break;
-            case 0x0001:
+            case X_ADDRESS:
                 registers.x = operand;
                 break;
-            case 0x0002:
+            case Y_ADDRESS:
                 registers.y = operand;
                 break;
-            case 0x0003:
+            case PC_ADDRESS:
                 registers.pc = operand;
                 break;
-            case 0x0004:
+            case SP_ADDRESS:
                 registers.sp = operand;
                 break;
-            case 0x0005:
+            case SR_ADDRESS:
                 registers.sr = operand;
                 break;
             default:
@@ -65,29 +65,31 @@ uint8_t CPU::read(uint16_t address) {
     increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
-            case 0x0000:
+            case AC_ADDRESS:
                 return registers.ac;
-            case 0x0001:
+            case X_ADDRESS:
                 return registers.x;
-            case 0x0002:
+            case Y_ADDRESS:
                 return registers.y;
-            case 0x0003:
+            case PC_ADDRESS:
                 return registers.pc;
-            case 0x0004:
+            case SP_ADDRESS:
                 return registers.sp;
-            case 0x0005:
+            case SR_ADDRESS:
                 return registers.sr;
             default:
                 spdlog::error("Invalid CPU read to illegal register: 0x{:X}", address);
                 emulator_exit(1);
         }
     }
-    if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END && ppu) {
+    if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) {
         address = NES_PPU_REGISTER_START + (address % 8);
-        if (CPU_PPU_PERM[address % 8] & READ) {
+        if (ppu && CPU_PPU_PERM[address % 8] & READ) {
             return ppu->read(address);
         }
-        spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
+        if (ppu) {
+            spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
+        }
         return 0;
     }
     return mem[address];
@@ -105,6 +107,7 @@ void CPU::NMI_handler() {
 
 void CPU::power_up(const std::string &rom_path) {
     memset(mem, 0, sizeof(mem));
+    instruction_counter = 1;
     cycles = 0;
     // registers.sr = 0x34;
     registers.sr = 0x4;

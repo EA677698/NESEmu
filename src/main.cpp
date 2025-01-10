@@ -65,6 +65,7 @@ int main(int argc, char* argv[]) {
             ("m,dump_memory", "Dump end memory", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("i,instruction_cycles", "Print instruction cycles", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("p,disable_ppu", "Disable PPU", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("b,breakpoint", "Set instruction count breakpoint", cxxopts::value<int>()->default_value("-1"))
 
             ("h,help", "Print help")
     ;
@@ -82,6 +83,7 @@ int main(int argc, char* argv[]) {
     args.dump_memory = result["dump_memory"].as<bool>();
     args.instruction_cycles = result["instruction_cycles"].as<bool>();
     args.disable_ppu = result["disable_ppu"].as<bool>();
+    args.breakpoint = result["breakpoint"].as<int>();
 
     if (!strcmp(args.rom_path.c_str(), "") && !args.instruction_cycles) {
         spdlog::error("No ROM file provided. Use --rom to specify the ROM path.");
@@ -171,6 +173,9 @@ int main(int argc, char* argv[]) {
 
         if(cpu.cycles < 1790000) {
             std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
+            if (args.breakpoint > 0 && cpu.instruction_counter == args.breakpoint) {
+                spdlog::info("Breakpoint reached at instruction count: {}", args.breakpoint);
+            }
             cpu.execute_opcode(cpu.read(cpu.registers.pc++));
             // First three are the following: Address in $PC, opcode, and operand
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",

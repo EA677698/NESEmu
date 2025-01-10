@@ -809,7 +809,7 @@ void CPU::execute_opcode(int opcode){
             break;
         //SBX
         case 0xCB:
-            immediate(&CPU::sbx);
+            immediate(&CPU::axs);
             break;
         //SHA
         case 0x9F:
@@ -820,11 +820,11 @@ void CPU::execute_opcode(int opcode){
             break;
         //SHX
         case 0x9E:
-            absolute_y(&CPU::shx);
+            absolute_y(&CPU::sxa);
             break;
         //SHY
         case 0x9C:
-            absolute_x(&CPU::shy);
+            absolute_x(&CPU::sya);
             break;
         //SLO
         case 0x07:
@@ -888,6 +888,7 @@ void CPU::execute_opcode(int opcode){
                 emulator_exit(1);
             }
     }
+    instruction_counter++;
 
 
 }

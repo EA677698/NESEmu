@@ -15,6 +15,10 @@ void CPU::clear_negative_flag(){
     registers.sr &= 0x7F;
 }
 
+void CPU::clear_overflow_flag(){
+    registers.sr &= 0xBF;
+}
+
 void CPU::clear_zero_flag(){
     registers.sr &= 0xFD;
 }
@@ -422,14 +426,15 @@ void CPU::ror(uint16_t address){
     rw_register_mode = 0x0;
 }
 
-void CPU::rti(){
+void CPU::rti() {
     uint8_t status = pop();
-    registers.sr = status & 0xEF;
+    registers.sr = (status & 0xCF) | (registers.sr & 0x30);
     uint16_t address = pop();
     address |= ((uint16_t) pop()) << 8;
     // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address;
 }
+
 
 void CPU::rts(){
     registers.pc++;
@@ -543,19 +548,23 @@ void CPU::ane(uint8_t operand) {
 
 void CPU::arr(uint8_t operand) {
     registers.ac &= operand;
-    uint8_t newCarry = is_bit_set(registers.ac, 0);
-    registers.ac = (registers.ac >> 1) | (is_bit_set(registers.sr, 0) << 7);
+    uint8_t carry_in = is_bit_set(registers.sr, 0);
+    uint8_t result = (registers.ac >> 1) | (carry_in << 7);
+    registers.ac = result;
     assign_zero_status(registers.ac);
     assign_negative_status(registers.ac);
-    registers.sr = (registers.sr & 0xFE) | (newCarry ? 1 : 0);
-    uint8_t bit5 = is_bit_set(registers.ac, 5);
-    uint8_t bit6 = is_bit_set(registers.ac, 6);
-    if (bit5 ^ bit6) {
-        registers.sr |= (1 << 6);
+    if (is_bit_set(result, 6)) {
+        sec();
     } else {
-        registers.sr &= ~(1 << 6);
+        clc();
+    }
+    if ((is_bit_set(result, 5) ^ is_bit_set(result, 6))) {
+        set_overflow_flag();
+    } else {
+        clear_overflow_flag();
     }
 }
+
 
 
 void CPU::dcp(uint16_t operand) {
@@ -614,20 +623,15 @@ void CPU::sax(uint16_t operand) {
     write(operand, registers.ac & registers.x);
 }
 
-void CPU::sbx(uint8_t operand) {
-    uint16_t value = registers.x & registers.ac;
-    value -= operand;
-    registers.x = value & 0xFF;
-    if (value >= operand) {
+void CPU::axs(uint8_t operand) {
+    uint16_t result = (registers.x & registers.ac) - operand;
+    registers.x = result & 0xFF;
+    if (result < 0x100) {
         sec();
     } else {
         clc();
     }
-    if (registers.x == operand) {
-        set_zero_flag();
-    } else {
-        clear_zero_flag();
-    }
+    assign_zero_status(registers.x);
     assign_negative_status(registers.x);
 }
 
@@ -637,16 +641,20 @@ void CPU::sha(uint16_t operand) {
     write(operand, value);
 }
 
-void CPU::shx(uint16_t operand) {
+void CPU::sxa(uint16_t operand) {
     uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
     uint8_t value = registers.x & highBytePlusOne;
-    write(operand, value);
+    if (!is_page_crossed(operand, -(registers.y & 0xFF))) {
+        write(operand, value);
+    }
 }
 
-void CPU::shy(uint16_t operand) {
+void CPU::sya(uint16_t operand) {
     uint8_t highBytePlusOne = ((operand >> 8) & 0xFF) + 1;
     uint8_t value = registers.y & highBytePlusOne;
-    write(operand, value);
+    if (!is_page_crossed(operand, -(registers.x & 0xFF))) {
+        write(operand, value);
+    }
 }
 
 void CPU::slo(uint16_t operand) {

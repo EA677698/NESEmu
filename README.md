@@ -38,7 +38,7 @@ Options:
     Print help
   -r, --rom <path>
     Path to the NES ROM file
-  -t  --test
+  -t  --test <type>
     Test type
   -d, --debug
     Enable debug mode logging
@@ -48,6 +48,8 @@ Options:
     Print instruction cycles
   -p --disable_ppu
     Disable PPU rendering
+  -b --breakpoint <instruction line>
+    Set a breakpoint at the specified instruction line
 ```
 
 ## Resources

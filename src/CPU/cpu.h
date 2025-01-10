@@ -45,6 +45,8 @@ class CPU {
 
     void clear_negative_flag();
 
+    void clear_overflow_flag();
+
     void clear_zero_flag();
 
     void set_zero_flag();
@@ -67,6 +69,7 @@ public:
     uint32_t cycles;
     uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack imo, but it'll do
     uint16_t current_operand; // operand for the current instruction
+    int instruction_counter;
 
     CPU(PPU *ppu);
 
@@ -822,7 +825,7 @@ private:
      * ------------------------
      * Immediate       | 0xCB
      */
-    void sbx(uint8_t operand);
+    void axs(uint8_t operand);
 
     /* Stores A AND X and high byte of addr + 1 at addr
      *
@@ -839,7 +842,7 @@ private:
      * ------------------------
      * Absolute,Y      | 0x9E
      */
-    void shx(uint16_t operand);
+    void sxa(uint16_t operand);
 
     /* Stores Y AND high byte of addr + 1 at addr
      *
@@ -847,7 +850,7 @@ private:
      * ------------------------
      * Absolute,X      | 0x9C
      */
-    void shy(uint16_t operand);
+    void sya(uint16_t operand);
 
     /* ASL operation + ORA operation
      *
