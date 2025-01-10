@@ -41,6 +41,7 @@ struct Arguments {
     bool dump_memory;
     bool instruction_cycles;
     bool disable_ppu;
+    int breakpoint;
 };
 
 extern Arguments args;

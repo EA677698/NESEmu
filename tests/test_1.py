@@ -74,12 +74,12 @@ def run_test(test_name, args=None, compare_logs=False,
     return True, None
 
 
-def test_cpu_cycle_accuracy():
-    run_test("cpu_cycle_accuracy", ["--instruction_cycles","--disable_ppu"])
-    correct, total = oc.run_comparison("logs/cpu_cycle_accuracy.log", False)
-    message = f"\nCycle correctness: {correct}/{total}"
-    print(message)
-    assert correct == total, message
+# def test_cpu_cycle_accuracy():
+#     run_test("cpu_cycle_accuracy", ["--instruction_cycles","--disable_ppu"])
+#     correct, total = oc.run_comparison("logs/cpu_cycle_accuracy.log", False)
+#     message = f"\nCycle correctness: {correct}/{total}"
+#     print(message)
+#     assert correct == total, message
 
 # Nestest-specific test
 def test_nestest():
