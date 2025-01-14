@@ -85,8 +85,9 @@ void CPU::execute_opcode(int opcode){
         case 0x90:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bcc(operand);
             break;
@@ -95,8 +96,9 @@ void CPU::execute_opcode(int opcode){
         case 0xB0:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bcs(operand);
             break;
@@ -105,8 +107,9 @@ void CPU::execute_opcode(int opcode){
         case 0xF0:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             beq(operand);
             break;
@@ -123,8 +126,9 @@ void CPU::execute_opcode(int opcode){
         case 0x30:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bmi(operand);
             break;
@@ -133,8 +137,9 @@ void CPU::execute_opcode(int opcode){
         case 0xD0:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bne(operand);
             break;
@@ -143,8 +148,9 @@ void CPU::execute_opcode(int opcode){
         case 0x10:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bpl(operand);
             break;
@@ -158,8 +164,9 @@ void CPU::execute_opcode(int opcode){
         case 0x50:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bvc(operand);
             break;
@@ -168,8 +175,9 @@ void CPU::execute_opcode(int opcode){
         case 0x70:
             prev_mode = rw_register_mode;
             rw_register_mode = 0x0;
-            current_operand = read(registers.pc);
-            operand = read(registers.pc++);
+            operand = read(registers.pc);
+            current_operand = operand;
+            registers.pc++;
             rw_register_mode = prev_mode;
             bvs(operand);
             break;

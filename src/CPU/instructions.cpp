@@ -2,13 +2,16 @@
 // Created by eafc6 on 7/1/2023.
 //
 
-#include <iostream>
 #include "cpu.h"
 #include "../global.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
-bool is_page_crossed(uint16_t initial_address, uint16_t change){
-    return (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
+bool CPU::is_page_crossed(const uint16_t initial_address, const uint16_t change){
+    const bool result = (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
+    if (result) {
+        increment_cycle_counter();
+    }
+    return result;
 }
 
 void CPU::clear_negative_flag(){
@@ -134,7 +137,9 @@ void CPU::asl(uint16_t address){
     } else {
         clc();
     }
-    write(address, operand <<= 1);
+    operand <<= 1;
+    increment_cycle_counter();
+    write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
     rw_register_mode = 0x0;
@@ -719,12 +724,14 @@ void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.x;
+    increment_cycle_counter();
     (this->*instruction)(read(address));
 }
 void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.y;
+    increment_cycle_counter();
     (this->*instruction)(read(address));
 }
 void CPU::absolute(void (CPU::*instruction)(uint16_t)) {
@@ -777,10 +784,11 @@ void CPU::indirect_x(void (CPU::*instruction)(uint8_t)) {
 }
 bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
     uint8_t address = read(registers.pc++);
-    uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
+    uint16_t base_address = read(address) | (read((address + 1) & 0xFF) << 8);
+    uint16_t effective_address = base_address + registers.y;
     this->current_operand = address;
     (this->*instruction)(read(effective_address));
-    return is_page_crossed(registers.pc - 1, effective_address);
+    return is_page_crossed(base_address, effective_address);
 }
 
 void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
@@ -801,12 +809,14 @@ void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.x;
+    increment_cycle_counter();
     (this->*instruction)(address);
 }
 void CPU::zero_page_y(void (CPU::*instruction)(uint16_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.y;
+    increment_cycle_counter();
     (this->*instruction)(address);
 }
 
