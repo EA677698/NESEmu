@@ -945,7 +945,7 @@ private:
 
     void indirect_y(void (CPU::*instruction)(uint16_t));
 
-    void no_addressing_mode(void (CPU::*instruction)());
+    void implied(void (CPU::*instruction)());
 };
 
 #endif //EMULATOR_CPU_H

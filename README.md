@@ -56,6 +56,8 @@ Options:
 
 A lot of information, research, and resources that have been used in this project can be found at [nesdev.org](https://nesdev.org).
 
+Test roms used for validating operations can be found at the [nest-test-roms](github.com/christopherpow/nes-test-roms) repo
+
 Information about unofficial opcodes used can be found at [www.masswerk.at](https://www.masswerk.at/nowgobang/2021/6502-illegal-opcodes).
 
 ## Contributing

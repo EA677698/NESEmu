@@ -157,7 +157,7 @@ void CPU::execute_opcode(int opcode){
 
         //BRK
         case 0x00:
-            brk();
+            implied(&CPU::brk);
             break;
 
         //BVC
@@ -184,22 +184,22 @@ void CPU::execute_opcode(int opcode){
 
         //CLC
         case 0x18:
-            clc();
+            implied(&CPU::clc);
             break;
 
         //CLD
         case 0xD8:
-            cld();
+            implied(&CPU::cld);
             break;
 
         //CLI
         case 0x58:
-            cli();
+            implied(&CPU::cli);
             break;
 
         //CLV
         case 0xB8:
-            clv();
+            implied(&CPU::clv);
             break;
 
         //CMP
@@ -266,12 +266,12 @@ void CPU::execute_opcode(int opcode){
 
         //DEX
         case 0xCA:
-            dex();
+            implied(&CPU::dex);
             break;
 
         //DEY
         case 0x88:
-            dey();
+            implied(&CPU::dey);
             break;
 
         //EOR
@@ -316,12 +316,12 @@ void CPU::execute_opcode(int opcode){
 
         //INX
         case 0xE8:
-            inx();
+            implied(&CPU::inx);
             break;
 
         //INY
         case 0xC8:
-            iny();
+            implied(&CPU::iny);
             break;
 
         //JMP
@@ -423,7 +423,7 @@ void CPU::execute_opcode(int opcode){
         case 0x7A:
         case 0xDA:
         case 0xFA:
-            nop();
+            implied(&CPU::nop);
             break;
         case 0x80:
         case 0x82:
@@ -486,22 +486,22 @@ void CPU::execute_opcode(int opcode){
 
         //PHA
         case 0x48:
-            pha();
+            implied(&CPU::pha);
             break;
 
         //PHP
         case 0x08:
-            php();
+            implied(&CPU::php);
             break;
 
         //PLA
         case 0x68:
-            pla();
+            implied(&CPU::pla);
             break;
 
         //PLP
         case 0x28:
-            plp();
+            implied(&CPU::plp);
             break;
 
         //ROL
@@ -540,12 +540,12 @@ void CPU::execute_opcode(int opcode){
 
         //RTI
         case 0x40:
-            rti();
+            implied(&CPU::rti);
             break;
 
         //RTS
         case 0x60:
-            rts();
+            implied(&CPU::rts);
             break;
 
         //SBC
@@ -576,17 +576,17 @@ void CPU::execute_opcode(int opcode){
 
         //SEC
         case 0x38:
-            sec();
+            implied(&CPU::sec);
             break;
 
         //SED
         case 0xF8:
-            sed();
+            implied(&CPU::sed);
             break;
 
         //SEI
         case 0x78:
-            sei();
+            implied(&CPU::sei);
             break;
 
         //STA
@@ -636,32 +636,32 @@ void CPU::execute_opcode(int opcode){
 
         //TAX
         case 0xAA:
-            tax();
+            implied(&CPU::tax);
             break;
 
         //TAY
         case 0xA8:
-            tay();
+            implied(&CPU::tay);
             break;
 
         //TSX
         case 0xBA:
-            tsx();
+            implied(&CPU::tsx);
             break;
 
         //TXA
         case 0x8A:
-            txa();
+            implied(&CPU::txa);
             break;
 
         //TXS
         case 0x9A:
-            txs();
+            implied(&CPU::txs);
             break;
 
         //TYA
         case 0x98:
-            tya();
+            implied(&CPU::tya);
             break;
 
         //ALL OTHER UNOFFICIAL OPS
