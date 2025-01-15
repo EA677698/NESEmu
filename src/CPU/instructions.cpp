@@ -2,13 +2,16 @@
 // Created by eafc6 on 7/1/2023.
 //
 
-#include <iostream>
 #include "cpu.h"
 #include "../global.h"
 
 //helper functions -------------------- NOT INSTRUCTIONS --------------------
-bool is_page_crossed(uint16_t initial_address, uint16_t change){
-    return (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
+bool CPU::is_page_crossed(const uint16_t initial_address, const uint16_t change){
+    const bool result = (initial_address & 0xFF00) != ((initial_address + change) & 0xFF00);
+    if (result) {
+        increment_cycle_counter();
+    }
+    return result;
 }
 
 void CPU::clear_negative_flag(){
@@ -134,7 +137,9 @@ void CPU::asl(uint16_t address){
     } else {
         clc();
     }
-    write(address, operand <<= 1);
+    operand <<= 1;
+    increment_cycle_counter();
+    write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
     rw_register_mode = 0x0;
@@ -143,7 +148,8 @@ void CPU::asl(uint16_t address){
 
 void CPU::bcc(int8_t operand){
     if(!is_bit_set(registers.sr, 0)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -152,14 +158,16 @@ void CPU::bcs(int8_t operand){
     if(is_bit_set(registers.sr, 0)){
         uint16_t old_pc = registers.pc;
         registers.pc += operand;
-        increment_cycle_counter(1 + is_page_crossed(old_pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(old_pc, operand);
 
     }
 }
 
 void CPU::beq(int8_t operand){
     if(is_bit_set(registers.sr, 1)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -183,21 +191,24 @@ void CPU::bit(uint8_t operand){
 
 void CPU::bmi(int8_t operand){
     if(is_bit_set(registers.sr, 7)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bne(int8_t operand){
     if(!is_bit_set(registers.sr, 1)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bpl(int8_t operand){
     if(!is_bit_set(registers.sr, 7)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -217,14 +228,16 @@ void CPU::brk(){
 
 void CPU::bvc(int8_t operand){
     if(!is_bit_set(registers.sr, 6)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bvs(int8_t operand){
     if(is_bit_set(registers.sr, 6)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -276,6 +289,7 @@ void CPU::cpy(uint8_t operand){
 
 void CPU::dec(uint16_t operand){
     uint8_t res = read(operand);
+    increment_cycle_counter();
     res--;
     write(operand,res);
     assign_zero_status(res);
@@ -303,6 +317,7 @@ void CPU::eor(uint8_t operand){
 void CPU::inc(uint16_t operand){
     uint8_t res = read(operand);
     res++;
+    increment_cycle_counter();
     write(operand,res);
     assign_zero_status(res);
     assign_negative_status(res);
@@ -329,6 +344,7 @@ void CPU::jsr(uint16_t operand){
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
     // spdlog::info("Storing address 0x{:X} into stack", registers.pc);
+    increment_cycle_counter();
     push(front);
     push(back);
     registers.pc = operand;
@@ -360,6 +376,7 @@ void CPU::lsr(uint16_t address){
     } else{
         clc();
     }
+    increment_cycle_counter();
     write(address, operand >>= 1);
     assign_zero_status(operand);
     clear_negative_flag();
@@ -385,6 +402,7 @@ void CPU::php(){
 
 void CPU::pla(){
     registers.ac = pop();
+    increment_cycle_counter();
     assign_zero_status(registers.ac);
     assign_negative_status(registers.ac);
 }
@@ -392,6 +410,7 @@ void CPU::pla(){
 void CPU::plp(){
     registers.sr &= 0x0;
     registers.sr |= pop();
+    increment_cycle_counter();
     registers.sr &= 0xEF;
     registers.sr |= 0x20;
 }
@@ -405,6 +424,7 @@ void CPU::rol(uint16_t address){
     }
     operand <<= 1;
     operand |= old_carry;
+    increment_cycle_counter();
     write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
@@ -420,6 +440,7 @@ void CPU::ror(uint16_t address){
     }
     operand >>= 1;
     operand |= (old_carry << 7);
+    increment_cycle_counter();
     write(address, operand);
     assign_zero_status(operand);
     assign_negative_status(operand);
@@ -428,6 +449,7 @@ void CPU::ror(uint16_t address){
 
 void CPU::rti() {
     uint8_t status = pop();
+    increment_cycle_counter();
     registers.sr = (status & 0xCF) | (registers.sr & 0x30);
     uint16_t address = pop();
     address |= ((uint16_t) pop()) << 8;
@@ -438,7 +460,9 @@ void CPU::rti() {
 
 void CPU::rts(){
     registers.pc++;
+    increment_cycle_counter();
     uint16_t address = pop();
+    increment_cycle_counter();
     address |= ((uint16_t) pop()) << 8;
     // spdlog::info("Retrieving address from stack: 0x{:X}",address);
     registers.pc = address + 1;
@@ -704,6 +728,7 @@ void CPU::usbc(uint8_t operand) {
 
 
 void CPU::accumulator(void (CPU::*instruction)(uint8_t)) {
+    read(registers.pc);
     (this->*instruction)(registers.ac);
 }
 void CPU::immediate(void (CPU::*instruction)(uint8_t)) {
@@ -719,12 +744,14 @@ void CPU::zero_page_x(void (CPU::*instruction)(uint8_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.x;
+    increment_cycle_counter();
     (this->*instruction)(read(address));
 }
 void CPU::zero_page_y(void (CPU::*instruction)(uint8_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.y;
+    increment_cycle_counter();
     (this->*instruction)(read(address));
 }
 void CPU::absolute(void (CPU::*instruction)(uint16_t)) {
@@ -771,19 +798,22 @@ void CPU::indirect(void (CPU::*instruction)(uint16_t)){
 void CPU::indirect_x(void (CPU::*instruction)(uint8_t)) {
     uint8_t address = read(registers.pc++);
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
+    increment_cycle_counter();
     uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
     this->current_operand = address;
     (this->*instruction)(read(effective_address));
 }
 bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
     uint8_t address = read(registers.pc++);
-    uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
+    uint16_t base_address = read(address) | (read((address + 1) & 0xFF) << 8);
+    uint16_t effective_address = base_address + registers.y;
     this->current_operand = address;
     (this->*instruction)(read(effective_address));
-    return is_page_crossed(registers.pc - 1, effective_address);
+    return is_page_crossed(base_address, effective_address);
 }
 
 void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
+    // read(registers.pc);
     rw_register_mode = 0x1;
     (this->*instruction)(AC_ADDRESS);
     rw_register_mode = 0x0;
@@ -801,12 +831,14 @@ void CPU::zero_page_x(void (CPU::*instruction)(uint16_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.x;
+    increment_cycle_counter();
     (this->*instruction)(address);
 }
 void CPU::zero_page_y(void (CPU::*instruction)(uint16_t)) {
     uint8_t operand = read(registers.pc++);
     this->current_operand = operand;
     uint8_t address = operand + registers.y;
+    increment_cycle_counter();
     (this->*instruction)(address);
 }
 
@@ -824,20 +856,25 @@ void absolute(void (CPU::*instruction)(uint8_t &)) {
 void CPU::absolute_x(void (CPU::*instruction)(uint16_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
-    uint16_t address = (highByte << 8) | lowByte;
-    this->current_operand = address;
-    (this->*instruction)(address + registers.x);
+    uint16_t base_address = (highByte << 8) | lowByte;
+    is_page_crossed(base_address, registers.x);
+    increment_cycle_counter();
+    this->current_operand = base_address;
+    (this->*instruction)(base_address + registers.x);
 }
 void CPU::absolute_y(void (CPU::*instruction)(uint16_t)){
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
-    uint16_t address = (highByte << 8) | lowByte;
-    this->current_operand = address;
-    (this->*instruction)(address + registers.y);
+    uint16_t base_address = (highByte << 8) | lowByte;
+    is_page_crossed(base_address, registers.y);
+    increment_cycle_counter();
+    this->current_operand = base_address;
+    (this->*instruction)(base_address + registers.y);
 }
 void CPU::indirect_x(void (CPU::*instruction)(uint16_t)) {
     uint8_t address = read(registers.pc++);
     uint8_t zero_page_address = (address + registers.x) & 0xFF;
+    increment_cycle_counter();
     uint16_t effective_address = read(zero_page_address) | (read((zero_page_address + 1) & 0xFF) << 8);
     this->current_operand = address;
     (this->*instruction)(effective_address);
@@ -845,11 +882,12 @@ void CPU::indirect_x(void (CPU::*instruction)(uint16_t)) {
 void CPU::indirect_y(void (CPU::*instruction)(uint16_t)) {
     uint8_t address = read(registers.pc++);
     uint16_t effective_address = (read(address) | (read((address + 1) & 0xFF) << 8)) + registers.y;
+    read(effective_address);
     this->current_operand = address;
     (this->*instruction)(effective_address);
 }
 
-void CPU::no_addressing_mode(void (CPU::*instruction)()) {
-    increment_cycle_counter();
+void CPU::implied(void (CPU::*instruction)()) {
+    read(registers.pc);
     (this->*instruction)();
 }

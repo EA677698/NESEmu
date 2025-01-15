@@ -21,7 +21,6 @@ void CPU::increment_cycle_counter(uint32_t cycles) {
 }
 
 void CPU::write(uint16_t address, uint8_t operand) {
-    increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
             case AC_ADDRESS:
@@ -48,6 +47,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
         }
         return;
     }
+    increment_cycle_counter();
     if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END && ppu) {
         address = NES_PPU_REGISTER_START + (address % 8);
         if (CPU_PPU_PERM[address % 8] > READ) {
@@ -62,7 +62,6 @@ void CPU::write(uint16_t address, uint8_t operand) {
 
 
 uint8_t CPU::read(uint16_t address) {
-    increment_cycle_counter();
     if (rw_register_mode) {
         switch (address) {
             case AC_ADDRESS:
@@ -82,6 +81,7 @@ uint8_t CPU::read(uint16_t address) {
                 emulator_exit(1);
         }
     }
+    increment_cycle_counter();
     if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) {
         address = NES_PPU_REGISTER_START + (address % 8);
         if (ppu && CPU_PPU_PERM[address % 8] & READ) {
@@ -123,10 +123,9 @@ void CPU::power_up(const std::string &rom_path) {
     for (int i = 0x4010; i <= 0x4013; i++) {
         mem[i] = 0;
     }
+    increment_cycle_counter(6);
     if (ppu) {
-        for (unsigned int i = 0; i < 20; i++) {
-            ppu->execute_cycle();
-        }
+        ppu->execute_cycle();
     }
     if (!args.instruction_cycles) {
         load_rom(this, rom_path);

@@ -57,6 +57,8 @@ class CPU {
 
     void increment_cycle_counter(uint32_t = 1);
 
+    bool CPU::is_page_crossed(uint16_t initial_address, uint16_t change);
+
     void assign_zero_status(uint8_t operand); // Sets the zero flag based on whether the operand is zero.
     void assign_negative_status(uint8_t operand); // Sets the negative flag based on operand's sign.
     void stack_decrement(); // Decrements the stack pointer.
@@ -943,7 +945,7 @@ private:
 
     void indirect_y(void (CPU::*instruction)(uint16_t));
 
-    void no_addressing_mode(void (CPU::*instruction)());
+    void implied(void (CPU::*instruction)());
 };
 
 #endif //EMULATOR_CPU_H
