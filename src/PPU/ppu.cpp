@@ -57,23 +57,38 @@ void PPU::write(uint16_t address, uint8_t operand) {
     }
 }
 
+void PPU::cpu_write(uint16_t address, uint8_t operand) {
+    ppudata_buffer = operand;
+    write(address, operand);
+}
+
 
 uint8_t PPU::read(uint16_t address) {
     uint8_t status;
     switch (address) {
         case PPUSTATUS_ADDR:
-            status = registers.ppustatus;
+            status = (registers.ppustatus & 0xE0) | (ppudata_buffer & 0x1F);
             registers.ppustatus &= 0x7F;
             registers.w = 0x0;
             return status;
         case OAMDATA_ADDR:
             return OAM[registers.oamaddr];
-        default:
-            registers.ppudata = ppudata_buffer;
-            ppudata_buffer = ppu_mem[registers.v & 0x3FFF];
+        case PPUDATA_ADDR:
+            if ((registers.v & 0x3FFF) >= 0x3F00 && (registers.v & 0x3FFF) <= 0x3FFF) {
+                registers.ppudata = ppu_mem[registers.v & 0x3FFF];
+            } else {
+                registers.ppudata = ppudata_buffer;
+            }
             registers.v += get_vram_address_increment();
             return registers.ppudata;
+        default:
+            return 0xFF;
     }
+}
+
+uint8_t PPU::cpu_read(uint16_t address) {
+    ppudata_buffer = read(address);
+    return ppudata_buffer;
 }
 
 void PPU::set_cpu(CPU *cpu) {
@@ -97,13 +112,13 @@ void PPU::ppu_power_up() {
     ppudata_buffer = 0x0;
     nmi_triggered = 0;
     scanline = 0;
-    cycles = -1;
+    cycles = 0;
     memset(frame, 0, sizeof(frame));
     load_system_palette("../../Composite_wiki.pal");
 }
 
 void PPU::execute_cycle() {
-
+    // spdlog::debug("Cycle: {}, Scanline: {}, V: {:04X}, T: {:04X}, VBlank set: {}", cycles, scanline, registers.v, registers.t, is_in_vblank());
     // Advance the cycle and manage scanline/cycle reset
     cycles++;
     if (cycles >= 341) { // End of scanline

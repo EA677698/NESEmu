@@ -92,7 +92,9 @@ public:
 
 
     void write(uint16_t address, uint8_t operand);
+    void cpu_write(uint16_t address, uint8_t operand);
     uint8_t read(uint16_t address);
+    uint8_t cpu_read(uint16_t address);
 
     void execute_cycle();
     void set_cpu(CPU* cpu);

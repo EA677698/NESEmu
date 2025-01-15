@@ -51,7 +51,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
     if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END && ppu) {
         address = NES_PPU_REGISTER_START + (address % 8);
         if (CPU_PPU_PERM[address % 8] > READ) {
-            ppu->write(address, operand);
+            ppu->cpu_write(address, operand);
         } else {
             spdlog::error("Invalid CPU write to PPU: 0x{:X}", address);
         }
@@ -85,7 +85,7 @@ uint8_t CPU::read(uint16_t address) {
     if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) {
         address = NES_PPU_REGISTER_START + (address % 8);
         if (ppu && CPU_PPU_PERM[address % 8] & READ) {
-            return ppu->read(address);
+            return ppu->cpu_read(address);
         }
         if (ppu) {
             spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
@@ -123,8 +123,11 @@ void CPU::power_up(const std::string &rom_path) {
     for (int i = 0x4010; i <= 0x4013; i++) {
         mem[i] = 0;
     }
-    increment_cycle_counter(6);
+    increment_cycle_counter(5);
     if (ppu) {
+        ppu->execute_cycle();
+        ppu->execute_cycle();
+        ppu->execute_cycle();
         ppu->execute_cycle();
     }
     if (!args.instruction_cycles) {

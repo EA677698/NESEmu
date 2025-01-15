@@ -104,39 +104,38 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     init_video();
-    PPU ppu;
-    CPU cpu = args.disable_ppu ? CPU(nullptr) : CPU(&ppu);
-    // CPU cpu(nullptr);
+    PPU *ppu = new PPU();
+    CPU *cpu = args.disable_ppu ? new CPU(nullptr) : new CPU(ppu);
 
     if (args.instruction_cycles) { // internal testing for cycles
-        cpu.cycles = 0;
-        power_up(cpu, argv[1]);
-        spdlog::info("POWER UP CYCLES: {}", cpu.cycles);
+        cpu->cycles = 0;
+        power_up(*cpu, argv[1]);
+        spdlog::info("POWER UP CYCLES: {}", cpu->cycles);
         for (int i = 0; i<sizeof(official_opcodes); i++) {
-            cpu.registers.pc = 0;
-            cpu.registers.ac = 0;
-            cpu.registers.x = 0;
-            cpu.registers.y = 0;
-            cpu.registers.sr = 0;
-            cpu.registers.sp = 0;
-            memset(cpu.mem, 0, sizeof(cpu.mem));
-            cpu.cycles = 1;
-            cpu.execute_opcode(official_opcodes[i]);
-            spdlog::info("0x{:X}: {}", official_opcodes[i], cpu.cycles);
+            cpu->registers.pc = 0;
+            cpu->registers.ac = 0;
+            cpu->registers.x = 0;
+            cpu->registers.y = 0;
+            cpu->registers.sr = 0;
+            cpu->registers.sp = 0;
+            memset(cpu->mem, 0, sizeof(cpu->mem));
+            cpu->cycles = 1;
+            cpu->execute_opcode(official_opcodes[i]);
+            spdlog::info("0x{:X}: {}", official_opcodes[i], cpu->cycles);
         }
         emulator_exit(0);
     }
 
 
-    power_up(cpu, args.rom_path);
     if(args.debug_mode) {
         spdlog::set_level(spdlog::level::debug);
     }
+    power_up(*cpu, args.rom_path);
     if(args.dump_memory){
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
-    spdlog::debug("PC REGISTER: 0x{:X}", cpu.registers.pc);
-    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
+    spdlog::debug("PC REGISTER: 0x{:X}", cpu->registers.pc);
+    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu->mem[cpu->registers.pc]);
     SDL_Event event;
     bool quit = false;
     time_t CPU = time(NULL);
@@ -146,29 +145,29 @@ int main(int argc, char* argv[]) {
     while (!quit) {
         uint64_t current_time = SDL_GetPerformanceCounter();
         double elapsed_render = (current_time - render_start) / (double)SDL_GetPerformanceFrequency();
-        final_mem = cpu.mem;
+        final_mem = cpu->mem;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true;
             }
         }
         if(time(NULL) - CPU >= 1){
-            cpu.cycles = 0;
+            cpu->cycles = 0;
             CPU = time(NULL);
         }
 
         if(!strcmp(args.test_type.c_str(), "blargg")) {
-            uint8_t status = cpu.mem[0x6000];
+            uint8_t status = cpu->mem[0x6000];
             if(status == 0x80){
                 blargg_initiated = true;
             }
             spdlog::debug("Status: 0x{:X}", status);
             if(status != 0x80 && blargg_initiated) {
-                char* res = (char*) &cpu.mem[0x6004];
+                char* res = (char*) &cpu->mem[0x6004];
                 spdlog::debug("Test finished or requires reset");
-                if(cpu.mem[0x6001] != 0xDE && cpu.mem[0x6002] != 0xB0 && cpu.mem[0x6003] != 0x61){
+                if(cpu->mem[0x6001] != 0xDE && cpu->mem[0x6002] != 0xB0 && cpu->mem[0x6003] != 0x61){
                     spdlog::warn("Unexpected validation values: 0x{:X} 0x{:X} 0x{:X}"
-                                 " expected 0xDE 0xB0 0x61", cpu.mem[0x6001], cpu.mem[0x6002], cpu.mem[0x6003]);
+                                 " expected 0xDE 0xB0 0x61", cpu->mem[0x6001], cpu->mem[0x6002], cpu->mem[0x6003]);
                 }
                 spdlog::info("Test result: {}", res);
                 emulator_exit(status);
@@ -179,9 +178,9 @@ int main(int argc, char* argv[]) {
             if(!strcmp(args.test_type.c_str(), "nestest")) {
                 if(nestest) {
                     spdlog::info("NESTEST: setting PC to 0xC000");
-                    cpu.registers.pc = 0xC000;
-                    cpu.registers.sr = 0x24;
-                    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu.mem[cpu.registers.pc]);
+                    cpu->registers.pc = 0xC000;
+                    cpu->registers.sr = 0x24;
+                    spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu->mem[cpu->registers.pc]);
                     nestest = 0x0;
                 }
                 //spdlog::debug("Status: 0x{:X}, 0x{:X}", cpu.mem[0x02], cpu.mem[0x03]);
@@ -189,19 +188,19 @@ int main(int argc, char* argv[]) {
 
         }
 
-        if(cpu.cycles < 1790000) {
-            std::memcpy(&snapshot, &cpu.registers, sizeof(CPU::Register));
-            if (args.breakpoint > 0 && cpu.instruction_counter == args.breakpoint) {
+        if(cpu->cycles < 1790000) {
+            std::memcpy(&snapshot, &cpu->registers, sizeof(CPU::Register));
+            if (args.breakpoint > 0 && cpu->instruction_counter == args.breakpoint) {
                 spdlog::info("Breakpoint reached at instruction count: {}", args.breakpoint);
             }
-            cpu.execute_opcode(cpu.read(cpu.registers.pc++));
+            cpu->execute_opcode(cpu->read(cpu->registers.pc++));
             // First three are the following: Address in $PC, opcode, and operand
             spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
-                          snapshot.pc, cpu.mem[snapshot.pc], cpu.current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
-            cpu.current_operand = 0x0;
-            if(elapsed_render >= (1.0 / 60.0) && ppu.is_in_vblank()){
+                          snapshot.pc, cpu->mem[snapshot.pc], cpu->current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
+            cpu->current_operand = 0x0;
+            if(elapsed_render >= (1.0 / 60.0) && ppu->is_in_vblank()){
                 render_start = current_time;
-                render_frame(ppu.frame);
+                render_frame(ppu->frame);
             }
         }
 
