@@ -123,10 +123,9 @@ void CPU::power_up(const std::string &rom_path) {
     for (int i = 0x4010; i <= 0x4013; i++) {
         mem[i] = 0;
     }
+    increment_cycle_counter(6);
     if (ppu) {
-        for (unsigned int i = 0; i < 20; i++) {
-            ppu->execute_cycle();
-        }
+        ppu->execute_cycle();
     }
     if (!args.instruction_cycles) {
         load_rom(this, rom_path);
