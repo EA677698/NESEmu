@@ -12,4 +12,8 @@ venv/
 tests/.pytest_cache
 tests/__pycache__
 tests/nestest/
-debug/
+tools/dk.txt
+tools/.idea/
+tools/opcodeCount.txt
+tools/processed.txt
+tools/__pycache__/

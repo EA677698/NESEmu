@@ -148,7 +148,8 @@ void CPU::asl(uint16_t address){
 
 void CPU::bcc(int8_t operand){
     if(!is_bit_set(registers.sr, 0)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -157,14 +158,16 @@ void CPU::bcs(int8_t operand){
     if(is_bit_set(registers.sr, 0)){
         uint16_t old_pc = registers.pc;
         registers.pc += operand;
-        increment_cycle_counter(1 + is_page_crossed(old_pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(old_pc, operand);
 
     }
 }
 
 void CPU::beq(int8_t operand){
     if(is_bit_set(registers.sr, 1)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -188,21 +191,24 @@ void CPU::bit(uint8_t operand){
 
 void CPU::bmi(int8_t operand){
     if(is_bit_set(registers.sr, 7)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bne(int8_t operand){
     if(!is_bit_set(registers.sr, 1)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bpl(int8_t operand){
     if(!is_bit_set(registers.sr, 7)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -222,14 +228,16 @@ void CPU::brk(){
 
 void CPU::bvc(int8_t operand){
     if(!is_bit_set(registers.sr, 6)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
 
 void CPU::bvs(int8_t operand){
     if(is_bit_set(registers.sr, 6)){
-        increment_cycle_counter(1 + is_page_crossed(registers.pc, operand));
+        increment_cycle_counter();
+        is_page_crossed(registers.pc, operand);
         registers.pc += operand;
     }
 }
@@ -763,7 +771,6 @@ bool CPU::absolute_x(void (CPU::*instruction)(uint8_t)) {
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    increment_cycle_counter();
     this->current_operand = address;
     (this->*instruction)(read(address + registers.x));
     return is_page_crossed(address, registers.x);
@@ -772,7 +779,6 @@ bool CPU::absolute_y(void (CPU::*instruction)(uint8_t)){
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
-    increment_cycle_counter();
     this->current_operand = address;
     (this->*instruction)(read(address + registers.y));
     return is_page_crossed(address, registers.y);

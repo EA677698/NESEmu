@@ -113,6 +113,13 @@ int main(int argc, char* argv[]) {
         power_up(cpu, argv[1]);
         spdlog::info("POWER UP CYCLES: {}", cpu.cycles);
         for (int i = 0; i<sizeof(official_opcodes); i++) {
+            cpu.registers.pc = 0;
+            cpu.registers.ac = 0;
+            cpu.registers.x = 0;
+            cpu.registers.y = 0;
+            cpu.registers.sr = 0;
+            cpu.registers.sp = 0;
+            memset(cpu.mem, 0, sizeof(cpu.mem));
             cpu.cycles = 1;
             cpu.execute_opcode(official_opcodes[i]);
             spdlog::info("0x{:X}: {}", official_opcodes[i], cpu.cycles);
