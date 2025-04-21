@@ -1,0 +1,8 @@
+[2025-01-14 17:59:37.603] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/15-brk.nes
+[2025-01-14 17:59:37.604] [NESEmu] [info] PRG_ROM_SIZE: 2
+[2025-01-14 17:59:37.604] [NESEmu] [info] RESET_VECTOR: 0xE683
+[2025-01-14 17:59:38.155] [NESEmu] [info] Test result: 
+15-brk
+
+Passed
+

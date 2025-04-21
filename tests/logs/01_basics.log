@@ -1,0 +1,8 @@
+[2025-01-14 17:58:49.192] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/01-basics.nes
+[2025-01-14 17:58:49.192] [NESEmu] [info] PRG_ROM_SIZE: 2
+[2025-01-14 17:58:49.192] [NESEmu] [info] RESET_VECTOR: 0xE683
+[2025-01-14 17:58:49.619] [NESEmu] [info] Test result: 
+01-basics
+
+Passed
+

@@ -1,0 +1,8 @@
+[2025-01-14 17:59:31.518] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/11-stack.nes
+[2025-01-14 17:59:31.518] [NESEmu] [info] PRG_ROM_SIZE: 2
+[2025-01-14 17:59:31.518] [NESEmu] [info] RESET_VECTOR: 0xE783
+[2025-01-14 17:59:35.942] [NESEmu] [info] Test result: 
+11-stack
+
+Passed
+

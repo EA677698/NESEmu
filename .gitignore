@@ -1,19 +1,33 @@
 # .gitignore
 
+# Jetbrains
 .idea/
-.vscode/
 cmake-build-debug/
 cmake-build-release
-Super_mario_brothers.nes
-Excite_bike.nes
-dk.nes
+
+# VsCode
+.vscode/
+build/
+
+# Libraries
 libs/
+
+# Python Testing
 venv/
+.pytest_cache/
 tests/.pytest_cache
 tests/__pycache__
 tests/nestest/
-tools/dk.txt
+tests/dump.bin
+
+# Python Opcode Extraction
 tools/.idea/
+tools/__pycache__/
+tools/dk.txt
 tools/opcodeCount.txt
 tools/processed.txt
-tools/__pycache__/
+
+# Nes Game Test ROMS
+Excite_bike.nes
+Super_mario_brothers.nes
+dk.nes

@@ -13,7 +13,7 @@ This emulator is the NTSC version of the NES. There are no current plans to add 
 
 ### Windows
 
-Currently, NESEMU is only compiled using Visual Studio 2022's compiler on Windows, and it is developed using CLion as the IDE.
+Currently, NESEMU is only compiled using Visual Studio 2022's compiler (MSVC 19.39.33523.0) on Windows, and it is developed using CLion as the IDE.
 
 #### Build Steps
 

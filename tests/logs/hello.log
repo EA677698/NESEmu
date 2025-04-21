@@ -1,0 +1,12 @@
+[2025-01-03 16:24:36.433] [NESEmu] [error] Error loading system palette file
+[2025-01-03 16:24:36.434] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/01-basics.nes
+[2025-01-03 16:24:36.434] [NESEmu] [info] PRG_ROM_SIZE: 2
+[2025-01-03 16:24:36.434] [NESEmu] [info] RESET_VECTOR: 0xE683
+[2025-01-03 16:24:36.871] [NESEmu] [info] Test result: 
+01-basics
+
+Passed
+
+Note: This test is meant for NTSC NES only.
+
+

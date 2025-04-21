@@ -3,7 +3,6 @@
 #include <SDL.h>
 #include <fstream>
 #include <iostream>
-
 #include "romLoader.h"
 #include "CPU/cpu.h"
 #include "RenderWindow/main_window.h"
@@ -14,7 +13,7 @@
 #include "spdlog/async.h"
 #include "cxxopts.hpp"
 
-unsigned char official_opcodes[] = {
+const unsigned char official_opcodes[] = {
     0x69, 0x65, 0x75, 0x6D, 0x7D, 0x79, 0x61, 0x71, 0x29, 0x25,
     0x35, 0x2D, 0x3D, 0x39, 0x21, 0x31, 0x0A, 0x06, 0x16, 0x0E,
     0x1E, 0x90, 0xB0, 0xF0, 0x24, 0x2C, 0x30, 0xD0, 0x10, 0x00,
@@ -103,6 +102,7 @@ int main(int argc, char* argv[]) {
         spdlog::error("Provided arguments: {}", result.arguments_string());
         exit(1);
     }
+
     init_video();
     PPU *ppu = new PPU();
     CPU *cpu = args.disable_ppu ? new CPU(nullptr) : new CPU(ppu);
@@ -203,8 +203,6 @@ int main(int argc, char* argv[]) {
                 render_frame(ppu->frame);
             }
         }
-
-        // ... (update pixels and rendering code here)
     }
     emulator_exit(0);
 }
