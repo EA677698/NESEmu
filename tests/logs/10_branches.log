@@ -1,8 +1,0 @@
-[2025-01-14 17:59:30.277] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/10-branches.nes
-[2025-01-14 17:59:30.277] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:59:30.277] [NESEmu] [info] RESET_VECTOR: 0xE683
-[2025-01-14 17:59:31.302] [NESEmu] [info] Test result: 
-10-branches
-
-Passed
-

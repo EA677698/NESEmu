@@ -1,8 +1,0 @@
-[2025-01-14 17:59:38.381] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/16-special.nes
-[2025-01-14 17:59:38.381] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:59:38.381] [NESEmu] [info] RESET_VECTOR: 0xE583
-[2025-01-14 17:59:38.564] [NESEmu] [info] Test result: 
-16-special
-
-Passed
-

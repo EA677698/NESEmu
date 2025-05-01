@@ -1,8 +1,0 @@
-[2025-01-14 17:59:07.734] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/06-absolute.nes
-[2025-01-14 17:59:07.734] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:59:07.735] [NESEmu] [info] RESET_VECTOR: 0xE783
-[2025-01-14 17:59:11.278] [NESEmu] [info] Test result: 
-06-absolute
-
-Passed
-

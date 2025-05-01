@@ -18,6 +18,8 @@ tests/.pytest_cache
 tests/__pycache__
 tests/nestest/
 tests/dump.bin
+latestLog.txt
+tests/logs/
 
 # Python Opcode Extraction
 tools/.idea/
@@ -31,7 +33,3 @@ Excite_bike.nes
 Super_mario_brothers.nes
 dk.nes
 SMB.nes
-
-# Other
-latestLog.txt
-tests/logs/

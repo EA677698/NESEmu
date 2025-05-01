@@ -1,8 +1,0 @@
-[2025-01-14 17:59:22.199] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/08-ind_x.nes
-[2025-01-14 17:59:22.199] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:59:22.199] [NESEmu] [info] RESET_VECTOR: 0xE783
-[2025-01-14 17:59:26.119] [NESEmu] [info] Test result: 
-08-ind_x
-
-Passed
-

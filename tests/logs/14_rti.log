@@ -1,8 +1,0 @@
-[2025-01-14 17:59:37.151] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/14-rti.nes
-[2025-01-14 17:59:37.151] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:59:37.151] [NESEmu] [info] RESET_VECTOR: 0xE683
-[2025-01-14 17:59:37.385] [NESEmu] [info] Test result: 
-14-rti
-
-Passed
-

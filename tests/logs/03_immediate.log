@@ -1,8 +1,0 @@
-[2025-01-14 17:58:52.968] [NESEmu] [info] Loaded ROM: instr_test-v5/rom_singles/03-immediate.nes
-[2025-01-14 17:58:52.968] [NESEmu] [info] PRG_ROM_SIZE: 2
-[2025-01-14 17:58:52.968] [NESEmu] [info] RESET_VECTOR: 0xE783
-[2025-01-14 17:58:55.404] [NESEmu] [info] Test result: 
-03-immediate
-
-Passed
-
