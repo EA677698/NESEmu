@@ -50,7 +50,9 @@ extern ROM rom;
 
 extern bool is_bit_set(uint8_t operand, char bit);
 
-extern void emulator_exit(int status);
+namespace reminescent {
+    extern void exit(int status);
+}
 
 
 

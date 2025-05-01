@@ -43,7 +43,7 @@ void power_up(CPU &cpu, const std::string& rom_path){
     cpu.power_up(rom_path);
 }
 
-void emulator_exit(int status){
+void reminescent::exit(int status){
     if(dump.is_open()){
         dump.write((char*)final_mem, 0x10000);
         dump.close();
@@ -53,7 +53,7 @@ void emulator_exit(int status){
     SDL_DestroyWindow(window);
     spdlog::shutdown();
     SDL_Quit();
-    exit(status);
+    std::exit(status);
 }
 
 void init_spdlog(){
@@ -61,7 +61,7 @@ void init_spdlog(){
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("latestLog.txt", true);
     std::vector<spdlog::sink_ptr> sinks {stdout_sink, file_sink};
-    auto async_logger = std::make_shared<spdlog::async_logger>("NESEmu", sinks.begin(), sinks.end(), spdlog::thread_pool());
+    auto async_logger = std::make_shared<spdlog::async_logger>("RemiNESent", sinks.begin(), sinks.end(), spdlog::thread_pool());
     set_default_logger(async_logger);
 }
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
             cpu->execute_opcode(official_opcodes[i]);
             spdlog::info("0x{:X}: {}", official_opcodes[i], cpu->cycles);
         }
-        emulator_exit(0);
+        reminescent::exit(0);
     }
 
 
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
                                  " expected 0xDE 0xB0 0x61", cpu->mem[0x6001], cpu->mem[0x6002], cpu->mem[0x6003]);
                 }
                 spdlog::info("Test result: {}", res);
-                emulator_exit(status);
+                reminescent::exit(status);
             }
         }
 
@@ -204,5 +204,5 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    emulator_exit(0);
+    reminescent::exit(0);
 }

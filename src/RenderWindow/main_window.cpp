@@ -29,9 +29,9 @@ void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
 void init_video(){
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         spdlog::critical("Could not initialize SDL: {}\n", SDL_GetError());
-        emulator_exit(1);
+        reminescent::exit(1);
     }
-    window = SDL_CreateWindow("NESEmu",
+    window = SDL_CreateWindow("RemiNESent",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer,
