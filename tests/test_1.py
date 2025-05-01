@@ -82,8 +82,8 @@ def test_cpu_cycle_accuracy():
 
 # Nestest-specific test
 def test_nestest():
-    rom_path = "nestest/nestest.nes"
-    reference_log = "nestest/nestest_log.txt"
+    rom_path = "test_roms/other/nestest.nes"
+    reference_log = "test_roms/other/nestest.log"
     passed, message = run_test("nestest", ["--rom", f"{rom_path}", "--disable_ppu", "--debug", "--test", "nestest"], compare_logs=True, reference_log=reference_log)
     assert passed, message
 
