@@ -44,7 +44,7 @@ void init_spdlog(){
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("latestLog.txt", true);
     std::vector<spdlog::sink_ptr> sinks {stdout_sink, file_sink};
-    auto async_logger = std::make_shared<spdlog::async_logger>("RemiNESent", sinks.begin(), sinks.end(), spdlog::thread_pool());
+    auto async_logger = std::make_shared<spdlog::async_logger>("RemiNEScent", sinks.begin(), sinks.end(), spdlog::thread_pool());
     set_default_logger(async_logger);
 }
 

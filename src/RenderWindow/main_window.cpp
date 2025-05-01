@@ -31,7 +31,7 @@ void init_video(){
         spdlog::critical("Could not initialize SDL: {}\n", SDL_GetError());
         reminescent::exit(1);
     }
-    window = SDL_CreateWindow("RemiNESent",
+    window = SDL_CreateWindow("RemiNEScent",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer,

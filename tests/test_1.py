@@ -7,9 +7,9 @@ import os
 
 # Paths to emulator executables
 executable_paths = [
-    "../build/bin/Release/RemiNESent.exe",
-    "../build/bin/Debug/RemiNESent.exe",
-    "../cmake-build-debug/bin/RemiNESent.exe"
+    "../build/bin/Release/RemiNEScent.exe",
+    "../build/bin/Debug/RemiNEScent.exe",
+    "../cmake-build-debug/bin/RemiNEScent.exe"
 ]
 
 

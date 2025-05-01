@@ -1,6 +1,6 @@
-# RemiNESent - NES Emulator
+# RemiNEScent - NES Emulator
 
-RemiNESent is a software emulator for the Nintendo Entertainment System (NES), a popular 8-bit home video game console from the 1980s.
+RemiNEScent is a software emulator for the Nintendo Entertainment System (NES), a popular 8-bit home video game console from the 1980s.
 This emulator is the NTSC version of the NES. There are no current plans to add PAL compatibility.
 
 ## Dependencies
@@ -13,11 +13,11 @@ This emulator is the NTSC version of the NES. There are no current plans to add 
 
 ### Windows
 
-Currently, RemiNESent is only compiled using Visual Studio 2022's compiler (MSVC 19.39.33523.0) on Windows, and it is developed using CLion as the IDE.
+Currently, RemiNEScent is only compiled using Visual Studio 2022's compiler (MSVC 19.39.33523.0) on Windows, and it is developed using CLion as the IDE.
 
 #### Build Steps
 
-1. Clone the repository: `git clone https://github.com/EA677698/RemiNESent`.
+1. Clone the repository: `git clone https://github.com/EA677698/RemiNEScent`.
 2. Open the project in your perferred IDE.
 3. Make sure SDL2, SPDLOG, and cxxopts are properly linked.
 4. Build and run the project.
@@ -32,7 +32,7 @@ The emulator can be used through the CLI.
 
 The following options are available:
 ```shell
-Usage: RemiNESent [options]
+Usage: RemiNEScent [options]
 Options:
   -h, --help
     Print help
