@@ -50,7 +50,9 @@ extern ROM rom;
 
 extern bool is_bit_set(uint8_t operand, char bit);
 
-extern void emulator_exit(int status);
+namespace reminescent {
+    extern void exit(int status);
+}
 
 constexpr unsigned char official_opcodes[] = {
     0x69, 0x65, 0x75, 0x6D, 0x7D, 0x79, 0x61, 0x71, 0x29, 0x25,

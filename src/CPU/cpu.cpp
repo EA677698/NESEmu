@@ -43,7 +43,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
                 break;
             default:
                 spdlog::error("Invalid CPU write to illegal register: 0x{:X}", address);
-                emulator_exit(1);
+                reminescent::exit(1);
         }
         return;
     }
@@ -78,7 +78,7 @@ uint8_t CPU::read(uint16_t address) {
                 return registers.sr;
             default:
                 spdlog::error("Invalid CPU read to illegal register: 0x{:X}", address);
-                emulator_exit(1);
+                reminescent::exit(1);
         }
     }
     increment_cycle_counter();

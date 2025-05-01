@@ -1,0 +1,10 @@
+{
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "python.testing.autoTestDiscoverOnSavePattern": "**/*.py",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "cmake.ctest.testExplorerIntegrationEnabled": false,
+}
