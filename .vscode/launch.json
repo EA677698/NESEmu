@@ -8,7 +8,7 @@
             "name": "SMB Test",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/cmake-build-debug/bin/Debug/emulator.exe",
+            "program": "${workspaceFolder}/cmake-build-debug/bin/Debug/RemiNESent.exe",
             "args": [
                 "--rom", "SMB.nes",
                 "--debug"
