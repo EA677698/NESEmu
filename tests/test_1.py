@@ -89,22 +89,22 @@ def test_nestest():
 
 # Parameterized tests for other ROMs
 @pytest.mark.parametrize("rom_file, test_name", [
-    ("instr_test-v5/rom_singles/01-basics.nes", "01_basics"),
-    ("instr_test-v5/rom_singles/02-implied.nes", "02_implied"),
-    ("instr_test-v5/rom_singles/03-immediate.nes", "03_immediate"),
-    ("instr_test-v5/rom_singles/04-zero_page.nes", "04_zero_page"),
-    ("instr_test-v5/rom_singles/05-zp_xy.nes", "05_zp_xy"),
-    ("instr_test-v5/rom_singles/06-absolute.nes", "06_absolute"),
-    ("instr_test-v5/rom_singles/07-abs_xy.nes", "07_abs_xy"),
-    ("instr_test-v5/rom_singles/08-ind_x.nes", "08_indirect_x"),
-    ("instr_test-v5/rom_singles/09-ind_y.nes", "09_indirect_y"),
-    ("instr_test-v5/rom_singles/10-branches.nes", "10_branches"),
-    ("instr_test-v5/rom_singles/11-stack.nes", "11_stack"),
-    ("instr_test-v5/rom_singles/12-jmp_jsr.nes", "12_jmp_jsr"),
-    ("instr_test-v5/rom_singles/13-rts.nes", "13_rti_rts"),
-    ("instr_test-v5/rom_singles/14-rti.nes", "14_rti"),
-    ("instr_test-v5/rom_singles/15-brk.nes", "15_brk"),
-    ("instr_test-v5/rom_singles/16-special.nes", "16_special")
+    ("test_roms/instr_test-v5/rom_singles/01-basics.nes", "01_basics"),
+    ("test_roms/instr_test-v5/rom_singles/02-implied.nes", "02_implied"),
+    ("test_roms/instr_test-v5/rom_singles/03-immediate.nes", "03_immediate"),
+    ("test_roms/instr_test-v5/rom_singles/04-zero_page.nes", "04_zero_page"),
+    ("test_roms/instr_test-v5/rom_singles/05-zp_xy.nes", "05_zp_xy"),
+    ("test_roms/instr_test-v5/rom_singles/06-absolute.nes", "06_absolute"),
+    ("test_roms/instr_test-v5/rom_singles/07-abs_xy.nes", "07_abs_xy"),
+    ("test_roms/instr_test-v5/rom_singles/08-ind_x.nes", "08_indirect_x"),
+    ("test_roms/instr_test-v5/rom_singles/09-ind_y.nes", "09_indirect_y"),
+    ("test_roms/instr_test-v5/rom_singles/10-branches.nes", "10_branches"),
+    ("test_roms/instr_test-v5/rom_singles/11-stack.nes", "11_stack"),
+    ("test_roms/instr_test-v5/rom_singles/12-jmp_jsr.nes", "12_jmp_jsr"),
+    ("test_roms/instr_test-v5/rom_singles/13-rts.nes", "13_rti_rts"),
+    ("test_roms/instr_test-v5/rom_singles/14-rti.nes", "14_rti"),
+    ("test_roms/instr_test-v5/rom_singles/15-brk.nes", "15_brk"),
+    ("test_roms/instr_test-v5/rom_singles/16-special.nes", "16_special")
 ])
 def test_rom(rom_file, test_name):
     passed, message = run_test(test_name, ["--rom", f"{rom_file}", "--test", "blargg", "--disable_ppu"])
