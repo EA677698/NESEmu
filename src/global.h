@@ -52,6 +52,7 @@ extern bool is_bit_set(uint8_t operand, char bit);
 
 namespace reminescent {
     extern void exit(int status);
+    extern void critical_error(const std::string& message, int status);
 }
 
 constexpr unsigned char official_opcodes[] = {

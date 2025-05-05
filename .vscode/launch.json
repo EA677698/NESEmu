@@ -5,13 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Simple Color Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/RemiNEScent.exe",
+            "args": [
+                "--rom", "tests/color_test.nes",
+               // "--debug"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole",
+            "preLaunchTask": "CMake: build",
+        },
+        {
             "name": "SMB Test",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/RemiNEScent.exe",
             "args": [
                 "--rom", "SMB.nes",
-                "--debug"
+               // "--debug"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

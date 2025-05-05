@@ -14,6 +14,7 @@ PPU::PPU() {
 void PPU::write(uint16_t address, uint8_t operand) {
     switch (address) {
         case PPUCTRL_ADDR:
+            registers.t = (registers.t & 0xF3FF) | ((operand & 0x3) << 10);
             registers.ppuctrl = operand;
             break;
         case PPUMASK_ADDR:
@@ -28,28 +29,28 @@ void PPU::write(uint16_t address, uint8_t operand) {
             registers.oamaddr++;
             break;
         case PPUSCROLL_ADDR:
-            registers.w = !registers.w;
-            if (registers.w == 0) {
+            if (!registers.w) { // 0
                 registers.t = (registers.t & 0x7FE0) | ((operand & 0xF8) >> 3);  // Coarse X
                 registers.x = operand & 0x07;
-            } else {
-                registers.t = (registers.t & 0x0C1F) | ((operand & 0x07) << 12); // Fine Y
+            } else { // 1
+                registers.t = (registers.t & 0x8FFF) | ((operand & 0x07) << 12); // Fine Y
                 registers.t = (registers.t & 0xFC1F) | ((operand & 0xF8) << 2);   // Coarse Y
             }
+            registers.w = !registers.w;
             break;
         case PPUADDR_ADDR:
-            registers.w = !registers.w;
-            if(!registers.w){
-                registers.t = (registers.t & 0x00FF) | ((operand & 0x3F) << 8);
-            } else {
+            if(!registers.w) { // 0
+                registers.t = (registers.t & 0xC0FF) | ((operand & 0x3F) << 8);
+            } else { // 1
                 registers.t = (registers.t & 0xFF00) | operand;
                 registers.v = registers.t;
             }
+            registers.w = !registers.w;
             break;
         case PPUDATA_ADDR:
             registers.ppudata = operand;
             ppu_mem[registers.v & 0x3FFF] = registers.ppudata;
-            registers.ppuaddr += get_vram_address_increment();
+            registers.v += get_vram_address_increment();
             break;
         default:
             registers.oamdma = operand;
@@ -75,7 +76,7 @@ uint8_t PPU::read(uint16_t address) {
             return OAM[registers.oamaddr];
         case PPUDATA_ADDR:
             if ((registers.v & 0x3FFF) >= 0x3F00 && (registers.v & 0x3FFF) <= 0x3FFF) {
-                registers.ppudata = ppu_mem[registers.v & 0x3FFF];
+                registers.ppudata = direct_read(registers.v & 0x3FFF);
             } else {
                 registers.ppudata = ppudata_buffer;
             }
@@ -86,6 +87,13 @@ uint8_t PPU::read(uint16_t address) {
     }
 }
 
+uint8_t PPU::direct_read(uint16_t address) {
+    if(address > 16384 || address < 0) {
+        reminescent::critical_error("Invalid PPU memory address", 1);
+    }
+    return ppu_mem[address];
+}
+
 uint8_t PPU::cpu_read(uint16_t address) {
     ppudata_buffer = read(address);
     return ppudata_buffer;
@@ -93,6 +101,39 @@ uint8_t PPU::cpu_read(uint16_t address) {
 
 void PPU::set_cpu(CPU *cpu) {
     this->cpu = cpu;
+}
+
+void PPU::increment_register_scrolls(uint8_t section, uint8_t vram_register, uint8_t increment) {
+    uint16_t* selected_register = nullptr;
+    if (vram_register == PPU_V){
+        selected_register = &registers.v;
+    } else {
+        selected_register = &registers.t;
+    }
+
+    uint8_t temp;
+    switch (section) {
+        case COARSE_X_SCROLL:
+            temp = (*selected_register & 0x001F) + increment;
+            *selected_register = *selected_register & 0xFFE0;
+            *selected_register |= temp & 0x1F;
+            break;
+        case COARSE_Y_SCROLL:
+            temp = (*selected_register & 0x03E0) + increment;
+            *selected_register = *selected_register & 0xFC1F;
+            *selected_register |= temp & 0x3E0;
+            break;
+        case NAMETABLE_SELECT:
+            temp = (*selected_register & 0x0C00) + increment;
+            *selected_register = *selected_register & 0xF3FF;
+            *selected_register |= temp & 0x0C00;
+            break;
+        case FINE_Y_SCROLL:
+            temp = (*selected_register & 0x7000) + increment;
+            *selected_register = *selected_register & 0x8FFF;
+            *selected_register |= temp & 0x7000;
+            break;
+    }
 }
 
 
@@ -114,7 +155,7 @@ void PPU::ppu_power_up() {
     scanline = 0;
     cycles = 0;
     memset(frame, 0, sizeof(frame));
-    load_system_palette("../../Composite_wiki.pal");
+    load_system_palette("Composite_wiki.pal");
 }
 
 void PPU::execute_cycle() {
@@ -138,12 +179,16 @@ void PPU::execute_cycle() {
     if (scanline < 240) { // Visible scanlines
         if (cycles < 256) {
             render_background(); // Background rendering for each pixel on this scanline
-        } else if (cycles >= 256 && cycles < 321) {
+        } else if (cycles == 256) {
+            increment_register_scrolls(COARSE_X_SCROLL, PPU_V);
+            increment_register_scrolls(COARSE_Y_SCROLL, PPU_V); 
+        } else if (cycles == 257) {
+            registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
+        } else if (cycles >= 258 && cycles < 321) {
             // Placeholder: Sprite evaluation for the next scanline (fetching OAM data)
             // This step will help prepare sprite data for the next line, if implemented.
         } else if (cycles >= 321 && cycles < 337) {
-            // Placeholder: Nametable fetching for the upcoming scanline
-            // The PPU fetches data for smooth scrolling and prepares tiles for rendering.
+            render_background(); // Fetch nametable data for the next scanline
         }
     } else if (scanline == 240) {
         // Post-render scanline - do nothing here as rendering has finished.
@@ -159,7 +204,6 @@ void PPU::execute_cycle() {
             clear_vblank(); // Clear the VBlank flag to prepare for the next frame
             nmi_triggered = false; // Reset NMI trigger status
         }
-        // Pre-render setup could go here, such as resetting PPU scroll registers if implemented
     }
 }
 
@@ -174,7 +218,15 @@ void PPU::render_background() {
     static uint8_t pattern_low_byte;
     static uint8_t pattern_high_byte;
     uint8_t data[8];
+
+    if (cycles == 0) {
+        return;
+    }
+
     switch (cycles % 8) {
+        case 0: // Increment horizontal scroll
+            increment_register_scrolls(COARSE_X_SCROLL, PPU_V);
+            break;
         case 1: // Retrieve nametable tile
             tile_column = tile_column % 32;
             address = table_address + (scanline * 0x20) + tile_column;
@@ -182,8 +234,8 @@ void PPU::render_background() {
             tile_column++;
             break;
         case 3: // Retrieve attribute byte (2x2 tile quadrant)
-            address = (table_address + 0x3C0) + ((scanline / 2) * 16) + (tile_column / 2);
-            attribute = read(address);
+            address = 0x23C0 | (registers.v & 0x0C00) | ((registers.v >> 4) & 0x38) | ((registers.v >> 2) & 0x07);
+            attribute = direct_read(address);
             break;
         case 5: // Fetch Tile pattern low byte
             address = pattern_table_address + tile;
@@ -196,9 +248,11 @@ void PPU::render_background() {
                 data[i] = (is_bit_set(pattern_high_byte,i) << 1) | is_bit_set(pattern_low_byte,i);
             }
             for(int i = 0; i < 8; i++){
-                frame[scanline][i * tile_column] = get_rgb_from_composite_palette(ppu_mem[PALETTE_BACKGROUND + (attribute * 4) + data[i]]);
+                int index = PALETTE_BACKGROUND;
+                index = index + (attribute * 4);
+                index = index + data[i];
+                frame[scanline][i * tile_column] = get_rgb_from_composite_palette(direct_read(index));
             }
-            scanline++;
             break;
         default:
             break;
@@ -324,12 +378,15 @@ void PPU::load_system_palette(const std::string& filename) {
         file.read((char*)system_palette, 0xC0);
         file.close();
     } else{
-        spdlog::error("Error loading system palette file");
+        reminescent::critical_error("Failed to load system palette", 1);
     }
 }
 
 RGBA PPU::get_rgb_from_composite_palette(uint8_t nes_color_index) {
-    int base_index = nes_color_index * 3;
+    int base_index = ((int)nes_color_index) * 3;
+    if (base_index >= 0xC0) {
+        reminescent::critical_error("Invalid NES color index", 1);
+    }
     return { system_palette[base_index], system_palette[base_index + 1], system_palette[base_index + 2] };
 }
 

@@ -39,6 +39,11 @@ void reminescent::exit(int status){
     std::exit(status);
 }
 
+void reminescent::critical_error(const std::string& message, int status){
+    spdlog::critical(message);
+    reminescent::exit(status);
+}
+
 void init_spdlog(){
     spdlog::init_thread_pool(8192, 1);
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();

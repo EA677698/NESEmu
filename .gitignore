@@ -29,7 +29,4 @@ tools/opcodeCount.txt
 tools/processed.txt
 
 # Nes Game Test ROMS
-Excite_bike.nes
-Super_mario_brothers.nes
-dk.nes
-SMB.nes
+/*.nes

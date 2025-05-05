@@ -33,6 +33,14 @@ class CPU;
 #define PPUDATA_ADDR 0x2007
 #define OAMDMA_ADDR 0x4014
 
+#define COARSE_X_SCROLL 0x1
+#define COARSE_Y_SCROLL 0x2
+#define NAMETABLE_SELECT 0x3
+#define FINE_Y_SCROLL 0x4
+
+#define PPU_V 0x0
+#define PPU_T 0x1
+
 class PPU {
 
     uint8_t OAM[256]; // object attribute memory (OAM)
@@ -42,11 +50,14 @@ class PPU {
     uint8_t system_palette[192];
 
 private:
+
     uint8_t nmi_triggered;
     CPU* cpu;
 
     void set_vblank();
     void clear_vblank();
+    uint8_t direct_read(uint16_t address);
+    void increment_register_scrolls(uint8_t section, uint8_t vram_register, uint8_t increment = 1);
 
 
 public:

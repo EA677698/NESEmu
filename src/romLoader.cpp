@@ -55,7 +55,6 @@ void load_flags(){
 void load_rom_fd(std::string rom_path){
     rom.rom_file.open(rom_path, std::ifstream::in | std::ifstream::binary);
     if(!rom.rom_file.is_open()){
-        //TODO throw error
         spdlog::error("UNABLE TO OPEN ROM FILE: {}", rom_path);
         reminescent::exit(1);
     }
@@ -68,7 +67,6 @@ void load_rom_fd(std::string rom_path){
 void load_rom(CPU *cpu, std::string rom_path){
     load_rom_fd(rom_path);
     if(!is_iNES_format()){
-        //TODO throw error
         spdlog::error("INVALID FILE FORMAT");
         exit(1);
     }
