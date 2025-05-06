@@ -12,6 +12,7 @@ PPU::PPU() {
 }
 
 void PPU::write(uint16_t address, uint8_t operand) {
+    ppu_io_bus = operand;
     switch (address) {
         case PPUCTRL_ADDR:
             registers.t = (registers.t & 0xF3FF) | ((operand & 0x3) << 10);
@@ -59,31 +60,37 @@ void PPU::write(uint16_t address, uint8_t operand) {
 }
 
 void PPU::cpu_write(uint16_t address, uint8_t operand) {
-    ppudata_buffer = operand;
     write(address, operand);
 }
 
 
 uint8_t PPU::read(uint16_t address) {
     uint8_t status;
+    uint16_t addr;
+    uint8_t value;
+    uint8_t result;
     switch (address) {
         case PPUSTATUS_ADDR:
-            status = (registers.ppustatus & 0xE0) | (ppudata_buffer & 0x1F);
+            status = (registers.ppustatus & 0xE0) | (registers.ppudata & 0x1F);
             registers.ppustatus &= 0x7F;
             registers.w = 0x0;
             return status;
         case OAMDATA_ADDR:
             return OAM[registers.oamaddr];
         case PPUDATA_ADDR:
-            if ((registers.v & 0x3FFF) >= 0x3F00 && (registers.v & 0x3FFF) <= 0x3FFF) {
-                registers.ppudata = direct_read(registers.v & 0x3FFF);
+            addr = registers.v & 0x3FFF;
+            value = direct_read(addr);
+            if (addr < 0x3F00) {
+                result = registers.ppudata;
+                registers.ppudata = value;
             } else {
-                registers.ppudata = ppudata_buffer;
-            }
+                result = value;
+                registers.ppudata = direct_read(addr & 0x2FFF);
+            } 
             registers.v += get_vram_address_increment();
-            return registers.ppudata;
+            return result;
         default:
-            return 0xFF;
+            return ppu_io_bus;
     }
 }
 
@@ -95,43 +102,47 @@ uint8_t PPU::direct_read(uint16_t address) {
 }
 
 uint8_t PPU::cpu_read(uint16_t address) {
-    ppudata_buffer = read(address);
-    return ppudata_buffer;
+    ppu_io_bus = read(address);
+    return ppu_io_bus;
 }
 
 void PPU::set_cpu(CPU *cpu) {
     this->cpu = cpu;
 }
 
-void PPU::increment_register_scrolls(uint8_t section, uint8_t vram_register, uint8_t increment) {
-    uint16_t* selected_register = nullptr;
-    if (vram_register == PPU_V){
-        selected_register = &registers.v;
-    } else {
-        selected_register = &registers.t;
-    }
-
-    uint8_t temp;
+// yyy NN YYYYY XXXXX
+// ||| || ||||| +++++-- coarse X scroll
+// ||| || +++++-------- coarse Y scroll
+// ||| ++-------------- nametable select
+// +++----------------- fine Y scroll
+// if increment is ever more than 1, overflows may not necessarily be detected
+void PPU::increment_register_scrolls(uint8_t section, uint16_t* internal_register, uint8_t increment) {
+    uint16_t temp;
     switch (section) {
         case COARSE_X_SCROLL:
-            temp = (*selected_register & 0x001F) + increment;
-            *selected_register = *selected_register & 0xFFE0;
-            *selected_register |= temp & 0x1F;
+            temp = (*internal_register & 0x001F) + increment;
+            *internal_register = *internal_register & 0xFFE0;
+            *internal_register |= temp & 0x1F;
+            *internal_register ^= is_bit_set(temp, 5) << 10;
             break;
         case COARSE_Y_SCROLL:
-            temp = (*selected_register & 0x03E0) + increment;
-            *selected_register = *selected_register & 0xFC1F;
-            *selected_register |= temp & 0x3E0;
+            temp = (*internal_register & 0x03E0) + (increment << 5);
+            *internal_register = *internal_register & 0xFC1F;
+            *internal_register |= temp & 0x3E0;
+            *internal_register ^= (temp == 0x1D) << 11;
             break;
         case NAMETABLE_SELECT:
-            temp = (*selected_register & 0x0C00) + increment;
-            *selected_register = *selected_register & 0xF3FF;
-            *selected_register |= temp & 0x0C00;
+            temp = (*internal_register & 0x0C00) + (increment << 10);
+            *internal_register = *internal_register & 0xF3FF;
+            *internal_register |= temp & 0x0C00;
             break;
         case FINE_Y_SCROLL:
-            temp = (*selected_register & 0x7000) + increment;
-            *selected_register = *selected_register & 0x8FFF;
-            *selected_register |= temp & 0x7000;
+            temp = (*internal_register & 0x7000) + (increment << 12);
+            *internal_register = *internal_register & 0x8FFF;
+            *internal_register |= temp & 0x7000;
+            if (temp == 0x8000) {
+                increment_register_scrolls(COARSE_Y_SCROLL, internal_register, 1); // Increment coarse Y if fine Y overflows
+            }
             break;
     }
 }
@@ -150,13 +161,56 @@ void PPU::ppu_power_up() {
     registers.v = 0x0;
     registers.t = 0x0;
     registers.x = 0x0;
-    ppudata_buffer = 0x0;
+    registers.ppudata = 0x0;
     nmi_triggered = 0;
     scanline = 0;
     cycles = 0;
     memset(frame, 0, sizeof(frame));
     load_system_palette("Composite_wiki.pal");
 }
+
+void PPU::sprite_evaluation() {
+    static int n = 0;
+    static int index = 0;
+    static uint8_t buffer = 0;
+    static bool can_write = true;
+
+    if (cycles % 2 == 1) {
+        buffer = OAM[n * 4 + 0];
+        return;
+    }
+
+    uint16_t next_scanline = scanline + 1;
+    if (next_scanline == 262) next_scanline = 0;
+
+    uint8_t sprite_y = buffer;
+    uint8_t sprite_height = (registers.ppuctrl & 0x20) ? 16 : 8;
+
+    if (can_write) {
+        if ((uint8_t)(next_scanline - sprite_y) < sprite_height) {
+            OAM_secondary[index * 4 + 0] = sprite_y;
+            OAM_secondary[index * 4 + 1] = OAM[n * 4 + 1];
+            OAM_secondary[index * 4 + 2] = OAM[n * 4 + 2];
+            OAM_secondary[index * 4 + 3] = OAM[n * 4 + 3];
+            index++;
+
+            if (index == 8) {
+                can_write = false;
+            }
+        }
+    } else {
+        if ((uint8_t)(next_scanline - sprite_y) < sprite_height) {
+            registers.ppustatus |= 0x20;
+        }
+    }
+    n++;
+    if (n == 64) {
+        n = 0;
+        index = 0;
+        can_write = true;
+    }
+}
+
 
 void PPU::execute_cycle() {
     // spdlog::debug("Cycle: {}, Scanline: {}, V: {:04X}, T: {:04X}, VBlank set: {}", cycles, scanline, registers.v, registers.t, is_in_vblank());
@@ -169,44 +223,61 @@ void PPU::execute_cycle() {
             scanline = 0; // Wrap around to the first scanline of the next frame
         }
     }
-
-    // Rendering cycle ranges:
-    // 0-255: Visible cycles for rendering the background and potentially sprites.
-    // 256-319: Cycles for sprite evaluation (preparation for next scanline).
-    // 321-336: Fetch nametable data for the next scanline.
-    // 337-340: Idle cycles (no visible effect, padding for timing).
-
     if (scanline < 240) { // Visible scanlines
         if (cycles < 256) {
-            render_background(); // Background rendering for each pixel on this scanline
+            render_background();
+            if (cycles == 1) {
+                memset(OAM_secondary, 0xFF, sizeof(OAM_secondary)); // Clear OAM secondary buffer
+            }
+
+        } else if (cycles >= 65 && cycles <= 256){
+            sprite_evaluation(); 
         } else if (cycles == 256) {
-            increment_register_scrolls(COARSE_X_SCROLL, PPU_V);
-            increment_register_scrolls(COARSE_Y_SCROLL, PPU_V); 
+            increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
+            increment_register_scrolls(FINE_Y_SCROLL, &registers.v); 
         } else if (cycles == 257) {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             // Placeholder: Sprite evaluation for the next scanline (fetching OAM data)
-            // This step will help prepare sprite data for the next line, if implemented.
         } else if (cycles >= 321 && cycles < 337) {
-            render_background(); // Fetch nametable data for the next scanline
+            render_background();
         }
-    } else if (scanline == 240) {
-        // Post-render scanline - do nothing here as rendering has finished.
     } else if (scanline == 241 && cycles == 1) {
         // Begin VBlank
         set_vblank(); // Set VBlank flag in PPUSTATUS (signals CPU rendering is done)
-        if (get_NMI() && !nmi_triggered) { // Trigger NMI if enabled in PPUCTRL
+        if (get_NMI() && !nmi_triggered) {
             nmi_triggered = true;
-            cpu->NMI_handler(); // This NMI signals the CPU to process VBlank routines
+            cpu->NMI_handler();
         }
     } else if (scanline == 261) { // Pre-render scanline
         if (cycles == 1) {
             clear_vblank(); // Clear the VBlank flag to prepare for the next frame
             nmi_triggered = false; // Reset NMI trigger status
         }
+        if (cycles < 256) {
+            render_background();
+        } else if (cycles == 256) {
+            increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
+            increment_register_scrolls(FINE_Y_SCROLL, &registers.v); 
+        } else if (cycles == 257) {
+            registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
+        } else if (cycles >= 258 && cycles < 321) {
+            if (cycles <= 280 && cycles <= 304) {
+                uint8_t temp_y = registers.t & 0x7000;
+                registers.v = (registers.v & 0x8FFF) | temp_y; // copy fine y t to v
+            }
+            // Placeholder: Sprite evaluation for the next scanline (fetching OAM data)
+            // This step will help prepare sprite data for the next line, if implemented.
+        } else if (cycles >= 321 && cycles < 337) {
+            render_background();
+        }
     }
 }
 
+
+void PPU::fetch_sprite(){
+    // TODO
+}
 
 void PPU::render_background() {
     uint16_t table_address = get_base_nametable_address();
@@ -225,11 +296,11 @@ void PPU::render_background() {
 
     switch (cycles % 8) {
         case 0: // Increment horizontal scroll
-            increment_register_scrolls(COARSE_X_SCROLL, PPU_V);
+            increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
             break;
         case 1: // Retrieve nametable tile
             tile_column = tile_column % 32;
-            address = table_address + (scanline * 0x20) + tile_column;
+            address = 0x2000 | (registers.v & 0x0FFF); //table_address + (scanline * 0x20) + tile_column;
             tile = read(address);
             tile_column++;
             break;

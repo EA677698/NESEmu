@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "DK Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/RemiNEScent.exe",
+            "args": [
+                "--rom", "dk.nes",
+               // "--debug"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole",
+            "preLaunchTask": "CMake: build",
+        },
+        {
             "name": "Simple Color Test",
             "type": "cppvsdbg",
             "request": "launch",

@@ -38,26 +38,25 @@ class CPU;
 #define NAMETABLE_SELECT 0x3
 #define FINE_Y_SCROLL 0x4
 
-#define PPU_V 0x0
-#define PPU_T 0x1
 
 class PPU {
 
     uint8_t OAM[256]; // object attribute memory (OAM)
     uint8_t ppu_mem[16384]; // VRAM
-    uint8_t ppudata_buffer; // For accuracy, buffer prefetches for next PPUDATA read
     uint16_t scanline;
     uint8_t system_palette[192];
-
-private:
-
+    
+    private:
+    
+    uint8_t ppu_io_bus;
+    uint8_t OAM_secondary[32];
     uint8_t nmi_triggered;
     CPU* cpu;
 
     void set_vblank();
     void clear_vblank();
     uint8_t direct_read(uint16_t address);
-    void increment_register_scrolls(uint8_t section, uint8_t vram_register, uint8_t increment = 1);
+    void increment_register_scrolls(uint8_t section, uint16_t* internal_register, uint8_t increment = 1);
 
 
 public:
@@ -107,8 +106,12 @@ public:
     uint8_t read(uint16_t address);
     uint8_t cpu_read(uint16_t address);
 
+    void sprite_evaluation();
+
     void execute_cycle();
     void set_cpu(CPU* cpu);
+
+    void fetch_sprite();
 
     void ppu_power_up();
 

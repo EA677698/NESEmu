@@ -48,13 +48,9 @@ void CPU::write(uint16_t address, uint8_t operand) {
         return;
     }
     increment_cycle_counter();
-    if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END && ppu) {
+    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) && ppu) {
         address = NES_PPU_REGISTER_START + (address % 8);
-        if (CPU_PPU_PERM[address % 8] > READ) {
-            ppu->cpu_write(address, operand);
-        } else {
-            spdlog::error("Invalid CPU write to PPU: 0x{:X}", address);
-        }
+        ppu->cpu_write(address, operand);
     } else {
         mem[address] = operand;
     }
@@ -82,15 +78,9 @@ uint8_t CPU::read(uint16_t address) {
         }
     }
     increment_cycle_counter();
-    if (address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) {
+    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) && ppu) {
         address = NES_PPU_REGISTER_START + (address % 8);
-        if (ppu && CPU_PPU_PERM[address % 8] & READ) {
-            return ppu->cpu_read(address);
-        }
-        if (ppu) {
-            spdlog::error("Invalid CPU read to PPU: 0x{:X}", address);
-        }
-        return 0;
+        return ppu->cpu_read(address);
     }
     return mem[address];
 }

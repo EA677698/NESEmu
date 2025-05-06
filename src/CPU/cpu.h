@@ -41,8 +41,6 @@ class CPU {
 
     PPU *ppu;
 
-    const uint8_t CPU_PPU_PERM[9] = {WRITE,WRITE,READ,WRITE,READ | WRITE, WRITE, WRITE, READ | WRITE, WRITE};
-
     void clear_negative_flag();
 
     void clear_overflow_flag();
