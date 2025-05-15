@@ -21,6 +21,12 @@ void CPU::increment_cycle_counter(uint32_t cycles) {
 }
 
 void CPU::write(uint16_t address, uint8_t operand) {
+
+    if (address < 0 || address > sizeof(mem)) {
+        spdlog::error("Invalid CPU write to address: 0x{:X}", address);
+        reminescent::exit(1);
+    }
+
     if (rw_register_mode) {
         switch (address) {
             case AC_ADDRESS:
@@ -58,6 +64,12 @@ void CPU::write(uint16_t address, uint8_t operand) {
 
 
 uint8_t CPU::read(uint16_t address) {
+
+    if (address < 0 || address > sizeof(mem)) {
+        spdlog::error("Invalid CPU write to address: 0x{:X}", address);
+        reminescent::exit(1);
+    }
+
     if (rw_register_mode) {
         switch (address) {
             case AC_ADDRESS:

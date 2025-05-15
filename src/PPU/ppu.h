@@ -116,6 +116,12 @@ public:
     void ppu_power_up();
 
     void render_background();
+
+    uint8_t get_coarse_x_scroll() const;
+    uint8_t get_coarse_y_scroll() const;
+    uint8_t get_nametable_select() const;
+    uint8_t get_fine_y_scroll() const;
+
     uint16_t get_base_nametable_address() const;
     uint8_t get_vram_address_increment() const;
     uint16_t get_sprite_pattern_table_address() const;
@@ -136,7 +142,7 @@ public:
     uint8_t sprite_zero_hit() const;
     uint8_t is_in_vblank() const;
     void load_system_palette(const std::string& filename);
-    RGBA get_rgb_from_composite_palette(uint8_t nes_color_index);
+    RGBA get_rgb_from_palette(uint8_t nes_color_index);
 
 };
 
