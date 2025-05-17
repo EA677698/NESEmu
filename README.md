@@ -19,8 +19,7 @@ Currently, RemiNEScent is only compiled using Visual Studio 2022's compiler (MSV
 
 1. Clone the repository: `git clone https://github.com/EA677698/RemiNEScent`.
 2. Open the project in your perferred IDE.
-3. Make sure SDL2, SPDLOG, and cxxopts are properly linked.
-4. Build and run the project.
+3. Run the CMake configuration
 
 ### Other Operating Systems
 

@@ -130,6 +130,8 @@ int main(int argc, char* argv[]) {
     uint8_t nestest = 0x1;
     bool blargg_initiated = false;
     CPU::Register snapshot;
+    uint16_t v;
+    uint32_t h;
     while (!quit) {
         uint64_t current_time = SDL_GetPerformanceCounter();
         double elapsed_render = (current_time - render_start) / (double)SDL_GetPerformanceFrequency();
@@ -178,13 +180,15 @@ int main(int argc, char* argv[]) {
 
         if(cpu->cycles < 1790000) {
             std::memcpy(&snapshot, &cpu->registers, sizeof(CPU::Register));
+            v = ppu->scanline;
+            h = ppu->cycles;
             if (args.breakpoint > 0 && cpu->instruction_counter == args.breakpoint) {
                 spdlog::info("Breakpoint reached at instruction count: {}", args.breakpoint);
             }
             cpu->execute_opcode(cpu->read(cpu->registers.pc++));
             // First three are the following: Address in $PC, opcode, and operand
-            spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X}",
-                          snapshot.pc, cpu->mem[snapshot.pc], cpu->current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp);
+            spdlog::debug("0x{:X}  0x{:X}  0x{:X}           A:0x{:X} X:0x{:X} Y:0x{:X} SR:0x{:X} SP:0x{:X} V:{} H:{}",
+                          snapshot.pc, cpu->mem[snapshot.pc], cpu->current_operand, snapshot.ac, snapshot.x, snapshot.y, snapshot.sr, snapshot.sp, v, h);
             cpu->current_operand = 0x0;
             if(elapsed_render >= (1.0 / 60.0) && ppu->is_in_vblank()){
                 render_start = current_time;

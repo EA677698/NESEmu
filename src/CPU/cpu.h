@@ -40,6 +40,7 @@
 class CPU {
 
     PPU *ppu;
+    uint8_t io_bus;
 
     void clear_negative_flag();
 

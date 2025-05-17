@@ -43,11 +43,10 @@ class PPU {
 
     uint8_t OAM[256]; // object attribute memory (OAM)
     uint8_t ppu_mem[16384]; // VRAM
-    uint16_t scanline;
     uint8_t system_palette[192];
-    
+
     private:
-    
+
     uint8_t ppu_io_bus;
     uint8_t OAM_secondary[32];
     uint8_t nmi_triggered;
@@ -61,6 +60,7 @@ class PPU {
 
 public:
 
+    uint16_t scanline;
     uint32_t cycles;
     RGBA frame[VIDEO_HEIGHT][VIDEO_WIDTH];
 
@@ -107,6 +107,8 @@ public:
     uint8_t cpu_read(uint16_t address);
 
     void sprite_evaluation();
+
+    void OAM_write(uint8_t data);
 
     void execute_cycle();
     void set_cpu(CPU* cpu);

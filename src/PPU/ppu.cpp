@@ -12,7 +12,9 @@ PPU::PPU() {
 }
 
 void PPU::write(uint16_t address, uint8_t operand) {
-    ppu_io_bus = operand;
+    if (address != OAMDMA_ADDR) {
+        ppu_io_bus = operand;
+    }
     switch (address) {
         case PPUCTRL_ADDR:
             registers.t = (registers.t & 0xF3FF) | ((operand & 0x3) << 10);
@@ -58,6 +60,7 @@ void PPU::write(uint16_t address, uint8_t operand) {
             registers.v += get_vram_address_increment();
             break;
         default:
+            registers.oamaddr = 0;
             registers.oamdma = operand;
             break;
     }
@@ -65,6 +68,10 @@ void PPU::write(uint16_t address, uint8_t operand) {
 
 void PPU::cpu_write(uint16_t address, uint8_t operand) {
     write(address, operand);
+}
+
+void PPU::OAM_write(uint8_t data) {
+    OAM[registers.oamaddr++] = data;
 }
 
 
@@ -75,7 +82,7 @@ uint8_t PPU::read(uint16_t address) {
     uint8_t result;
     switch (address) {
         case PPUSTATUS_ADDR:
-            status = (registers.ppustatus & 0xE0) | (registers.ppudata & 0x1F);
+            status = (registers.ppustatus & 0xE0) | (ppu_io_bus & 0x1F);
             registers.ppustatus &= 0x7F;
             registers.w = 0x0;
             return status;
@@ -155,6 +162,8 @@ void PPU::increment_register_scrolls(uint8_t section, uint16_t *internal_registe
                 // Increment coarse Y if fine Y overflows
             }
             break;
+        default:
+            break;
     }
 }
 
@@ -192,10 +201,12 @@ void PPU::sprite_evaluation() {
     }
 
     uint16_t next_scanline = scanline + 1;
-    if (next_scanline == 262) next_scanline = 0;
+    if (next_scanline == 262) {
+        next_scanline = 0;
+    }
 
     uint8_t sprite_y = buffer;
-    uint8_t sprite_height = (registers.ppuctrl & 0x20) ? 16 : 8;
+    uint8_t sprite_height = get_sprite_size();
 
     if (can_write) {
         if ((uint8_t) (next_scanline - sprite_y) < sprite_height) {
@@ -205,14 +216,10 @@ void PPU::sprite_evaluation() {
             OAM_secondary[index * 4 + 3] = OAM[n * 4 + 3];
             index++;
 
-            if (index == 8) {
-                can_write = false;
-            }
+            can_write = index != 8;
         }
-    } else {
-        if ((uint8_t) (next_scanline - sprite_y) < sprite_height) {
-            registers.ppustatus |= 0x20;
-        }
+    } else if ((uint8_t) (next_scanline - sprite_y) < sprite_height) {
+        registers.ppustatus |= 0x20;
     }
     n++;
     if (n == 64) {
@@ -243,9 +250,9 @@ void PPU::execute_cycle() {
                 memset(OAM_secondary, 0xFF, sizeof(OAM_secondary)); // Clear OAM secondary buffer
             }
         } else if (cycles >= 65 && cycles < 256) {
-            // sprite_evaluation();
+             sprite_evaluation();
         } else if (cycles == 256) {
-            // sprite_evaluation();
+             sprite_evaluation();
             increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
             increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
         } else if (cycles == 257) {
@@ -276,7 +283,7 @@ void PPU::execute_cycle() {
         } else if (cycles == 257) {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
-            if (cycles <= 280 && cycles <= 304) {
+            if (cycles >= 280 && cycles <= 304) {
                 uint8_t temp_y = registers.t & 0x7000;
                 registers.v = (registers.v & 0x8FFF) | temp_y; // copy fine y t to v
             }
@@ -293,23 +300,28 @@ void PPU::fetch_sprite() {
     static uint8_t attribute;
     static uint8_t x_coordinate;
 
-    if (cycles < 4) {
-        switch (cycles % 4) {
-            case 1:
-                y_coordinate = OAM_secondary[0];
-                break;
-            case 2:
-                tile_index = OAM_secondary[1];
-                break;
-            case 3:
-                attribute = OAM_secondary[2];
-                break;
-            case 0:
-                x_coordinate = OAM_secondary[3];
-            default:
-                break;
-        }
-    } else {
+    switch (cycles % 8) {
+        case 1:
+            y_coordinate = OAM_secondary[0];
+            break;
+        case 2:
+            tile_index = OAM_secondary[1];
+            break;
+        case 3:
+            attribute = OAM_secondary[2];
+            break;
+        case 4:
+            x_coordinate = OAM_secondary[3];
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 0:
+        default:
+            break;
     }
 }
 
@@ -358,7 +370,9 @@ void PPU::render_background() {
                 uint16_t index = PALETTE_BACKGROUND;
                 index = index + (attribute >> shift) & 0x03;
                 index = index + data[i];
-                frame[scanline][i + column] = get_rgb_from_palette(direct_read(index));
+                if (scanline < 240) {
+                    frame[scanline][i + column] = get_rgb_from_palette(direct_read(index));
+                }
             }
             column += 8;
             break;

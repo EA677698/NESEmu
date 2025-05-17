@@ -54,9 +54,27 @@ void CPU::write(uint16_t address, uint8_t operand) {
         return;
     }
     increment_cycle_counter();
-    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) && ppu) {
-        address = NES_PPU_REGISTER_START + (address % 8);
+    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) &&
+        ppu) {
+        if (address != OAMDMA_ADDR) {
+            address = NES_PPU_REGISTER_START + (address % 8);
+        }
         ppu->cpu_write(address, operand);
+        if (address == OAMDMA_ADDR) {
+            uint16_t addr = operand * 0x100;
+            uint8_t buffer;
+            read(addr);
+            for (int i = 0; i < 256; i++) {
+                buffer = read(addr + i);
+                ppu->OAM_write(buffer);
+                increment_cycle_counter();
+            }
+            if (cycles % 2 != 0) {
+                increment_cycle_counter();
+            }
+        }
+    } else if (address >= NES_APU_IO_REGISTERS_START && address <= NES_APU_IO_REGISTERS_END){
+        io_bus = operand;
     } else {
         mem[address] = operand;
     }
@@ -90,21 +108,26 @@ uint8_t CPU::read(uint16_t address) {
         }
     }
     increment_cycle_counter();
-    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) && ppu) {
+    if (((address >= NES_PPU_REGISTER_START && address <= NES_PPU_REGISTER_MIRRORS_END) || address == OAMDMA_ADDR) &&
+        ppu) {
         address = NES_PPU_REGISTER_START + (address % 8);
         return ppu->cpu_read(address);
+    }
+    if (address >= NES_APU_IO_REGISTERS_START && address <= NES_APU_IO_REGISTERS_END) {
+        return 0x40;
     }
     return mem[address];
 }
 
 void CPU::NMI_handler() {
-    uint8_t front = registers.pc >> 8;
-    uint8_t back = registers.pc & 0xFF;
+    uint8_t front = (registers.pc + 1) >> 8;
+    uint8_t back = (registers.pc + 1) & 0xFF;
     push(front);
     push(back);
     php();
     registers.sr |= 0x04;
     jmp(NMI_VECTOR);
+    registers.pc--;
 }
 
 void CPU::power_up(const std::string &rom_path) {
@@ -136,5 +159,5 @@ void CPU::power_up(const std::string &rom_path) {
         load_rom(this, rom_path);
     }
     registers.pc = RESET_VECTOR;
-    spdlog::info("RESET_VECTOR: 0x{:X}",registers.pc);
+    spdlog::info("RESET_VECTOR: 0x{:X}", registers.pc);
 }
