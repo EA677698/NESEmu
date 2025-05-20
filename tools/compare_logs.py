@@ -1,8 +1,9 @@
 import re
 import santize_log as sl
+import shutil
 
 def parse_mesen_line(line):
-    match = re.match(r"([0-9A-F]{4})\s+.*?\s+A:([0-9A-F]{2}) X:([0-9A-F]{2}) Y:([0-9A-F]{2}) S:([0-9A-F]{2}) P:([0-9A-F]{2})\s*V:([0-9]{1,3})\s*H:([0-9]{1,3})", line)
+    match = re.match(r"([0-9A-F]{4})\s+.*?\s+A:([0-9A-F]{2}) X:([0-9A-F]{2}) Y:([0-9A-F]{2}) S:([0-9A-F]{2}) P:([0-9A-F]{2})\s*V:-?([0-9]{1,3})\s*H:([0-9]{1,3})", line)
     if match:
         return {
             'PC': int(match.group(1), 16),
@@ -21,7 +22,7 @@ def parse_emulator_line(line):
     if any(skip in line for skip in ["PC REGISTER", "INITIAL OPCODE", "Status:"]):
         return None
 
-    match = re.match(r".*0x([0-9A-F]{4})\s+0x[0-9A-F]{1,2}.*?A:0x([0-9A-F]{1,2}) X:0x([0-9A-F]{1,2}) Y:0x([0-9A-F]{1,2}) SR:0x([0-9A-F]{1,2}) SP:0x([0-9A-F]{1,2}) V:([0-9]{1,3}) H:([0-9]{1,3})", line)
+    match = re.match(r".*0x([0-9A-F]{4})\s+0x[0-9A-F]{1,2}.*?A:0x([0-9A-F]{1,2}) X:0x([0-9A-F]{1,2}) Y:0x([0-9A-F]{1,2}) SR:0x([0-9A-F]{1,2}) SP:0x([0-9A-F]{1,2}) V:-?([0-9]{1,3}) H:([0-9]{1,3})", line)
     if match:
         return {
             'PC': int(match.group(1), 16),
@@ -60,11 +61,13 @@ def compare_logs(mesen_log, emulator_log, ignore_discrepancies=0):
                 print(f"Discrepancy found at line {line_number} (one log has data, the other does not):")
                 print(f"Mesen: {mesen_line.strip() if mesen_data else 'No data'}")
                 print(f"Emulator: {emulator_line.strip() if emulator_data else 'No data'}")
+                print("\nOriginal lines:")
+                print(mesen_line)
                 print(emulator_line)
                 return
 
         print("No discrepancies found.")
 
-
+shutil.copyfile('../latestLog.txt', 'latestLog.txt')
 sl.sanitize_emulator_log("latestLog.txt", "processed.txt")
 compare_logs('dk.txt', 'processed.txt', 0)

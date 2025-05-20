@@ -12,6 +12,7 @@ CPU::CPU(PPU *ppu) : ppu(ppu) {
 
 void CPU::increment_cycle_counter(uint32_t cycles) {
     this->cycles += cycles;
+    total_cycles += cycles;
     if (ppu) {
         unsigned int ppu_cycles = cycles * 3;
         for (unsigned int i = 0; i < ppu_cycles; i++) {
@@ -62,14 +63,13 @@ void CPU::write(uint16_t address, uint8_t operand) {
         ppu->cpu_write(address, operand);
         if (address == OAMDMA_ADDR) {
             uint16_t addr = operand * 0x100;
-            uint8_t buffer;
-            read(addr);
-            for (int i = 0; i < 256; i++) {
-                buffer = read(addr + i);
-                ppu->OAM_write(buffer);
+            increment_cycle_counter();
+            if (total_cycles % 2 != 0) {
                 increment_cycle_counter();
             }
-            if (cycles % 2 != 0) {
+            for (int i = 0; i < 256; i++) {
+                uint8_t buffer = read(addr + i);
+                ppu->OAM_write(buffer);
                 increment_cycle_counter();
             }
         }
@@ -120,26 +120,29 @@ uint8_t CPU::read(uint16_t address) {
 }
 
 void CPU::NMI_handler() {
-    uint8_t front = (registers.pc + 1) >> 8;
-    uint8_t back = (registers.pc + 1) & 0xFF;
+    increment_cycle_counter();
+    uint8_t front = (registers.pc) >> 8;
+    uint8_t back = (registers.pc) & 0xFF;
     push(front);
     push(back);
     php();
     registers.sr |= 0x04;
     jmp(NMI_VECTOR);
-    registers.pc--;
+    increment_cycle_counter();
 }
 
 void CPU::power_up(const std::string &rom_path) {
     memset(mem, 0, sizeof(mem));
     instruction_counter = 1;
     cycles = 0;
+    total_cycles = 0;
     // registers.sr = 0x34;
     registers.sr = 0x4;
     registers.ac = 0, registers.x = 0, registers.y = 0;
     registers.sp = 0xFD;
     rw_register_mode = 0x0;
     current_operand = 0;
+    nmi_requested = false;
     mem[0x4017] = 0;
     mem[0x4015] = 0;
     for (int i = 0x4000; i <= 0x400F; i++) {
@@ -150,6 +153,8 @@ void CPU::power_up(const std::string &rom_path) {
     }
     increment_cycle_counter(5);
     if (ppu) {
+        ppu->execute_cycle();
+        ppu->execute_cycle();
         ppu->execute_cycle();
         ppu->execute_cycle();
         ppu->execute_cycle();

@@ -898,6 +898,11 @@ void CPU::execute_opcode(int opcode){
     }
     instruction_counter++;
 
+    if (nmi_requested) {
+        nmi_requested = false;
+        NMI_handler();
+    }
+
 
 }
 

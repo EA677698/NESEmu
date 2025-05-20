@@ -24,7 +24,8 @@ tests/logs/
 # Python Opcode Extraction
 tools/.idea/
 tools/__pycache__/
-tools/dk.txt
+tools/dk*
+tools/latestLog.txt
 tools/opcodeCount.txt
 tools/processed.txt
 

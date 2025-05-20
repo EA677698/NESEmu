@@ -49,7 +49,6 @@ class PPU {
 
     uint8_t ppu_io_bus;
     uint8_t OAM_secondary[32];
-    uint8_t nmi_triggered;
     CPU* cpu;
 
     void set_vblank();

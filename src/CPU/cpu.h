@@ -68,9 +68,12 @@ class CPU {
 public:
     uint8_t mem[65536];
     uint32_t cycles;
+    uint64_t total_cycles;
     uint8_t rw_register_mode; // read/write register mode to 16 bit addresses -- horrible hack imo, but it'll do
     uint16_t current_operand; // operand for the current instruction
     int instruction_counter;
+    bool nmi_requested;
+
 
     CPU(PPU *ppu);
 

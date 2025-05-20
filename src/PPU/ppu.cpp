@@ -182,7 +182,6 @@ void PPU::ppu_power_up() {
     registers.t = 0x0;
     registers.x = 0x0;
     registers.ppudata = 0x0;
-    nmi_triggered = 0;
     scanline = 0;
     cycles = 0;
     memset(frame, 0, sizeof(frame));
@@ -265,18 +264,17 @@ void PPU::execute_cycle() {
     } else if (scanline == 241 && cycles == 1) {
         // Begin VBlank
         set_vblank(); // Set VBlank flag in PPUSTATUS (signals CPU rendering is done)
-        if (get_NMI() && !nmi_triggered) {
-            nmi_triggered = true;
-            cpu->NMI_handler();
+        if (get_NMI()) {
+            cpu->nmi_requested = true;
         }
     } else if (scanline == 261) {
         // Pre-render scanline
         if (cycles == 1) {
             clear_vblank(); // Clear the VBlank flag to prepare for the next frame
-            nmi_triggered = false; // Reset NMI trigger status
         }
         if (cycles < 256) {
             render_background();
+        } else if (cycles >= 65 && cycles < 256) {
         } else if (cycles == 256) {
             increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
             increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
@@ -287,6 +285,7 @@ void PPU::execute_cycle() {
                 uint8_t temp_y = registers.t & 0x7000;
                 registers.v = (registers.v & 0x8FFF) | temp_y; // copy fine y t to v
             }
+            fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
             render_background();
         }

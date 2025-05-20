@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
     uint8_t nestest = 0x1;
     bool blargg_initiated = false;
     CPU::Register snapshot;
-    uint16_t v;
+    int16_t v;
     uint32_t h;
     while (!quit) {
         uint64_t current_time = SDL_GetPerformanceCounter();
@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
         if(cpu->cycles < 1790000) {
             std::memcpy(&snapshot, &cpu->registers, sizeof(CPU::Register));
             v = ppu->scanline;
+            v = v == 261 ? -1 : v;
             h = ppu->cycles;
             if (args.breakpoint > 0 && cpu->instruction_counter == args.breakpoint) {
                 spdlog::info("Breakpoint reached at instruction count: {}", args.breakpoint);

@@ -156,10 +156,9 @@ void CPU::bcc(int8_t operand){
 
 void CPU::bcs(int8_t operand){
     if(is_bit_set(registers.sr, 0)){
-        uint16_t old_pc = registers.pc;
-        registers.pc += operand;
         increment_cycle_counter();
-        is_page_crossed(old_pc, operand);
+        is_page_crossed(registers.pc, operand);
+        registers.pc += operand;
 
     }
 }
@@ -772,16 +771,18 @@ bool CPU::absolute_x(void (CPU::*instruction)(uint8_t)) {
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
     this->current_operand = address;
+    bool page_crossed = is_page_crossed(address, registers.x);
     (this->*instruction)(read(address + registers.x));
-    return is_page_crossed(address, registers.x);
+    return page_crossed;
 }
 bool CPU::absolute_y(void (CPU::*instruction)(uint8_t)){
     uint16_t lowByte = read(registers.pc++);
     uint16_t highByte = read(registers.pc++);
     uint16_t address = (highByte << 8) | lowByte;
     this->current_operand = address;
+    bool page_crossed = is_page_crossed(address, registers.y);
     (this->*instruction)(read(address + registers.y));
-    return is_page_crossed(address, registers.y);
+    return page_crossed;
 }
 void CPU::indirect(void (CPU::*instruction)(uint16_t)){
     uint16_t lowByte = read(registers.pc++);
@@ -808,8 +809,9 @@ bool CPU::indirect_y(void (CPU::*instruction)(uint8_t)) {
     uint16_t base_address = read(address) | (read((address + 1) & 0xFF) << 8);
     uint16_t effective_address = base_address + registers.y;
     this->current_operand = address;
+    bool page_crossed = is_page_crossed(base_address, registers.y);
     (this->*instruction)(read(effective_address));
-    return is_page_crossed(base_address, effective_address);
+    return page_crossed;
 }
 
 void CPU::accumulator(void (CPU::*instruction)(uint16_t)) {
