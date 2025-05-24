@@ -67,6 +67,13 @@ void PPU::write(uint16_t address, uint8_t operand) {
 }
 
 void PPU::cpu_write(uint16_t address, uint8_t operand) {
+    if (!cpu_delay) {
+        cpu_delay = cpu->cycles > 29658;
+        if (address == PPUCTRL_ADDR || address == PPUMASK_ADDR
+            || address == PPUSCROLL_ADDR || address == PPUCTRL_ADDR) {
+            return;
+        }
+    }
     write(address, operand);
 }
 
@@ -184,11 +191,15 @@ void PPU::ppu_power_up() {
     registers.ppudata = 0x0;
     scanline = 0;
     cycles = 0;
+    cpu_delay = 0;
     memset(frame, 0, sizeof(frame));
     load_system_palette("Composite_wiki.pal");
 }
 
 void PPU::sprite_evaluation() {
+    if (!are_sprites_rendered()) {
+        return;
+    }
     static int n = 0; // row
     static int index = 0;
     static uint8_t buffer = 0;
@@ -281,7 +292,7 @@ void PPU::execute_cycle() {
         } else if (cycles == 257) {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
-            if (cycles >= 280 && cycles <= 304) {
+            if (cycles >= 280 && cycles <= 304 && is_background_rendered()) {
                 uint8_t temp_y = registers.t & 0x7000;
                 registers.v = (registers.v & 0x8FFF) | temp_y; // copy fine y t to v
             }
@@ -294,6 +305,9 @@ void PPU::execute_cycle() {
 
 
 void PPU::fetch_sprite() {
+    if (!are_sprites_rendered()) {
+        return;
+    }
     static uint8_t y_coordinate;
     static uint8_t tile_index;
     static uint8_t attribute;
@@ -325,6 +339,11 @@ void PPU::fetch_sprite() {
 }
 
 void PPU::render_background() {
+
+    if (!is_background_rendered()) {
+        return;
+    }
+
     uint16_t pattern_table_address = get_background_pattern_table_address();
     static uint16_t address;
     static uint8_t tile;
@@ -466,11 +485,11 @@ uint8_t PPU::sprites_visibility() const {
     return is_bit_set(registers.ppumask, 2);
 }
 
-uint8_t PPU::background_shown() const {
+uint8_t PPU::is_background_rendered() const {
     return is_bit_set(registers.ppumask, 3);
 }
 
-uint8_t PPU::sprites_shown() const {
+uint8_t PPU::are_sprites_rendered() const {
     return is_bit_set(registers.ppumask, 4);
 }
 

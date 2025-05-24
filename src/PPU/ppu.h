@@ -48,6 +48,7 @@ class PPU {
     private:
 
     uint8_t ppu_io_bus;
+    uint8_t cpu_delay;
     uint8_t OAM_secondary[32];
     CPU* cpu;
 
@@ -133,8 +134,8 @@ public:
     uint8_t is_greyscale() const;
     uint8_t background_visibility() const;
     uint8_t sprites_visibility() const;
-    uint8_t background_shown() const;
-    uint8_t sprites_shown() const;
+    uint8_t is_background_rendered() const;
+    uint8_t are_sprites_rendered() const;
     uint8_t is_red_emphasized() const;
     uint8_t is_green_emphasized() const;
     uint8_t is_blue_emphasized() const;
