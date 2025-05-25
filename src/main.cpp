@@ -5,6 +5,9 @@
 #include <iostream>
 #include "romLoader.h"
 #include "CPU/cpu.h"
+#include "debug/oam_viewer.h"
+#include "debug/palette_viewer.h"
+#include "debug/s_palette_viewer.h"
 #include "RenderWindow/main_window.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -122,6 +125,12 @@ int main(int argc, char* argv[]) {
     if(args.dump_memory){
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
+
+    OAM_Viewer oam_window;
+    Palette_Viewer palette_window;
+    SPalette_Viewer spalette_window;
+
+
     spdlog::debug("PC REGISTER: 0x{:X}", cpu->registers.pc);
     spdlog::debug("INITIAL OPCODE: 0x{:X}", cpu->mem[cpu->registers.pc]);
     SDL_Event event;
@@ -137,8 +146,20 @@ int main(int argc, char* argv[]) {
         double elapsed_render = (current_time - render_start) / (double)SDL_GetPerformanceFrequency();
         final_mem = cpu->mem;
         while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                quit = true;
+            switch (event.type) {
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+                case SDL_WINDOWEVENT:
+                    SDL_WindowEvent* we = (SDL_WindowEvent*)&event;
+                    switch(we->event) {
+                        case SDL_WINDOWEVENT_CLOSE: {
+                            quit = true;
+                            break;
+                        }
+                    }
+                    break;
+                
             }
         }
         if(time(NULL) - CPU >= 1){
@@ -196,6 +217,9 @@ int main(int argc, char* argv[]) {
                 render_frame(ppu->frame);
             }
         }
+        oam_window.render(ppu);
+        palette_window.render(ppu);
+        spalette_window.render(ppu);
     }
     reminescent::exit(0);
 }

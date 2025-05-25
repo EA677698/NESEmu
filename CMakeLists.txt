@@ -34,6 +34,12 @@ FetchContent_MakeAvailable(cxxopts)
 add_executable(RemiNEScent src/main.cpp src/global.h src/CPU/instructions.cpp
         src/apu.cpp src/PPU/ppu.cpp src/PPU/ppu.h src/romLoader.cpp src/mappers/mapper.cpp src/mappers/mapper.h src/mappers/mapper0.cpp src/mappers/mapper0.h src/CPU/opcode_interpreter.cpp src/CPU/cpu.h src/CPU/cpu.cpp src/romLoader.h
         src/RenderWindow/main_window.h
-        src/RenderWindow/main_window.cpp)
+        src/RenderWindow/main_window.cpp
+        src/debug/oam_viewer.cpp
+        src/debug/oam_viewer.h
+        src/debug/palette_viewer.cpp
+        src/debug/palette_viewer.h
+        src/debug/s_palette_viewer.cpp
+        src/debug/s_palette_viewer.h)
 
 target_link_libraries(RemiNEScent PRIVATE spdlog::spdlog SDL2::SDL2 SDL2::SDL2main cxxopts::cxxopts)

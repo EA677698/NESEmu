@@ -28,6 +28,7 @@ tools/dk*
 tools/latestLog.txt
 tools/opcodeCount.txt
 tools/processed.txt
+tools/xa*
 
 # Nes Game Test ROMS
 /*.nes

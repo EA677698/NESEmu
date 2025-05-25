@@ -69,8 +69,11 @@ void PPU::write(uint16_t address, uint8_t operand) {
 void PPU::cpu_write(uint16_t address, uint8_t operand) {
     if (!cpu_delay) {
         cpu_delay = cpu->cycles > 29658;
+        if (address != OAMDMA_ADDR) {
+            ppu_io_bus = operand;
+        }
         if (address == PPUCTRL_ADDR || address == PPUMASK_ADDR
-            || address == PPUSCROLL_ADDR || address == PPUCTRL_ADDR) {
+            || address == PPUSCROLL_ADDR || address == PPUADDR_ADDR) {
             return;
         }
     }
@@ -260,13 +263,16 @@ void PPU::execute_cycle() {
                 memset(OAM_secondary, 0xFF, sizeof(OAM_secondary)); // Clear OAM secondary buffer
             }
         } else if (cycles >= 65 && cycles < 256) {
-             sprite_evaluation();
+            sprite_evaluation();
         } else if (cycles == 256) {
-             sprite_evaluation();
-            increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
-            increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
-        } else if (cycles == 257) {
-            registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
+            sprite_evaluation();
+            // Increment horizontal scroll
+            if (is_background_rendered()) {
+                increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
+                increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
+            }
+        } else if (cycles == 257 && is_background_rendered()) {
+            registers.v = (registers.v & 0xFBE0) | (registers.t & 0x041F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
@@ -287,14 +293,16 @@ void PPU::execute_cycle() {
             render_background();
         } else if (cycles >= 65 && cycles < 256) {
         } else if (cycles == 256) {
-            increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
-            increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
+            if (is_background_rendered()) {
+                increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
+                increment_register_scrolls(FINE_Y_SCROLL, &registers.v);
+            }
         } else if (cycles == 257) {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             if (cycles >= 280 && cycles <= 304 && is_background_rendered()) {
-                uint8_t temp_y = registers.t & 0x7000;
-                registers.v = (registers.v & 0x8FFF) | temp_y; // copy fine y t to v
+                uint8_t temp_y = registers.t & 0x3DF;
+                registers.v = (registers.v & 0xFC20) | temp_y; // copy fine y t to v
             }
             fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
@@ -547,5 +555,15 @@ RGBA PPU::get_rgb_from_palette(uint8_t nes_color) {
     if (nes_color >= 0x3F) {
         reminescent::critical_error("Invalid NES color index", 1);
     }
-    return {system_palette[nes_color], system_palette[nes_color + 64], system_palette[nes_color + 128]};
+    uint8_t index = nes_color * 3;
+    return {system_palette[index], system_palette[index + 1], system_palette[index + 2]};
+}
+
+uint8_t* PPU::get_OAM(){
+    return OAM;
+}
+
+uint8_t* PPU::get_palette_ram() {
+    return ppu_mem + 0x3F00;
+
 }

@@ -146,6 +146,10 @@ public:
     void load_system_palette(const std::string& filename);
     RGBA get_rgb_from_palette(uint8_t nes_color_index);
 
+
+    uint8_t* get_OAM();
+    uint8_t* get_palette_ram();
+
 };
 
 #endif //EMULATOR_PPU_H

@@ -5,7 +5,6 @@
 #include <SDL.h>
 #include "main_window.h"
 #include "spdlog/spdlog.h"
-#include "../global.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -32,7 +31,7 @@ void init_video(){
         reminescent::exit(1);
     }
     window = SDL_CreateWindow("RemiNEScent",
-                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_RESIZABLE);
+                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer,
                                  SDL_PIXELFORMAT_ARGB8888,
