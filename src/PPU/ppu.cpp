@@ -67,16 +67,6 @@ void PPU::write(uint16_t address, uint8_t operand) {
 }
 
 void PPU::cpu_write(uint16_t address, uint8_t operand) {
-    if (!cpu_delay) {
-        cpu_delay = cpu->cycles > 29658;
-        if (address != OAMDMA_ADDR) {
-            ppu_io_bus = operand;
-        }
-        if (address == PPUCTRL_ADDR || address == PPUMASK_ADDR
-            || address == PPUSCROLL_ADDR || address == PPUADDR_ADDR) {
-            return;
-        }
-    }
     write(address, operand);
 }
 
@@ -194,7 +184,6 @@ void PPU::ppu_power_up() {
     registers.ppudata = 0x0;
     scanline = 0;
     cycles = 0;
-    cpu_delay = 0;
     memset(frame, 0, sizeof(frame));
     load_system_palette("Composite_wiki.pal");
 }

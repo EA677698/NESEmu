@@ -48,7 +48,6 @@ class PPU {
     private:
 
     uint8_t ppu_io_bus;
-    uint8_t cpu_delay;
     uint8_t OAM_secondary[32];
     CPU* cpu;
 
