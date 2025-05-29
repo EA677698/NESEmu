@@ -184,6 +184,8 @@ void PPU::ppu_power_up() {
     registers.ppudata = 0x0;
     scanline = 0;
     cycles = 0;
+    frames = 0;
+    t_frame = 0;
     memset(frame, 0, sizeof(frame));
     load_system_palette("Composite_wiki.pal");
 }
@@ -236,13 +238,18 @@ void PPU::execute_cycle() {
     // spdlog::debug("Cycle: {}, Scanline: {}, V: {:04X}, T: {:04X}, VBlank set: {}", cycles, scanline, registers.v, registers.t, is_in_vblank());
     // Advance the cycle and manage scanline/cycle reset
     cycles++;
-    if (cycles >= 341) {
+    if (cycles > 340) {
         // End of scanline
         cycles = 0;
         scanline++;
         if (scanline > 261) {
             scanline = 0; // Wrap around to the first scanline of the next frame
+            frames++;
         }
+    }
+    if (t_frame != frames) {
+        spdlog::debug("PPU Breakpoint Reached");
+        t_frame = frames;
     }
     if (scanline < 240) {
         // Visible scanlines
@@ -360,20 +367,20 @@ void PPU::render_background() {
             break;
         case 1: // Retrieve nametable tile
             address = 0x2000 | (registers.v & 0x0FFF);
-            tile = read(address);
+            tile = direct_read(address);
             break;
         case 3: // Retrieve attribute byte (2x2 tile quadrant)
             address = 0x23C0 | (registers.v & 0x0C00) | ((registers.v >> 4) & 0x38) | ((registers.v >> 2) & 0x07);
             attribute = direct_read(address);
             break;
         case 5: // Fetch Tile pattern low byte
-            address = pattern_table_address + tile;
-            pattern_low_byte = read(address);
+            address = pattern_table_address + tile * 16 + get_fine_y_scroll();
+            pattern_low_byte = direct_read(address);
             break;
         case 7: // Fetch Tile pattern high byte
-            address = pattern_table_address + tile + 8;
-            pattern_high_byte = read(address);
-            for (int i = 0; i < 8; i++) {
+            address += 8;
+            pattern_high_byte = direct_read(address);
+            for (int i = 0; i < 8; i++) { // combine planes
                 uint8_t low = (pattern_low_byte >> (7 - i)) & 1;
                 uint8_t high = (pattern_high_byte >> (7 - i)) & 1;
                 data[i] = (high << 1) | low;
@@ -383,10 +390,11 @@ void PPU::render_background() {
                 int x = get_coarse_x_scroll() % 4;
                 int shift = 4 * (y > 1) + 2 * (x > 1);
                 uint16_t index = PALETTE_BACKGROUND;
-                index = index + (attribute >> shift) & 0x03;
-                index = index + data[i];
+                index = index + (((attribute >> shift) & 0x3) * 0x4); // palette set selection
+                index = index + data[i]; // color selection
                 if (scanline < 240) {
-                    frame[scanline][i + column] = get_rgb_from_palette(direct_read(index));
+                    uint8_t color_index = direct_read(index);
+                    frame[scanline][i + column] = get_rgb_from_palette(color_index);
                 }
             }
             column += 8;

@@ -126,9 +126,12 @@ int main(int argc, char* argv[]) {
         dump.open("dump.bin", std::ios::out | std::ios::binary);
     }
 
+#ifndef NDEBUG
     OAM_Viewer oam_window;
     Palette_Viewer palette_window;
     SPalette_Viewer spalette_window;
+#endif
+
 
 
     spdlog::debug("PC REGISTER: 0x{:X}", cpu->registers.pc);
@@ -217,9 +220,11 @@ int main(int argc, char* argv[]) {
                 render_frame(ppu->frame);
             }
         }
+#ifndef NDEBUG
         oam_window.render(ppu);
         palette_window.render(ppu);
         spalette_window.render(ppu);
+#endif
     }
     reminescent::exit(0);
 }

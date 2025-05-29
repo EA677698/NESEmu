@@ -61,6 +61,8 @@ public:
 
     uint16_t scanline;
     uint32_t cycles;
+    uint32_t frames;
+    uint32_t t_frame;
     RGBA frame[VIDEO_HEIGHT][VIDEO_WIDTH];
 
     PPU();

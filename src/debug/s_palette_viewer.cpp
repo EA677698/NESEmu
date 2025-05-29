@@ -5,7 +5,7 @@
 #include "s_palette_viewer.h"
 
 SPalette_Viewer::SPalette_Viewer() {
-    window = SDL_CreateWindow("Palette Viewer",
+    window = SDL_CreateWindow("System Palette Viewer",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               S_PALETTE_WINDOW_WIDTH, S_PALETTE_WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
