@@ -297,13 +297,15 @@ void PPU::execute_cycle() {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             if (cycles >= 280 && cycles <= 304 && is_background_rendered()) {
-                uint8_t temp_y = registers.t & 0x3DF;
-                registers.v = (registers.v & 0xFC20) | temp_y; // copy fine y t to v
+                registers.v = (registers.v & 0xFC20) | (registers.t & 0x3DF); // copy fine y t to v
             }
             fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
             render_background();
         }
+    }
+    if (scanline == 0 && cycles == 1) {
+        spdlog::info("Frame {}, v={:04X} t={:04X} x={} w={}", frames, registers.v, registers.t, registers.x, registers.w);
     }
 }
 
@@ -343,7 +345,6 @@ void PPU::fetch_sprite() {
 }
 
 void PPU::render_background() {
-
     if (!is_background_rendered()) {
         return;
     }
@@ -368,19 +369,47 @@ void PPU::render_background() {
         case 1: // Retrieve nametable tile
             address = 0x2000 | (registers.v & 0x0FFF);
             tile = direct_read(address);
+#ifndef NDEBUG
+            if (tile < 0 || tile > 255) {
+                spdlog::critical("Out of bound tile index {:d}", tile);
+            }
+#endif
             break;
         case 3: // Retrieve attribute byte (2x2 tile quadrant)
             address = 0x23C0 | (registers.v & 0x0C00) | ((registers.v >> 4) & 0x38) | ((registers.v >> 2) & 0x07);
             attribute = direct_read(address);
+#ifndef NDEBUG
+            // spdlog::info("Attribute Index: {:X}", tile);
+            if ((address & 0x03C0) != 0x03C0 || address < 0x2000 || address >= 0x3000) {
+                spdlog::critical("Invalid attribute byte address: ${:04X}", address);
+            }
+#endif
             break;
         case 5: // Fetch Tile pattern low byte
             address = pattern_table_address + tile * 16 + get_fine_y_scroll();
             pattern_low_byte = direct_read(address);
+#ifndef NDEBUG
+            if (address < pattern_table_address || address >= pattern_table_address + 0x1000) {
+                spdlog::critical("Pattern address out of bounds: ${:04X}", address);
+            }
+            if (address >= 0x2000) {
+                spdlog::critical("Pattern table read beyond 0x1FFF: ${:04X}", address);
+            }
+#endif
             break;
         case 7: // Fetch Tile pattern high byte
             address += 8;
             pattern_high_byte = direct_read(address);
-            for (int i = 0; i < 8; i++) { // combine planes
+#ifndef NDEBUG
+            if (address < pattern_table_address || address >= pattern_table_address + 0x1000) {
+                spdlog::critical("Pattern address out of bounds: ${:04X}", address);
+            }
+            if (address >= 0x2000) {
+                spdlog::critical("Pattern table read beyond 0x1FFF: ${:04X}", address);
+            }
+#endif
+            for (int i = 0; i < 8; i++) {
+                // combine planes
                 uint8_t low = (pattern_low_byte >> (7 - i)) & 1;
                 uint8_t high = (pattern_high_byte >> (7 - i)) & 1;
                 data[i] = (high << 1) | low;
@@ -391,7 +420,7 @@ void PPU::render_background() {
                 int shift = 4 * (y > 1) + 2 * (x > 1);
                 uint16_t index = PALETTE_BACKGROUND;
                 index = index + (((attribute >> shift) & 0x3) * 0x4); // palette set selection
-                index = index + data[i]; // color selection
+                index = index + (data[i] & 0x3); // color selection
                 if (scanline < 240) {
                     uint8_t color_index = direct_read(index);
                     frame[scanline][i + column] = get_rgb_from_palette(color_index);
@@ -549,18 +578,17 @@ void PPU::load_system_palette(const std::string &filename) {
 }
 
 RGBA PPU::get_rgb_from_palette(uint8_t nes_color) {
-    if (nes_color >= 0x3F) {
+    if (nes_color > 0x3F) {
         reminescent::critical_error("Invalid NES color index", 1);
     }
     uint8_t index = nes_color * 3;
     return {system_palette[index], system_palette[index + 1], system_palette[index + 2]};
 }
 
-uint8_t* PPU::get_OAM(){
+uint8_t *PPU::get_OAM() {
     return OAM;
 }
 
-uint8_t* PPU::get_palette_ram() {
+uint8_t *PPU::get_palette_ram() {
     return ppu_mem + 0x3F00;
-
 }

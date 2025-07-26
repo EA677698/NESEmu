@@ -64,7 +64,7 @@ void load_rom_fd(std::string rom_path){
     memcpy(rom.header,buff,16);
 }
 
-void load_rom(CPU *cpu, std::string rom_path){
+void load_rom(CPU *cpu, PPU* ppu, std::string rom_path){
     load_rom_fd(rom_path);
     if(!is_iNES_format()){
         spdlog::error("INVALID FILE FORMAT");
@@ -72,5 +72,5 @@ void load_rom(CPU *cpu, std::string rom_path){
     }
     load_flags();
     spdlog::info("PRG_ROM_SIZE: {}",rom.PRG_ROM_SIZE);
-    mapper0 MAP(cpu);
+    mapper0 MAP(cpu, ppu);
 }

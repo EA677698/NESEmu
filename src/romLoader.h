@@ -18,7 +18,7 @@ void load_flags();
 
 void load_rom_fd(std::string rom_path);
 
-void load_rom(CPU *cpu, std::string rom_path);
+void load_rom(CPU *cpu, PPU* ppu, std::string rom_path);
 
 
 #endif //EMULATOR_ROMLOADER_H

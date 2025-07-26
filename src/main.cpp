@@ -127,9 +127,9 @@ int main(int argc, char* argv[]) {
     }
 
 #ifndef NDEBUG
-    OAM_Viewer oam_window;
-    Palette_Viewer palette_window;
-    SPalette_Viewer spalette_window;
+    // OAM_Viewer oam_window;
+    // Palette_Viewer palette_window;
+    // SPalette_Viewer spalette_window;
 #endif
 
 
@@ -221,9 +221,9 @@ int main(int argc, char* argv[]) {
             }
         }
 #ifndef NDEBUG
-        oam_window.render(ppu);
-        palette_window.render(ppu);
-        spalette_window.render(ppu);
+        // oam_window.render(ppu);
+        // palette_window.render(ppu);
+        // spalette_window.render(ppu);
 #endif
     }
     reminescent::exit(0);

@@ -13,7 +13,7 @@ class mapper0 : public mapper{
 
 public:
 
-    mapper0(CPU *cpu);
+    mapper0(CPU *cpu, PPU* ppu);
 };
 
 

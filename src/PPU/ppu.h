@@ -42,7 +42,6 @@ class CPU;
 class PPU {
 
     uint8_t OAM[256]; // object attribute memory (OAM)
-    uint8_t ppu_mem[16384]; // VRAM
     uint8_t system_palette[192];
 
     private:
@@ -58,6 +57,8 @@ class PPU {
 
 
 public:
+
+    uint8_t ppu_mem[16384]; // VRAM
 
     uint16_t scanline;
     uint32_t cycles;
