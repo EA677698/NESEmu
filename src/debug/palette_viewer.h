@@ -10,7 +10,7 @@
 #include <SDL_render.h>
 
 #define PALETTE_WINDOW_WIDTH 256
-#define PALETTE_WINDOW_HEIGHT 128
+#define PALETTE_WINDOW_HEIGHT 32
 
 class Palette_Viewer {
 

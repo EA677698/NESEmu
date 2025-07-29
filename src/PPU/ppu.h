@@ -64,7 +64,7 @@ public:
     uint32_t cycles;
     uint32_t frames;
     uint32_t t_frame;
-    RGBA frame[VIDEO_HEIGHT][VIDEO_WIDTH];
+    RGBA frame[VIDEO_WIDTH][VIDEO_HEIGHT];
 
     PPU();
 
@@ -151,6 +151,8 @@ public:
 
     uint8_t* get_OAM();
     uint8_t* get_palette_ram();
+    uint8_t *PPU::get_pattern_1_table();
+    uint8_t *PPU::get_pattern_2_table();
 
 };
 

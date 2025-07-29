@@ -11,9 +11,9 @@ SDL_Renderer* renderer;
 SDL_Texture* texture;
 
 
-void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]) {
+void render_frame(RGBA frame_buffer[VIDEO_WIDTH][VIDEO_HEIGHT]) {
 
-    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_WIDTH * sizeof(RGBA)) != 0) {
+    if (SDL_UpdateTexture(texture, nullptr, frame_buffer, VIDEO_HEIGHT * sizeof(RGBA)) != 0) {
         spdlog::critical("SDL_UpdateTexture failed: {}\n", SDL_GetError());
         return;
     }
@@ -31,7 +31,7 @@ void init_video(){
         reminescent::exit(1);
     }
     window = SDL_CreateWindow("RemiNEScent",
-                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_SHOWN);
+                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, VIDEO_WIDTH, VIDEO_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer,
                                  SDL_PIXELFORMAT_ARGB8888,

@@ -135,16 +135,17 @@ void PPU::increment_register_scrolls(uint8_t section, uint16_t *internal_registe
                 *internal_register &= ~0x001F;
                 *internal_register ^= 0x0400;
             } else {
-                *internal_register += 1;
+                *internal_register += increment;
             }
             break;
         case COARSE_Y_SCROLL:
-            temp = (*internal_register & 0x03E0) + (increment << 5);
+            temp = (*internal_register & 0x03E0);
             *internal_register = *internal_register & 0xFC1F;
             if (temp == 0x3A0) {
+                *internal_register &= 0xFC1F;
                 *internal_register ^= 0x0800;
-            }
-            if (temp != 0x3E0 && temp != 0x3A0) {
+            } else {
+                temp += (increment << 5);
                 *internal_register |= temp & 0x3E0;
             }
             break;
@@ -297,15 +298,17 @@ void PPU::execute_cycle() {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             if (cycles >= 280 && cycles <= 304 && is_background_rendered()) {
-                registers.v = (registers.v & 0xFC20) | (registers.t & 0x3DF); // copy fine y t to v
+                registers.v = (registers.v & 0x41F) | (registers.t & 0xFBE0); // copy all but x (CORRECT)
+                // registers.v = (registers.v & 0xFC20) | (registers.t & 0x3DF); // copy fine y t to v
             }
             fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
             render_background();
         }
     }
-    if (scanline == 0 && cycles == 1) {
-        spdlog::info("Frame {}, v={:04X} t={:04X} x={} w={}", frames, registers.v, registers.t, registers.x, registers.w);
+    if (scanline == 0 && cycles == 0) {
+        spdlog::info("Frame {}, v={:04X} t={:04X} x={} w={}", frames, registers.v, registers.t, registers.x,
+                     registers.w);
     }
 }
 
@@ -355,8 +358,9 @@ void PPU::render_background() {
     static uint8_t attribute;
     static uint8_t pattern_low_byte;
     static uint8_t pattern_high_byte;
-    static uint8_t column = 0;
+    static uint16_t column = 0;
     uint8_t data[8];
+    uint8_t render_line = scanline;
 
     if (cycles == 0) {
         return;
@@ -414,19 +418,31 @@ void PPU::render_background() {
                 uint8_t high = (pattern_high_byte >> (7 - i)) & 1;
                 data[i] = (high << 1) | low;
             }
-            for (int i = 0; i < 8; i++) {
+            if (cycles == 327) {
+                column = 0;
+            }
+            if (cycles >=327) {
+                render_line++;
+                if (render_line == 262) {
+                    render_line = 0;
+                }
+            }
+            if (frames == 6 && scanline == 56) {
+                spdlog::info("test");
+            }
+            for (int i = registers.x; i < 8; i++) {
                 int y = get_coarse_y_scroll() % 4;
                 int x = get_coarse_x_scroll() % 4;
                 int shift = 4 * (y > 1) + 2 * (x > 1);
                 uint16_t index = PALETTE_BACKGROUND;
                 index = index + (((attribute >> shift) & 0x3) * 0x4); // palette set selection
                 index = index + (data[i] & 0x3); // color selection
-                if (scanline < 240) {
+                if (scanline < 240 || cycles >= 327) {
                     uint8_t color_index = direct_read(index);
-                    frame[scanline][i + column] = get_rgb_from_palette(color_index);
+                    frame[render_line][i + column] = get_rgb_from_palette(color_index);
                 }
             }
-            column += 8;
+            column += 8 - registers.x;
             break;
         default:
             break;
@@ -591,4 +607,12 @@ uint8_t *PPU::get_OAM() {
 
 uint8_t *PPU::get_palette_ram() {
     return ppu_mem + 0x3F00;
+}
+
+uint8_t *PPU::get_pattern_1_table() {
+    return ppu_mem;
+}
+
+uint8_t *PPU::get_pattern_2_table() {
+    return ppu_mem + 0x1000;
 }

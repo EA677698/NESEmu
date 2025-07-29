@@ -15,6 +15,7 @@
 #include "spdlog/async_logger.h"
 #include "spdlog/async.h"
 #include "cxxopts.hpp"
+#include "debug/Pattern_Viewer.h"
 
 ROM rom;
 Arguments args;
@@ -128,8 +129,9 @@ int main(int argc, char* argv[]) {
 
 #ifndef NDEBUG
     // OAM_Viewer oam_window;
-    // Palette_Viewer palette_window;
-    // SPalette_Viewer spalette_window;
+    Palette_Viewer palette_window;
+    SPalette_Viewer spalette_window;
+    // Pattern_Viewer pattern_window;
 #endif
 
 
@@ -218,13 +220,14 @@ int main(int argc, char* argv[]) {
             if(elapsed_render >= (1.0 / 60.0) && ppu->is_in_vblank()){
                 render_start = current_time;
                 render_frame(ppu->frame);
-            }
-        }
 #ifndef NDEBUG
         // oam_window.render(ppu);
-        // palette_window.render(ppu);
-        // spalette_window.render(ppu);
+        palette_window.render(ppu);
+        spalette_window.render(ppu);
+        // pattern_window.render(ppu);
 #endif
+            }
+        }
     }
     reminescent::exit(0);
 }

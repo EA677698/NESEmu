@@ -15,7 +15,7 @@ extern SDL_Texture *texture;
 
 void init_video();
 
-void render_frame(RGBA frame_buffer[VIDEO_HEIGHT][VIDEO_WIDTH]);
+void render_frame(RGBA frame_buffer[VIDEO_WIDTH][VIDEO_HEIGHT]);
 
 
 #endif //EMULATOR_MAIN_WINDOW_H

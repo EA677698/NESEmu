@@ -40,6 +40,8 @@ add_executable(RemiNEScent src/main.cpp src/global.h src/CPU/instructions.cpp
         src/debug/palette_viewer.cpp
         src/debug/palette_viewer.h
         src/debug/s_palette_viewer.cpp
-        src/debug/s_palette_viewer.h)
+        src/debug/s_palette_viewer.h
+        src/debug/pattern_viewer.cpp
+        src/debug/pattern_viewer.h)
 
 target_link_libraries(RemiNEScent PRIVATE spdlog::spdlog SDL2::SDL2 SDL2::SDL2main cxxopts::cxxopts)
