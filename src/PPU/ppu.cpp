@@ -427,9 +427,6 @@ void PPU::render_background() {
                     render_line = 0;
                 }
             }
-            if (frames == 6 && scanline == 56) {
-                spdlog::info("test");
-            }
             for (int i = registers.x; i < 8; i++) {
                 int y = get_coarse_y_scroll() % 4;
                 int x = get_coarse_x_scroll() % 4;
