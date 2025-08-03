@@ -342,7 +342,6 @@ void CPU::jsr(uint16_t operand){
     registers.pc--;
     uint8_t front = registers.pc >> 8;
     uint8_t back = registers.pc & 0xFF;
-    // spdlog::info("Storing address 0x{:X} into stack", registers.pc);
     increment_cycle_counter();
     push(front);
     push(back);
@@ -476,7 +475,7 @@ void CPU::sbc(uint8_t operand){
         clc();
     }
 
-    uint8_t overflow = ((registers.ac ^ temp) & 0x80) && ((registers.ac ^ operand) & 0x80);
+    const uint8_t overflow = ((registers.ac ^ temp) & 0x80) && ((registers.ac ^ operand) & 0x80);
     if(overflow) {
         set_overflow_flag();
     } else {

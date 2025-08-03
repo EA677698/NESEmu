@@ -68,7 +68,7 @@ void CPU::write(uint16_t address, uint8_t operand) {
                 increment_cycle_counter();
             }
             for (int i = 0; i < 256; i++) {
-                uint8_t buffer = read(addr + i);
+                const uint8_t buffer = read(addr + i);
                 ppu->OAM_write(buffer);
                 increment_cycle_counter();
             }
@@ -121,8 +121,8 @@ uint8_t CPU::read(uint16_t address) {
 
 void CPU::NMI_handler() {
     increment_cycle_counter();
-    uint8_t front = (registers.pc) >> 8;
-    uint8_t back = (registers.pc) & 0xFF;
+    const uint8_t front = (registers.pc) >> 8;
+    const uint8_t back = (registers.pc) & 0xFF;
     push(front);
     push(back);
     php();

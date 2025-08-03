@@ -38,7 +38,7 @@ void load_flag_6(){
 }
 
 void load_flag_7(){
-    uint8_t* byte = &rom.header[7];
+    const uint8_t* byte = &rom.header[7];
     rom.unisystem = is_bit_set(*byte,0);
     rom.upper_nybble = *byte >> 4;
 }
@@ -64,7 +64,7 @@ void load_rom_fd(std::string rom_path){
     memcpy(rom.header,buff,16);
 }
 
-void load_rom(CPU *cpu, PPU* ppu, std::string rom_path){
+void load_rom(CPU *cpu, PPU* ppu, const std::string &rom_path){
     load_rom_fd(rom_path);
     if(!is_iNES_format()){
         spdlog::error("INVALID FILE FORMAT");
