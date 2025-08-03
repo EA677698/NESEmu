@@ -103,28 +103,27 @@ public:
         uint8_t w;
     } registers;
 
-    struct {
+    struct Pixel_8 {
         uint16_t address;
         uint8_t tile;
         uint8_t attribute;
         uint8_t pattern_lsb;
         uint8_t pattern_msb;
-    } background;
+        uint8_t colors[8];
+        uint8_t bit_plane[8];
+    };
+
+    Pixel_8 background;
 
     struct Sprite{
-        uint16_t address;
+        uint8_t y_coordinate;
         uint8_t tile;
         uint8_t attribute;
-        uint8_t pattern_lsb;
-        uint8_t pattern_msb;
-
-        uint8_t y_coordinate;
-        uint8_t s_tile;
-        uint8_t s_attribute;
         uint8_t x_coordinate;
     };
 
-    Sprite sprite[8];
+    Sprite raw_sprite[8];
+    Pixel_8 sprite[8];
 
     struct {
         uint16_t column;
@@ -158,12 +157,14 @@ public:
     void render_background();
 
     //rendering pipeline
-    void retrieve_nametable_tile(uint16_t& address, uint8_t& tile);
-    void retrieve_attribute_byte(uint16_t& address, uint8_t& attribute);
-    void retrieve_pattern_lsb(uint16_t pattern_addr, uint16_t& address, uint8_t& tile, uint8_t& pattern_lsb);
-    void retrieve_pattern_msb(uint16_t pattern_addr, uint16_t& address, uint8_t& pattern_lsb);
+    void retrieve_nametable_tile(Pixel_8& row);
+    void retrieve_attribute_byte(Pixel_8& row);
+    void retrieve_pattern_lsb(uint16_t pattern_addr, Pixel_8& row);
+    void retrieve_pattern_msb(uint16_t pattern_addr, Pixel_8& row);
+    void create_bit_plane(Pixel_8& row);
+    void retrieve_color_index(Pixel_8& row);
     void priority_mux();
-    void render_pixels();
+    void output_pixel(uint8_t color_index, int index);
 
     uint8_t get_coarse_x_scroll() const;
     uint8_t get_coarse_y_scroll() const;

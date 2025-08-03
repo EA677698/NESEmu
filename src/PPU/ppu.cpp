@@ -297,7 +297,6 @@ void PPU::execute_cycle() {
         }
         if (cycles < 256) {
             render_background();
-        } else if (cycles >= 65 && cycles < 256) {
         } else if (cycles == 256) {
             if (is_background_rendered()) {
                 increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
@@ -307,8 +306,7 @@ void PPU::execute_cycle() {
             registers.v = (registers.v & 0xFFE0) | (registers.t & 0x001F); // copy coarse x t to v
         } else if (cycles >= 258 && cycles < 321) {
             if (cycles >= 280 && cycles <= 304 && is_background_rendered()) {
-                registers.v = (registers.v & 0x41F) | (registers.t & 0xFBE0); // copy all but x (CORRECT)
-                // registers.v = (registers.v & 0xFC20) | (registers.t & 0x3DF); // copy fine y t to v
+                registers.v = (registers.v & 0x41F) | (registers.t & 0xFBE0); // copy all but x
             }
             fetch_sprite();
         } else if (cycles >= 321 && cycles < 337) {
@@ -327,18 +325,24 @@ void PPU::fetch_sprite() {
         return;
     }
 
+    uint16_t pattern_addr = get_sprite_pattern_table_address();
+    int index = render.sprite_index;
+
     switch (cycles % 8) {
         case 1:
-            sprite[render.sprite_index].y_coordinate = OAM_secondary[0];
+            raw_sprite[index].y_coordinate = OAM_secondary[index * 4 + 0];
             break;
         case 2:
-            sprite[render.sprite_index].s_tile = OAM_secondary[1];
+            raw_sprite[index].tile = OAM_secondary[index * 4 + 1];
+            sprite[index].tile = raw_sprite[index].tile;
             break;
         case 3:
-            sprite[render.sprite_index].s_attribute = OAM_secondary[2];
+            raw_sprite[index].attribute = OAM_secondary[index * 4 + 2];
+            retrieve_pattern_lsb(pattern_addr, sprite[index]);
+            retrieve_pattern_msb(pattern_addr, sprite[index]);
             break;
         case 4:
-            sprite[render.sprite_index].x_coordinate = OAM_secondary[3];
+            raw_sprite[index].x_coordinate = OAM_secondary[index * 4 + 3];
             render.sprite_index += render.sprite_index == 7 ? -7 : 1;
             break;
         default:
@@ -362,90 +366,145 @@ void PPU::render_background() {
             increment_register_scrolls(COARSE_X_SCROLL, &registers.v);
             break;
         case 1: // Retrieve nametable tile
-            retrieve_nametable_tile(background.address, background.tile);
+            retrieve_nametable_tile(background);
             break;
         case 3: // Retrieve attribute byte (2x2 tile quadrant)
-            retrieve_attribute_byte(background.address, background.attribute);
+            retrieve_attribute_byte(background);
             break;
         case 5: // Fetch Tile pattern low byte
-            retrieve_pattern_lsb(pattern_addr, background.address, background.tile, background.pattern_lsb);
+            retrieve_pattern_lsb(pattern_addr, background);
             break;
         case 7: // Fetch Tile pattern high byte
-            retrieve_pattern_msb(pattern_addr, background.address, background.pattern_msb);
+            retrieve_pattern_msb(pattern_addr, background);
             priority_mux();
-            render_pixels();
             break;
         default:
             break;
     }
 }
 
-void PPU::retrieve_nametable_tile(uint16_t &address, uint8_t &tile) {
-    address = 0x2000 | (registers.v & 0x0FFF);
-    tile = direct_read(address);
+void PPU::retrieve_nametable_tile(Pixel_8 &row) {
+    row.address = 0x2000 | (registers.v & 0x0FFF);
+    row.tile = direct_read(row.address);
 #ifndef NDEBUG
-    if (tile < 0 || tile > 255) {
-        spdlog::critical("Out of bound tile index {:d}", tile);
+    if (row.tile < 0 || row.tile > 255) {
+        spdlog::critical("Out of bound tile index {:d}", row.tile);
     }
 #endif
 }
 
-void PPU::retrieve_attribute_byte(uint16_t &address, uint8_t &attribute) {
-    address = 0x23C0 | (registers.v & 0x0C00) | ((registers.v >> 4) & 0x38) | ((registers.v >> 2) & 0x07);
-    attribute = direct_read(address);
+void PPU::retrieve_attribute_byte(Pixel_8 &row) {
+    row.address = 0x23C0 | (registers.v & 0x0C00) | ((registers.v >> 4) & 0x38) | ((registers.v >> 2) & 0x07);
+    row.attribute = direct_read(row.address);
 #ifndef NDEBUG
     // spdlog::info("Attribute Index: {:X}", tile);
-    if ((address & 0x03C0) != 0x03C0 || address < 0x2000 || address >= 0x3000) {
-        spdlog::critical("Invalid attribute byte address: ${:04X}", address);
+    if ((row.address & 0x03C0) != 0x03C0 || row.address < 0x2000 || row.address >= 0x3000) {
+        spdlog::critical("Invalid attribute byte address: ${:04X}", row.address);
     }
 #endif
 }
 
-void PPU::retrieve_pattern_lsb(uint16_t pattern_addr, uint16_t &address, uint8_t& tile, uint8_t &pattern_lsb) {
-    address = pattern_addr + tile * 16 + get_fine_y_scroll();
-    pattern_lsb = direct_read(address);
-#ifndef NDEBUG
-    if (address < pattern_addr || address >= pattern_addr + 0x1000) {
-        spdlog::critical("Pattern address out of bounds: ${:04X}", address);
+void PPU::retrieve_pattern_lsb(uint16_t pattern_addr, Pixel_8 &row) {
+    if (pattern_addr == get_sprite_pattern_table_address()) {
+        if (get_sprite_size() == 8) {
+            row.address = pattern_addr + row.tile * 16 + get_fine_y_scroll();
+            row.pattern_lsb = direct_read(row.address);
+        } else {
+            row.address = row.tile + get_fine_y_scroll();
+            row.pattern_lsb = direct_read(row.address);
+        }
+
+    } else {
+        row.address = pattern_addr + row.tile * 16 + get_fine_y_scroll();
+        row.pattern_lsb = direct_read(row.address);
     }
-    if (address >= 0x2000) {
-        spdlog::critical("Pattern table read beyond 0x1FFF: ${:04X}", address);
+#ifndef NDEBUG
+    if (row.address < pattern_addr || row.address >= pattern_addr + 0x1000) {
+        spdlog::critical("[LSB] Pattern address out of bounds: ${:04X}", row.address);
+    }
+    if (row.address >= 0x2000) {
+        spdlog::critical("[LSB] Pattern table read beyond 0x1FFF: ${:04X}", row.address);
     }
 #endif
 }
 
-void PPU::retrieve_pattern_msb(uint16_t pattern_addr, uint16_t &address, uint8_t &pattern_msb) {
-    address += 8;
-    pattern_msb = direct_read(address);
-#ifndef NDEBUG
-    if (address < pattern_addr || address >= pattern_addr + 0x1000) {
-        spdlog::critical("Pattern address out of bounds: ${:04X}", address);
+void PPU::retrieve_pattern_msb(uint16_t pattern_addr, Pixel_8 &row) {
+    if (pattern_addr == get_sprite_pattern_table_address()) {
+        if (get_sprite_size() == 8) {
+            row.address += 8;
+            row.pattern_msb = direct_read(row.address);
+        } else {
+            row.address = pattern_addr + ((row.tile & 0xFE) * 16 + get_fine_y_scroll());
+            row.pattern_msb = direct_read(row.address);
+        }
+    } else {
+        row.address += 8;
+        row.pattern_msb = direct_read(row.address);
     }
-    if (address >= 0x2000) {
-        spdlog::critical("Pattern table read beyond 0x1FFF: ${:04X}", address);
+#ifndef NDEBUG
+    if (row.address < pattern_addr || row.address >= pattern_addr + 0x1000) {
+        spdlog::critical("[MSB] Pattern address out of bounds: ${:04X}", row.address);
+    }
+    if (row.address >= 0x2000) {
+        spdlog::critical("[MSB] Pattern table read beyond 0x1FFF: ${:04X}", row.address);
     }
 #endif
+}
+
+void PPU::create_bit_plane(Pixel_8 &row) {
+    for (int i = 0; i < 8; i++) {
+        // combine planes
+        const uint8_t low = (row.pattern_lsb >> (7 - i)) & 1;
+        const uint8_t high = (row.pattern_msb >> (7 - i)) & 1;
+        row.bit_plane[i] = (high << 1) | low;
+    }
+}
+
+void PPU::retrieve_color_index(Pixel_8 &row) {
+    for (int i = registers.x; i < 8; i++) {
+        const int y = get_coarse_y_scroll() % 4;
+        const int x = get_coarse_x_scroll() % 4;
+        const int shift = 4 * (y > 1) + 2 * (x > 1);
+        uint16_t index = PALETTE_BACKGROUND;
+        index = index + (((row.attribute >> shift) & 0x3) * 0x4); // palette set selection
+        index = index + (row.bit_plane[i] & 0x3); // color selection
+        row.colors[i] = direct_read(index);
+    }
 }
 
 void PPU::priority_mux() {
-    render.select[0] = background.pattern_lsb;
-    render.select[1] = background.pattern_msb;
-    render.select[2] = background.attribute;
+    uint8_t color_index = 0;
+    uint8_t colors[8];
+    create_bit_plane(background);
+    retrieve_color_index(background);
+
+    for (int i = 0; i < 8; i++) {
+        create_bit_plane(sprite[i]);
+        retrieve_color_index(sprite[i]);
+    }
+    // TODO: This doesn't make sense. It's not comparing each pixel of each sprite against the background
+    bool sprite_selected = false;
+    for (int i = 0; i < 8; i++) {
+        if (raw_sprite[i].x_coordinate == render.column + registers.x &&
+            sprite[i].bit_plane[i] == 0 &&
+            (raw_sprite[i].attribute & 0x20) == 0 &&
+            !sprite_selected) {
+            sprite_selected = true;
+            colors[i] = sprite->colors[i]; // <--- what? That's not a specific entry
+        } else {
+            colors[i] = background.colors[i];
+        }
+    }
+
+    for (int i = registers.x; i < 8; i++) {
+        output_pixel(colors[color_index++], i);
+    }
+
+    render.column += 8 - registers.x;
 }
 
-
-void PPU::render_pixels() {
-    uint8_t data[8];
+void PPU::output_pixel(uint8_t color_index, int index) {
     uint8_t render_line = scanline;
-    uint8_t pattern_lsb = render.select[0];
-    uint8_t pattern_msb = render.select[1];
-    uint8_t attribute = render.select[2];
-    for (int i = 0; i < 8; i++) {
-        // combine planes
-        const uint8_t low = (pattern_lsb >> (7 - i)) & 1;
-        const uint8_t high = (pattern_msb >> (7 - i)) & 1;
-        data[i] = (high << 1) | low;
-    }
     if (cycles == 327) {
         render.column = 0;
     }
@@ -455,21 +514,10 @@ void PPU::render_pixels() {
             render_line = 0;
         }
     }
-    for (int i = registers.x; i < 8; i++) {
-        const int y = get_coarse_y_scroll() % 4;
-        const int x = get_coarse_x_scroll() % 4;
-        const int shift = 4 * (y > 1) + 2 * (x > 1);
-        uint16_t index = PALETTE_BACKGROUND;
-        index = index + (((attribute >> shift) & 0x3) * 0x4); // palette set selection
-        index = index + (data[i] & 0x3); // color selection
-        if (scanline < 240 || cycles >= 327) {
-            const uint8_t color_index = direct_read(index);
-            frame[render_line][i + render.column] = get_rgb_from_palette(color_index);
-        }
+    if (scanline < 240 || cycles >= 327) {
+        frame[render_line][index + render.column] = get_rgb_from_palette(color_index);
     }
-    render.column += 8 - registers.x;
 }
-
 
 
 // Tile column within a nametable (0-31)
